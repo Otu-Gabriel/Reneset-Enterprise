@@ -447,6 +447,37 @@ export const auditLogger = {
     });
   },
 
+  async stockAdded(
+    userId: string,
+    productId: string,
+    productName: string,
+    stockDetails: {
+      quantityAdded: number;
+      previousStock: number;
+      newStock: number;
+      notes?: string | null;
+    },
+    metadata?: { ipAddress?: string; userAgent?: string }
+  ) {
+    await createAuditLog({
+      userId,
+      action: AuditAction.UPDATE,
+      entity: AuditEntity.PRODUCT,
+      entityId: productId,
+      description: `Added ${stockDetails.quantityAdded} units to ${productName} (${stockDetails.previousStock} → ${stockDetails.newStock})`,
+      details: {
+        productId,
+        productName,
+        type: "stock_addition",
+        quantityAdded: stockDetails.quantityAdded,
+        previousStock: stockDetails.previousStock,
+        newStock: stockDetails.newStock,
+        notes: stockDetails.notes,
+      },
+      ...metadata,
+    });
+  },
+
   async reportExported(userId: string, reportType: string) {
     await createAuditLog({
       userId,

@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
-import { Edit, Trash2, Search, Eye } from "lucide-react";
+import { Edit, Trash2, Search, Eye, Plus } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { ProductDetailsModal } from "./ProductDetailsModal";
 import { EditItemModal } from "./EditItemModal";
+import { AddStockModal } from "./AddStockModal";
 
 interface Product {
   id: string;
@@ -58,6 +59,8 @@ export function InventoryTable() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [addingStockProduct, setAddingStockProduct] = useState<Product | null>(null);
+  const [addStockOpen, setAddStockOpen] = useState(false);
 
   const canEdit =
     session?.user?.permissions &&
@@ -144,6 +147,12 @@ export function InventoryTable() {
     e.stopPropagation(); // Prevent row click
     setEditingProduct(product);
     setEditOpen(true);
+  };
+
+  const handleAddStockClick = (e: React.MouseEvent, product: Product) => {
+    e.stopPropagation(); // Prevent row click
+    setAddingStockProduct(product);
+    setAddStockOpen(true);
   };
 
   if (loading) {
@@ -279,14 +288,25 @@ export function InventoryTable() {
                           <Eye className="h-4 w-4" />
                         </Button>
                         {canEdit && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => handleEditClick(e, product)}
-                            title="Edit Product"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => handleAddStockClick(e, product)}
+                              title="Add Stock"
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => handleEditClick(e, product)}
+                              title="Edit Product"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </>
                         )}
                         {canDelete && (
                           <Button
@@ -340,6 +360,15 @@ export function InventoryTable() {
         onOpenChange={(open) => {
           setEditOpen(open);
           if (!open) setEditingProduct(null);
+        }}
+        onSuccess={fetchProducts}
+      />
+      <AddStockModal
+        product={addingStockProduct}
+        open={addStockOpen}
+        onOpenChange={(open) => {
+          setAddStockOpen(open);
+          if (!open) setAddingStockProduct(null);
         }}
         onSuccess={fetchProducts}
       />
