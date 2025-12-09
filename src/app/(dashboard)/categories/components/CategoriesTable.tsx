@@ -97,23 +97,23 @@ export function CategoriesTable({ canCreate = false, canEdit = false, canDelete 
     <>
       <Card className="bg-card">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Categories</CardTitle>
-            <div className="flex items-center gap-2">
+          <div className="flex items-center flex-col sm:flex-row gap-5 sm:gap-0 sm:justify-between">
+            <CardTitle className="hidden sm:block">Categories</CardTitle>
+            <div className="flex items-center flex-col sm:flex-row gap-2 w-full sm:w-auto">
               {canCreate && (
                 <AddCategoryModal onSuccess={fetchCategories}>
-                  <Button>
+                  <Button className="w-full sm:w-auto">
                     <Plus className="mr-2 h-4 w-4" />
                     Add Category
                   </Button>
                 </AddCategoryModal>
               )}
-              <div className="relative">
+              <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Search categories..."
-                  className="pl-9 w-64"
+                  className="pl-9 sm:w-64 w-full"
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);

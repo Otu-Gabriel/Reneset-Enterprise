@@ -123,22 +123,22 @@ export function BrandsTable({ canCreate = false, canEdit = false, canDelete = fa
       <Card className="bg-card">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Brands</CardTitle>
-            <div className="flex items-center gap-2">
+            <CardTitle className="hidden sm:block">Brands</CardTitle>
+            <div className="flex items-center gap-2 flex-col sm:flex-row w-full sm:w-auto">
               {canCreate && (
                 <AddBrandModal onSuccess={fetchBrands}>
-                  <Button>
+                  <Button className="w-full sm:w-auto">
                     <Plus className="mr-2 h-4 w-4" />
                     Add Brand
                   </Button>
                 </AddBrandModal>
               )}
-              <div className="relative">
+              <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Search brands..."
-                  className="pl-9 w-64"
+                  className="pl-9 sm:w-64 w-full"
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);
@@ -153,7 +153,7 @@ export function BrandsTable({ canCreate = false, canEdit = false, canDelete = fa
                   setPage(1);
                 }}
               >
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>

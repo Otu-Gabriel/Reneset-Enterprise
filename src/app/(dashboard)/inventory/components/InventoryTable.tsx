@@ -163,15 +163,15 @@ export function InventoryTable() {
     <>
       <Card className="bg-card">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Products</CardTitle>
-            <div className="flex items-center gap-2">
-              <div className="relative">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <CardTitle className="text-xl sm:text-2xl">Products</CardTitle>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Search..."
-                  className="pl-9 w-64"
+                  className="pl-9 w-full sm:w-64"
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);
@@ -186,7 +186,7 @@ export function InventoryTable() {
                   setPage(1);
                 }}
               >
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
@@ -201,18 +201,19 @@ export function InventoryTable() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="p-0 sm:p-6">
+          <div className="overflow-x-auto">
+            <Table className="min-w-full">
             <TableHeader>
               <TableRow>
-                <TableHead>Image</TableHead>
+                <TableHead className="hidden sm:table-cell">Image</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Brand</TableHead>
+                <TableHead className="hidden md:table-cell">SKU</TableHead>
+                <TableHead className="hidden lg:table-cell">Category</TableHead>
+                <TableHead className="hidden lg:table-cell">Brand</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Stock</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="hidden sm:table-cell">Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -230,7 +231,7 @@ export function InventoryTable() {
                     className="cursor-pointer hover:bg-accent/50 transition-colors"
                     onClick={() => handleRowClick(product)}
                   >
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       {product.imageUrl ? (
                         <div className="relative w-12 h-12 rounded-md overflow-hidden bg-muted">
                           <img
@@ -249,9 +250,9 @@ export function InventoryTable() {
                       )}
                     </TableCell>
                     <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>{product.sku}</TableCell>
-                    <TableCell>{product.category}</TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">{product.sku}</TableCell>
+                    <TableCell className="hidden lg:table-cell">{product.category}</TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       {product.brand ? (
                         <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
                           {product.brand.name}
@@ -264,7 +265,7 @@ export function InventoryTable() {
                     <TableCell>
                       {product.stock} {product.unit}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <span
                         className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                           product.stock <= product.minStock
@@ -324,6 +325,7 @@ export function InventoryTable() {
               )}
             </TableBody>
           </Table>
+          </div>
           {totalPages > 1 && (
             <div className="flex items-center justify-end gap-2 mt-4">
               <Button
