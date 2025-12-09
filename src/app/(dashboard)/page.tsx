@@ -19,14 +19,25 @@ import { redirect } from "next/navigation";
 
 async function getDashboardStats() {
   const now = new Date();
-  const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const previous7Days = new Date(last7Days.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  // Get current period stats
-  const currentSales = await prisma.sale.findMany({
+  // Today's date range (start of today to end of today)
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(now);
+  todayEnd.setHours(23, 59, 59, 999);
+
+  // Yesterday's date range
+  const yesterdayStart = new Date(todayStart);
+  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+  const yesterdayEnd = new Date(todayEnd);
+  yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
+
+  // Get today's sales
+  const todaySales = await prisma.sale.findMany({
     where: {
       saleDate: {
-        gte: last7Days,
+        gte: todayStart,
+        lte: todayEnd,
       },
     },
     include: {
@@ -34,12 +45,12 @@ async function getDashboardStats() {
     },
   });
 
-  // Get previous period stats
-  const previousSales = await prisma.sale.findMany({
+  // Get yesterday's sales
+  const yesterdaySales = await prisma.sale.findMany({
     where: {
       saleDate: {
-        gte: previous7Days,
-        lt: last7Days,
+        gte: yesterdayStart,
+        lte: yesterdayEnd,
       },
     },
     include: {
@@ -47,50 +58,49 @@ async function getDashboardStats() {
     },
   });
 
-  const currentRevenue = currentSales.reduce(
+  const todayRevenue = todaySales.reduce(
     (sum, sale) => sum + sale.totalAmount,
     0
   );
-  const previousRevenue = previousSales.reduce(
+  const yesterdayRevenue = yesterdaySales.reduce(
     (sum, sale) => sum + sale.totalAmount,
     0
   );
 
-  const currentOrders = currentSales.length;
-  const previousOrders = previousSales.length;
+  const todayOrders = todaySales.length;
+  const yesterdayOrders = yesterdaySales.length;
 
-  const currentAvgPrice =
-    currentOrders > 0 ? currentRevenue / currentOrders : 0;
-  const previousAvgPrice =
-    previousOrders > 0 ? previousRevenue / previousOrders : 0;
+  const todayAvgPrice = todayOrders > 0 ? todayRevenue / todayOrders : 0;
+  const yesterdayAvgPrice =
+    yesterdayOrders > 0 ? yesterdayRevenue / yesterdayOrders : 0;
 
   const revenueChange =
-    previousRevenue > 0
-      ? Math.round(((currentRevenue - previousRevenue) / previousRevenue) * 100)
-      : currentRevenue > 0
+    yesterdayRevenue > 0
+      ? Math.round(((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100)
+      : todayRevenue > 0
         ? 100
         : 0;
 
   const ordersChange =
-    previousOrders > 0
-      ? Math.round(((currentOrders - previousOrders) / previousOrders) * 100)
-      : currentOrders > 0
+    yesterdayOrders > 0
+      ? Math.round(((todayOrders - yesterdayOrders) / yesterdayOrders) * 100)
+      : todayOrders > 0
         ? 100
         : 0;
 
   const avgPriceChange =
-    previousAvgPrice > 0
+    yesterdayAvgPrice > 0
       ? Math.round(
-          ((currentAvgPrice - previousAvgPrice) / previousAvgPrice) * 100
+          ((todayAvgPrice - yesterdayAvgPrice) / yesterdayAvgPrice) * 100
         )
-      : currentAvgPrice > 0
+      : todayAvgPrice > 0
         ? 100
         : 0;
 
   return {
-    totalRevenue: currentRevenue,
-    totalOrders: currentOrders,
-    averagePrice: currentAvgPrice,
+    totalRevenue: todayRevenue,
+    totalOrders: todayOrders,
+    averagePrice: todayAvgPrice,
     revenueChange,
     ordersChange,
     averagePriceChange: avgPriceChange,
@@ -99,48 +109,32 @@ async function getDashboardStats() {
 
 async function getSalesOverview() {
   const now = new Date();
-  const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const previous7Days = new Date(last7Days.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
 
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  // Get hourly data for today
   const data = [];
 
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    date.setHours(0, 0, 0, 0);
+  for (let hour = 0; hour < 24; hour++) {
+    const hourStart = new Date(todayStart);
+    hourStart.setHours(hour, 0, 0, 0);
+    const hourEnd = new Date(todayStart);
+    hourEnd.setHours(hour, 59, 59, 999);
 
-    const nextDate = new Date(date);
-    nextDate.setDate(nextDate.getDate() + 1);
-
-    const currentSales = await prisma.sale.findMany({
+    const sales = await prisma.sale.findMany({
       where: {
         saleDate: {
-          gte: date,
-          lt: nextDate,
+          gte: hourStart,
+          lte: hourEnd,
         },
       },
     });
 
-    const previousDate = new Date(date);
-    previousDate.setDate(previousDate.getDate() - 7);
-
-    const previousNextDate = new Date(previousDate);
-    previousNextDate.setDate(previousNextDate.getDate() + 1);
-
-    const previousSales = await prisma.sale.findMany({
-      where: {
-        saleDate: {
-          gte: previousDate,
-          lt: previousNextDate,
-        },
-      },
-    });
+    const revenue = sales.reduce((sum, s) => sum + s.totalAmount, 0);
 
     data.push({
-      date: days[date.getDay()],
-      current: currentSales.reduce((sum, s) => sum + s.totalAmount, 0),
-      previous: previousSales.reduce((sum, s) => sum + s.totalAmount, 0),
+      hour: hour.toString().padStart(2, "0") + ":00",
+      revenue: revenue,
     });
   }
 
@@ -148,7 +142,20 @@ async function getSalesOverview() {
 }
 
 async function getCategorySales() {
+  const now = new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(now);
+  todayEnd.setHours(23, 59, 59, 999);
+
+  // Get only today's sales
   const sales = await prisma.sale.findMany({
+    where: {
+      saleDate: {
+        gte: todayStart,
+        lte: todayEnd,
+      },
+    },
     include: {
       items: {
         include: {
@@ -179,15 +186,27 @@ async function getCategorySales() {
       value,
       percentage: total > 0 ? Math.round((value / total) * 100) : 0,
     }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 3);
+    .sort((a, b) => b.value - a.value);
 
   return data;
 }
 
 async function getRecentTransactions() {
+  const now = new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(now);
+  todayEnd.setHours(23, 59, 59, 999);
+
+  // Get only today's transactions
   const transactions = await prisma.sale.findMany({
-    take: 4,
+    where: {
+      saleDate: {
+        gte: todayStart,
+        lte: todayEnd,
+      },
+    },
+    take: 10,
     orderBy: {
       saleDate: "desc",
     },
@@ -221,9 +240,9 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Dashboard - Today</h1>
         <p className="text-sm sm:text-base text-muted-foreground">
-          Welcome to your inventory management system
+          Overview of today's sales and performance
         </p>
       </div>
 
@@ -234,71 +253,53 @@ export default async function DashboardPage() {
         <SalesByCategory data={categorySales} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="bg-card">
-          <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentTransactions.slice(0, 2).map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell className="font-medium">
-                      #{transaction.saleNumber}
-                    </TableCell>
-                    <TableCell>{transaction.customerName}</TableCell>
-                    <TableCell>{formatDate(transaction.saleDate)}</TableCell>
-                    <TableCell>
-                      {formatCurrency(transaction.totalAmount)}
-                    </TableCell>
+      <Card className="bg-card">
+        <CardHeader>
+          <CardTitle>Today's Transactions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {recentTransactions.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No transactions today
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Amount</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card">
-          <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentTransactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell className="font-medium">
-                      #{transaction.saleNumber}
-                    </TableCell>
-                    <TableCell>{transaction.customerName}</TableCell>
-                    <TableCell>{formatDate(transaction.saleDate)}</TableCell>
-                    <TableCell>
-                      {formatCurrency(transaction.totalAmount)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+                </TableHeader>
+                <TableBody>
+                  {recentTransactions.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell className="font-medium">
+                        #{transaction.saleNumber}
+                      </TableCell>
+                      <TableCell>{transaction.customerName}</TableCell>
+                      <TableCell>
+                        {new Date(transaction.saleDate).toLocaleTimeString(
+                          "en-US",
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {formatCurrency(transaction.totalAmount)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

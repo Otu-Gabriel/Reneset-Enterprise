@@ -60,18 +60,18 @@ export function StatsCards({ stats }: StatsCardsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-3">
       <StatCard
-        title="Total Revenue"
+        title="Today's Revenue"
         value={stats.totalRevenue}
         change={stats.revenueChange}
         isCurrency
       />
       <StatCard
-        title="Total Orders"
+        title="Today's Orders"
         value={stats.totalOrders}
         change={stats.ordersChange}
       />
       <StatCard
-        title="Average Price"
+        title="Average Order Value"
         value={stats.averagePrice}
         change={stats.averagePriceChange}
         isCurrency
@@ -79,4 +79,3 @@ export function StatsCards({ stats }: StatsCardsProps) {
     </div>
   );
 }
-
