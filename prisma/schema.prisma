@@ -1,0 +1,251 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Seed configuration
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Permission {
+  VIEW_DASHBOARD
+  VIEW_SALES
+  CREATE_SALES
+  EDIT_SALES
+  DELETE_SALES
+  VIEW_INVENTORY
+  CREATE_INVENTORY
+  EDIT_INVENTORY
+  DELETE_INVENTORY
+  VIEW_CATEGORIES
+  CREATE_CATEGORIES
+  EDIT_CATEGORIES
+  DELETE_CATEGORIES
+  VIEW_BRANDS
+  CREATE_BRANDS
+  EDIT_BRANDS
+  DELETE_BRANDS
+  VIEW_EMPLOYEES
+  CREATE_EMPLOYEES
+  EDIT_EMPLOYEES
+  DELETE_EMPLOYEES
+  VIEW_REPORTS
+  EXPORT_REPORTS
+  EDIT_OWN_PROFILE
+  VIEW_ACCOUNT_INFO
+  MANAGE_SYSTEM_SETTINGS
+  VIEW_SETTINGS
+  MANAGE_USERS
+  VIEW_INSTALLMENTS
+  CREATE_INSTALLMENTS
+  RECORD_PAYMENTS
+  MANAGE_INSTALLMENTS
+  VIEW_AUDIT_LOGS
+  VIEW_CUSTOMERS
+  FULL_ACCESS
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  password      String
+  name          String
+  role          Role         @default(EMPLOYEE)
+  permissions   Permission[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  sales         Sale[]
+  createdBy     Employee[]   @relation("CreatedBy")
+  updatedBy     Employee[]   @relation("UpdatedBy")
+  auditLogs     AuditLog[]
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  sku         String    @unique
+  category    String
+  brandId     String?
+  brand       Brand?    @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  price       Float
+  cost        Float?
+  imageUrl    String?
+  stock       Int       @default(0)
+  minStock    Int       @default(0)
+  unit        String    @default("pcs")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  saleItems   SaleItem[]
+}
+
+model Sale {
+  id            String     @id @default(cuid())
+  saleNumber    String     @unique
+  customerName  String
+  customerEmail String?
+  customerPhone String?
+  totalAmount   Float
+  status        String     @default("completed")
+  paymentMethod String?    @default("cash")
+  notes         String?
+  saleDate      DateTime   @default(now())
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  userId        String
+  user          User       @relation(fields: [userId], references: [id])
+  items         SaleItem[]
+  installmentPlan InstallmentPlan?
+}
+
+model SaleItem {
+  id          String   @id @default(cuid())
+  saleId      String
+  sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  quantity    Int
+  price       Float
+  discount    Float    @default(0)
+  subtotal    Float
+  createdAt   DateTime @default(now())
+}
+
+model Employee {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  phone       String?
+  position    String
+  department  String?
+  salary      Float?
+  hireDate    DateTime @default(now())
+  status      String   @default("active")
+  address     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String?
+  createdBy   User?    @relation("CreatedBy", fields: [createdById], references: [id])
+  updatedById String?
+  updatedBy   User?    @relation("UpdatedBy", fields: [updatedById], references: [id])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  brands      Brand[]
+}
+
+model Brand {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  products    Product[]
+
+  @@unique([name, categoryId])
+}
+
+model InstallmentPlan {
+  id                String              @id @default(cuid())
+  saleId            String              @unique
+  sale              Sale                @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  totalAmount       Float
+  downPayment       Float               @default(0)
+  remainingAmount   Float
+  numberOfInstallments Int
+  installmentAmount Float
+  frequency         String              // weekly, bi-weekly, monthly
+  startDate         DateTime
+  status            String              @default("active") // active, completed, defaulted, cancelled
+  notes             String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  payments          InstallmentPayment[]
+}
+
+model InstallmentPayment {
+  id                String          @id @default(cuid())
+  installmentPlanId String
+  installmentPlan   InstallmentPlan @relation(fields: [installmentPlanId], references: [id], onDelete: Cascade)
+  installmentNumber Int
+  dueDate           DateTime
+  amount            Float           // Expected payment amount
+  paidAmount        Float           @default(0) // Actual payment (allows partial)
+  paymentDate       DateTime?
+  status            String          @default("pending") // pending, paid, overdue, partial
+  paymentMethod     String?
+  notes             String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([installmentPlanId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  VIEW
+  EXPORT
+  IMPORT
+  PASSWORD_CHANGE
+  PERMISSION_CHANGE
+  STATUS_CHANGE
+}
+
+enum AuditEntity {
+  PRODUCT
+  SALE
+  EMPLOYEE
+  USER
+  CATEGORY
+  BRAND
+  INSTALLMENT
+  INSTALLMENT_PAYMENT
+  PROFILE
+  SETTINGS
+  SYSTEM
+}
+
+model AuditLog {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+  action      AuditAction
+  entity      AuditEntity
+  entityId    String?
+  description String
+  details     Json?        // Store additional context like old/new values, changes, etc.
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime     @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([entity])
+  @@index([entityId])
+  @@index([createdAt])
+}
+

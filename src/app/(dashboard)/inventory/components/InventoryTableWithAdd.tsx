@@ -1,0 +1,48 @@
+"use client";
+
+import { useState } from "react";
+import { InventoryTable } from "./InventoryTable";
+import { AddItemModal } from "./AddItemModal";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+
+interface InventoryTableWithAddButtonProps {
+  canCreate: boolean;
+}
+
+export function InventoryTableWithAddButton({
+  canCreate,
+}: InventoryTableWithAddButtonProps) {
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = () => {
+    setRefreshKey((prev) => prev + 1);
+    // Trigger table refresh
+    if ((window as any).refreshInventoryTable) {
+      setTimeout(() => {
+        (window as any).refreshInventoryTable();
+      }, 100);
+    }
+  };
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Inventory</h1>
+          <p className="text-muted-foreground">Manage your product inventory</p>
+        </div>
+        {canCreate && (
+          <AddItemModal onSuccess={handleRefresh}>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Item
+            </Button>
+          </AddItemModal>
+        )}
+      </div>
+      <InventoryTable key={refreshKey} />
+    </>
+  );
+}
+
