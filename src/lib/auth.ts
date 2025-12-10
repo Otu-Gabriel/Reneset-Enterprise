@@ -1,7 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./prisma";
-import { Permission } from "@prisma/client";
+import { Permission, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
@@ -56,7 +56,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as string;
+        session.user.role = token.role as Role;
         session.user.permissions = token.permissions as Permission[];
       }
       return session;
@@ -90,4 +90,3 @@ export function hasAnyPermission(
   }
   return requiredPermissions.some((perm) => userPermissions.includes(perm));
 }
-

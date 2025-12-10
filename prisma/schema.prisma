@@ -69,6 +69,7 @@ model User {
   createdBy     Employee[]   @relation("CreatedBy")
   updatedBy     Employee[]   @relation("UpdatedBy")
   auditLogs     AuditLog[]
+  updatedSettings SystemSettings[] @relation("SettingsUpdatedBy")
 }
 
 model Product {
@@ -247,5 +248,18 @@ model AuditLog {
   @@index([entity])
   @@index([entityId])
   @@index([createdAt])
+}
+
+model SystemSettings {
+  id          String   @id @default("system") // Singleton - only one record
+  currency    String   @default("USD")
+  dateFormat  String   @default("MM/DD/YYYY")
+  timeFormat  String   @default("12h")
+  language    String   @default("en")
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+  updatedBy   User?    @relation("SettingsUpdatedBy", fields: [updatedById], references: [id])
+
+  @@map("system_settings")
 }
 

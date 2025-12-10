@@ -33,12 +33,18 @@ interface SalesReportProps {
   endDate: string;
 }
 
+// Professional color palette with high contrast (same as dashboard)
 const COLORS = [
-  "hsl(217, 91%, 60%)",
-  "hsl(217, 70%, 50%)",
-  "hsl(217, 50%, 40%)",
-  "hsl(250, 95%, 65%)",
-  "hsl(250, 85%, 55%)",
+  "#3B82F6", // Blue
+  "#10B981", // Green
+  "#F59E0B", // Amber
+  "#EF4444", // Red
+  "#8B5CF6", // Purple
+  "#EC4899", // Pink
+  "#06B6D4", // Cyan
+  "#F97316", // Orange
+  "#84CC16", // Lime
+  "#6366F1", // Indigo
 ];
 
 export function SalesReport({ startDate, endDate }: SalesReportProps) {
@@ -108,7 +114,9 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Order Value</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Average Order Value
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -127,7 +135,10 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={data.dailySales}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="hsl(var(--muted))"
+                />
                 <XAxis
                   dataKey="date"
                   stroke="hsl(var(--muted-foreground))"
@@ -158,40 +169,103 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
 
         <Card className="bg-card">
           <CardHeader>
-            <CardTitle>Sales by Category</CardTitle>
+            <CardTitle>
+              Sales by Category
+              {startDate || endDate
+                ? ` (${startDate ? formatDate(startDate) : "Start"} - ${endDate ? formatDate(endDate) : "End"})`
+                : " (All Time)"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={data.categorySales}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) =>
-                    `${name}: ${formatCurrency(value)}`
-                  }
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {data.categorySales.map((entry: any, index: number) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
+            {!data.categorySales || data.categorySales.length === 0 ? (
+              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                No sales data for selected period
+              </div>
+            ) : (
+              <div className="flex flex-col lg:flex-row items-center justify-center gap-6">
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={data.categorySales}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={(entry: any) => {
+                        const total = data.categorySales.reduce(
+                          (sum: number, item: any) => sum + item.value,
+                          0
+                        );
+                        const percentage =
+                          total > 0
+                            ? Math.round((entry.value / total) * 100)
+                            : 0;
+                        return percentage > 5 ? `${percentage}%` : "";
+                      }}
+                      outerRadius={100}
+                      innerRadius={40}
+                      fill="#8884d8"
+                      dataKey="value"
+                      paddingAngle={2}
+                    >
+                      {data.categorySales.map((entry: any, index: number) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--popover))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                      formatter={(value: number) => formatCurrency(value)}
                     />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                  formatter={(value: number) => formatCurrency(value)}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+                  </PieChart>
+                </ResponsiveContainer>
+
+                {/* Custom Legend - same style as dashboard */}
+                <div className="space-y-3 min-w-[200px]">
+                  <h4 className="text-sm font-semibold mb-2">Categories</h4>
+                  {(() => {
+                    const total = data.categorySales.reduce(
+                      (sum: number, item: any) => sum + item.value,
+                      0
+                    );
+                    return data.categorySales.map(
+                      (entry: any, index: number) => {
+                        const percentage =
+                          total > 0
+                            ? Math.round((entry.value / total) * 100)
+                            : 0;
+                        return (
+                          <div
+                            key={entry.category || entry.name}
+                            className="flex items-center gap-3"
+                          >
+                            <div
+                              className="w-4 h-4 rounded-full flex-shrink-0"
+                              style={{
+                                backgroundColor: COLORS[index % COLORS.length],
+                              }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium truncate">
+                                {entry.category || entry.name}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {formatCurrency(entry.value)} ({percentage}%)
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -204,7 +278,10 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={data.topProducts.slice(0, 10)}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="hsl(var(--muted))"
+                />
                 <XAxis
                   dataKey="name"
                   stroke="hsl(var(--muted-foreground))"
@@ -238,7 +315,10 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={data.paymentMethods}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="hsl(var(--muted))"
+                />
                 <XAxis
                   dataKey="method"
                   stroke="hsl(var(--muted-foreground))"
@@ -292,4 +372,3 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
     </div>
   );
 }
-

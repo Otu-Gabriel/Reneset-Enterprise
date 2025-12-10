@@ -9,7 +9,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import {
+  formatCurrencyWithSettings,
+  formatDateWithSettings,
+} from "@/lib/formatting";
 import { prisma } from "@/lib/prisma";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
@@ -237,6 +240,23 @@ export default async function DashboardPage() {
   const categorySales = await getCategorySales();
   const recentTransactions = await getRecentTransactions();
 
+  // Format transactions with system settings
+  const formattedTransactions = await Promise.all(
+    recentTransactions.map(async (transaction) => ({
+      ...transaction,
+      formattedAmount: await formatCurrencyWithSettings(
+        transaction.totalAmount
+      ),
+      formattedTime: new Date(transaction.saleDate).toLocaleTimeString(
+        "en-US",
+        {
+          hour: "2-digit",
+          minute: "2-digit",
+        }
+      ),
+    }))
+  );
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div>
@@ -274,24 +294,14 @@ export default async function DashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentTransactions.map((transaction) => (
+                  {formattedTransactions.map((transaction) => (
                     <TableRow key={transaction.id}>
                       <TableCell className="font-medium">
                         #{transaction.saleNumber}
                       </TableCell>
                       <TableCell>{transaction.customerName}</TableCell>
-                      <TableCell>
-                        {new Date(transaction.saleDate).toLocaleTimeString(
-                          "en-US",
-                          {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          }
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {formatCurrency(transaction.totalAmount)}
-                      </TableCell>
+                      <TableCell>{transaction.formattedTime}</TableCell>
+                      <TableCell>{transaction.formattedAmount}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -12,61 +18,93 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Check, Loader2 } from "lucide-react";
+import { useSystemSettings } from "@/hooks/useSystemSettings";
 
 export function SystemPreferences() {
-  const [loading, setLoading] = useState(false);
+  const {
+    settings,
+    loading: settingsLoading,
+    updateSettings,
+  } = useSystemSettings();
+  const [saving, setSaving] = useState(false);
   const [preferences, setPreferences] = useState({
     dateFormat: "MM/DD/YYYY",
     timeFormat: "12h",
     currency: "USD",
     language: "en",
   });
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  // Update local state when settings are loaded
+  useEffect(() => {
+    if (settings) {
+      setPreferences({
+        dateFormat: settings.dateFormat,
+        timeFormat: settings.timeFormat,
+        currency: settings.currency,
+        language: settings.language,
+      });
+    }
+  }, [settings]);
 
   const handleSave = async () => {
-    setLoading(true);
+    setSaving(true);
     setMessage(null);
 
-    // In a real application, you would save these preferences to the database
-    // For now, we'll just simulate saving to localStorage
     try {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("userPreferences", JSON.stringify(preferences));
+      const result = await updateSettings(preferences);
+      if (result.success) {
+        setMessage({ type: "success", text: "Preferences saved successfully" });
+        setTimeout(() => setMessage(null), 3000);
+        // Clear cache to force refresh
+        if (typeof window !== "undefined") {
+          window.location.reload();
+        }
+      } else {
+        setMessage({
+          type: "error",
+          text: result.error || "Failed to save preferences",
+        });
       }
-      setMessage({ type: "success", text: "Preferences saved successfully" });
-      setTimeout(() => setMessage(null), 3000);
     } catch (error) {
       setMessage({ type: "error", text: "Failed to save preferences" });
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  // Load preferences from localStorage on mount
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("userPreferences");
-      if (saved) {
-        try {
-          setPreferences(JSON.parse(saved));
-        } catch (error) {
-          console.error("Error loading preferences:", error);
-        }
-      }
-    }
-  }, []);
+  if (settingsLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Message Alert */}
       {message && (
-        <Card className={message.type === "success" ? "bg-green-500/10 border-green-500" : "bg-red-500/10 border-red-500"}>
+        <Card
+          className={
+            message.type === "success"
+              ? "bg-green-500/10 border-green-500"
+              : "bg-red-500/10 border-red-500"
+          }
+        >
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
               {message.type === "success" ? (
                 <Check className="h-4 w-4 text-green-600" />
               ) : null}
-              <p className={message.type === "success" ? "text-green-600" : "text-red-600"}>
+              <p
+                className={
+                  message.type === "success" ? "text-green-600" : "text-red-600"
+                }
+              >
                 {message.text}
               </p>
             </div>
@@ -186,15 +224,16 @@ export function SystemPreferences() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Email notifications, SMS alerts, and push notifications will be available in a future update.
+            Email notifications, SMS alerts, and push notifications will be
+            available in a future update.
           </p>
         </CardContent>
       </Card>
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={loading}>
-          {loading ? (
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Saving...
@@ -207,4 +246,3 @@ export function SystemPreferences() {
     </div>
   );
 }
-
