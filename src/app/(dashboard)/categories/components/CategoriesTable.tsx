@@ -12,12 +12,22 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Edit, Trash2, Search, Plus } from "lucide-react";
+import { Edit, Trash2, Search, Plus, Upload } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { EditCategoryModal } from "./EditCategoryModal";
 import { AddCategoryModal } from "./AddCategoryModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 interface Category {
   id: string;
@@ -36,7 +46,11 @@ interface CategoriesTableProps {
   canDelete?: boolean;
 }
 
-export function CategoriesTable({ canCreate = false, canEdit = false, canDelete = false }: CategoriesTableProps) {
+export function CategoriesTable({
+  canCreate = false,
+  canEdit = false,
+  canDelete = false,
+}: CategoriesTableProps) {
   const { data: session } = useSession();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +58,14 @@ export function CategoriesTable({ canCreate = false, canEdit = false, canDelete 
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importResults, setImportResults] = useState<{
+    success: number;
+    failed: number;
+    errors: string[];
+  } | null>(null);
 
   useEffect(() => {
     fetchCategories();
@@ -66,6 +88,44 @@ export function CategoriesTable({ canCreate = false, canEdit = false, canDelete 
       console.error("Error fetching categories:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImport = async () => {
+    if (!importFile) {
+      alert("Please select a file");
+      return;
+    }
+
+    setImporting(true);
+    setImportResults(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", importFile);
+
+      const response = await fetch("/api/categories/import", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setImportResults(data.results);
+        fetchCategories();
+        if (data.results.failed === 0) {
+          setImportOpen(false);
+          setImportFile(null);
+        }
+      } else {
+        alert(data.error || "Failed to import categories");
+      }
+    } catch (error) {
+      console.error("Error importing categories:", error);
+      alert("Failed to import categories");
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -101,12 +161,90 @@ export function CategoriesTable({ canCreate = false, canEdit = false, canDelete 
             <CardTitle className="hidden sm:block">Categories</CardTitle>
             <div className="flex items-center flex-col sm:flex-row gap-2 w-full sm:w-auto">
               {canCreate && (
-                <AddCategoryModal onSuccess={fetchCategories}>
-                  <Button className="w-full sm:w-auto">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Category
-                  </Button>
-                </AddCategoryModal>
+                <>
+                  <AddCategoryModal onSuccess={fetchCategories}>
+                    <Button className="w-full sm:w-auto">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Category
+                    </Button>
+                  </AddCategoryModal>
+                  <Dialog open={importOpen} onOpenChange={setImportOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-full sm:w-auto">
+                        <Upload className="mr-2 h-4 w-4" />
+                        Import
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Import Categories from Excel</DialogTitle>
+                        <DialogDescription>
+                          Upload an Excel file with columns: Name, Description
+                          (optional)
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="file">Excel File</Label>
+                          <Input
+                            id="file"
+                            type="file"
+                            accept=".xlsx,.xls"
+                            onChange={(e) =>
+                              setImportFile(e.target.files?.[0] || null)
+                            }
+                          />
+                        </div>
+                        {importResults && (
+                          <div className="p-4 bg-muted rounded-lg">
+                            <p className="font-medium mb-2">
+                              Import Results: {importResults.success} succeeded,{" "}
+                              {importResults.failed} failed
+                            </p>
+                            {importResults.errors.length > 0 && (
+                              <div className="mt-2 max-h-40 overflow-y-auto">
+                                <p className="text-sm font-medium text-red-600 mb-1">
+                                  Errors:
+                                </p>
+                                <ul className="text-sm text-muted-foreground list-disc list-inside">
+                                  {importResults.errors
+                                    .slice(0, 10)
+                                    .map((error, idx) => (
+                                      <li key={idx}>{error}</li>
+                                    ))}
+                                  {importResults.errors.length > 10 && (
+                                    <li>
+                                      ... and {importResults.errors.length - 10}{" "}
+                                      more
+                                    </li>
+                                  )}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setImportOpen(false);
+                            setImportFile(null);
+                            setImportResults(null);
+                          }}
+                        >
+                          Close
+                        </Button>
+                        <Button
+                          onClick={handleImport}
+                          disabled={importing || !importFile}
+                        >
+                          {importing ? "Importing..." : "Import"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </>
               )}
               <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

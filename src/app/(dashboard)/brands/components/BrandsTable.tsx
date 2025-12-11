@@ -19,12 +19,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Edit, Trash2, Search, Plus } from "lucide-react";
+import { Edit, Trash2, Search, Plus, Upload } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { EditBrandModal } from "./EditBrandModal";
 import { AddBrandModal } from "./AddBrandModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 interface Category {
   id: string;
@@ -47,7 +57,11 @@ interface BrandsTableProps {
   canDelete?: boolean;
 }
 
-export function BrandsTable({ canCreate = false, canEdit = false, canDelete = false }: BrandsTableProps) {
+export function BrandsTable({
+  canCreate = false,
+  canEdit = false,
+  canDelete = false,
+}: BrandsTableProps) {
   const { data: session } = useSession();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -57,6 +71,14 @@ export function BrandsTable({ canCreate = false, canEdit = false, canDelete = fa
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importResults, setImportResults] = useState<{
+    success: number;
+    failed: number;
+    errors: string[];
+  } | null>(null);
 
   useEffect(() => {
     fetchBrands();
@@ -71,7 +93,8 @@ export function BrandsTable({ canCreate = false, canEdit = false, canDelete = fa
         limit: "10",
       });
       if (search) params.append("search", search);
-      if (categoryFilter && categoryFilter !== "all") params.append("categoryId", categoryFilter);
+      if (categoryFilter && categoryFilter !== "all")
+        params.append("categoryId", categoryFilter);
 
       const response = await fetch(`/api/brands?${params}`);
       const data = await response.json();
@@ -91,6 +114,44 @@ export function BrandsTable({ canCreate = false, canEdit = false, canDelete = fa
       setCategories(data.categories || []);
     } catch (error) {
       console.error("Error fetching categories:", error);
+    }
+  };
+
+  const handleImport = async () => {
+    if (!importFile) {
+      alert("Please select a file");
+      return;
+    }
+
+    setImporting(true);
+    setImportResults(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", importFile);
+
+      const response = await fetch("/api/brands/import", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setImportResults(data.results);
+        fetchBrands();
+        if (data.results.failed === 0) {
+          setImportOpen(false);
+          setImportFile(null);
+        }
+      } else {
+        alert(data.error || "Failed to import brands");
+      }
+    } catch (error) {
+      console.error("Error importing brands:", error);
+      alert("Failed to import brands");
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -126,12 +187,90 @@ export function BrandsTable({ canCreate = false, canEdit = false, canDelete = fa
             <CardTitle className="hidden sm:block">Brands</CardTitle>
             <div className="flex items-center gap-2 flex-col sm:flex-row w-full sm:w-auto">
               {canCreate && (
-                <AddBrandModal onSuccess={fetchBrands}>
-                  <Button className="w-full sm:w-auto">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Brand
-                  </Button>
-                </AddBrandModal>
+                <>
+                  <AddBrandModal onSuccess={fetchBrands}>
+                    <Button className="w-full sm:w-auto">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Brand
+                    </Button>
+                  </AddBrandModal>
+                  <Dialog open={importOpen} onOpenChange={setImportOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-full sm:w-auto">
+                        <Upload className="mr-2 h-4 w-4" />
+                        Import
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Import Brands from Excel</DialogTitle>
+                        <DialogDescription>
+                          Upload an Excel file with columns: Name, Category,
+                          Description (optional)
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="file">Excel File</Label>
+                          <Input
+                            id="file"
+                            type="file"
+                            accept=".xlsx,.xls"
+                            onChange={(e) =>
+                              setImportFile(e.target.files?.[0] || null)
+                            }
+                          />
+                        </div>
+                        {importResults && (
+                          <div className="p-4 bg-muted rounded-lg">
+                            <p className="font-medium mb-2">
+                              Import Results: {importResults.success} succeeded,{" "}
+                              {importResults.failed} failed
+                            </p>
+                            {importResults.errors.length > 0 && (
+                              <div className="mt-2 max-h-40 overflow-y-auto">
+                                <p className="text-sm font-medium text-red-600 mb-1">
+                                  Errors:
+                                </p>
+                                <ul className="text-sm text-muted-foreground list-disc list-inside">
+                                  {importResults.errors
+                                    .slice(0, 10)
+                                    .map((error, idx) => (
+                                      <li key={idx}>{error}</li>
+                                    ))}
+                                  {importResults.errors.length > 10 && (
+                                    <li>
+                                      ... and {importResults.errors.length - 10}{" "}
+                                      more
+                                    </li>
+                                  )}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setImportOpen(false);
+                            setImportFile(null);
+                            setImportResults(null);
+                          }}
+                        >
+                          Close
+                        </Button>
+                        <Button
+                          onClick={handleImport}
+                          disabled={importing || !importFile}
+                        >
+                          {importing ? "Importing..." : "Import"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </>
               )}
               <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -270,4 +409,3 @@ export function BrandsTable({ canCreate = false, canEdit = false, canDelete = fa
     </>
   );
 }
-

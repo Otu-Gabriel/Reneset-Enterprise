@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrency } from "@/hooks/useCurrency";
-import { Edit, Trash2, Search, Eye, Plus } from "lucide-react";
+import { Edit, Trash2, Search, Eye, Plus, Download, Upload } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
@@ -27,6 +27,16 @@ import {
 import { ProductDetailsModal } from "./ProductDetailsModal";
 import { EditItemModal } from "./EditItemModal";
 import { AddStockModal } from "./AddStockModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 interface Product {
   id: string;
@@ -63,6 +73,15 @@ export function InventoryTable() {
   const [editOpen, setEditOpen] = useState(false);
   const [addingStockProduct, setAddingStockProduct] = useState<Product | null>(null);
   const [addStockOpen, setAddStockOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importResults, setImportResults] = useState<{
+    success: number;
+    failed: number;
+    errors: string[];
+  } | null>(null);
 
   const canEdit =
     session?.user?.permissions &&
@@ -70,6 +89,9 @@ export function InventoryTable() {
   const canDelete =
     session?.user?.permissions &&
     hasPermission(session.user.permissions, Permission.DELETE_INVENTORY);
+  const canCreate =
+    session?.user?.permissions &&
+    hasPermission(session.user.permissions, Permission.CREATE_INVENTORY);
 
   useEffect(() => {
     fetchProducts();
@@ -158,6 +180,74 @@ export function InventoryTable() {
     setAddStockOpen(true);
   };
 
+  const handleImport = async () => {
+    if (!importFile) {
+      alert("Please select a file");
+      return;
+    }
+
+    setImporting(true);
+    setImportResults(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", importFile);
+
+      const response = await fetch("/api/inventory/import", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setImportResults(data.results);
+        fetchProducts();
+        if (data.results.failed === 0) {
+          setImportOpen(false);
+          setImportFile(null);
+        }
+      } else {
+        alert(data.error || "Failed to import products");
+      }
+    } catch (error) {
+      console.error("Error importing products:", error);
+      alert("Failed to import products");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (search) params.append("search", search);
+      if (category && category !== "all") params.append("category", category);
+      if (stockStatus && stockStatus !== "all") params.append("stockStatus", stockStatus);
+
+      const response = await fetch(`/api/inventory/export?${params.toString()}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `products-export-${new Date().toISOString().split("T")[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert("Failed to export products");
+      }
+    } catch (error) {
+      console.error("Error exporting products:", error);
+      alert("Failed to export products");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-8">Loading...</div>;
   }
@@ -218,6 +308,86 @@ export function InventoryTable() {
                   <SelectItem value="out_of_stock">Out of Stock</SelectItem>
                 </SelectContent>
               </Select>
+              <Button
+                variant="outline"
+                onClick={handleExport}
+                disabled={exporting}
+                className="w-full sm:w-auto"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {exporting ? "Exporting..." : "Export"}
+              </Button>
+              {canCreate && (
+                <Dialog open={importOpen} onOpenChange={setImportOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full sm:w-auto">
+                      <Upload className="mr-2 h-4 w-4" />
+                      Import
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Import Products from Excel</DialogTitle>
+                      <DialogDescription>
+                        Upload an Excel file with columns: Name, SKU, Category, Price, Description (optional), Brand (optional), Cost (optional), Stock (optional), Min Stock (optional), Unit (optional), Image URL (optional)
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="file">Excel File</Label>
+                        <Input
+                          id="file"
+                          type="file"
+                          accept=".xlsx,.xls"
+                          onChange={(e) =>
+                            setImportFile(e.target.files?.[0] || null)
+                          }
+                        />
+                      </div>
+                      {importResults && (
+                        <div className="p-4 bg-muted rounded-lg">
+                          <p className="font-medium mb-2">
+                            Import Results: {importResults.success} succeeded,{" "}
+                            {importResults.failed} failed
+                          </p>
+                          {importResults.errors.length > 0 && (
+                            <div className="mt-2 max-h-40 overflow-y-auto">
+                              <p className="text-sm font-medium text-red-600 mb-1">
+                                Errors:
+                              </p>
+                              <ul className="text-sm text-muted-foreground list-disc list-inside">
+                                {importResults.errors.slice(0, 10).map((error, idx) => (
+                                  <li key={idx}>{error}</li>
+                                ))}
+                                {importResults.errors.length > 10 && (
+                                  <li>
+                                    ... and {importResults.errors.length - 10} more
+                                  </li>
+                                )}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setImportOpen(false);
+                          setImportFile(null);
+                          setImportResults(null);
+                        }}
+                      >
+                        Close
+                      </Button>
+                      <Button onClick={handleImport} disabled={importing || !importFile}>
+                        {importing ? "Importing..." : "Import"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
           </div>
         </CardHeader>
