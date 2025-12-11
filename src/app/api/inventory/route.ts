@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category") || "";
+    const stockStatus = searchParams.get("stockStatus") || "";
 
     const where: any = {};
     if (search) {
@@ -35,24 +36,69 @@ export async function GET(request: NextRequest) {
     if (category) {
       where.category = category;
     }
+    
+    // Filter by stock status
+    // Note: Prisma doesn't support comparing two fields directly in where clause
+    // So we filter out_of_stock here, and handle low_stock/in_stock after fetching
+    if (stockStatus === "out_of_stock") {
+      where.stock = 0;
+    } else if (stockStatus === "low_stock") {
+      // Low stock: stock > 0 AND stock <= minStock
+      where.stock = { gt: 0 };
+    } else if (stockStatus === "in_stock") {
+      // In stock: stock > minStock (we'll filter this after fetching)
+      where.stock = { gt: 0 };
+    }
 
-    const [products, total] = await Promise.all([
-      prisma.product.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-        include: {
-          brand: {
-            select: {
-              id: true,
-              name: true,
-            },
+    // Fetch products with pagination
+    let products = await prisma.product.findMany({
+      where,
+      skip: stockStatus && stockStatus !== "out_of_stock" ? 0 : skip, // Don't skip if we need to filter
+      take: stockStatus && stockStatus !== "out_of_stock" ? 10000 : limit, // Fetch more if we need to filter
+      orderBy: { createdAt: "desc" },
+      include: {
+        brand: {
+          select: {
+            id: true,
+            name: true,
           },
         },
-      }),
-      prisma.product.count({ where }),
-    ]);
+      },
+    });
+
+    // Apply stock status filtering for low_stock and in_stock
+    if (stockStatus === "low_stock") {
+      products = products.filter((p) => p.stock > 0 && p.stock <= p.minStock);
+    } else if (stockStatus === "in_stock") {
+      products = products.filter((p) => p.stock > p.minStock);
+    }
+
+    // Apply pagination after filtering
+    if (stockStatus && stockStatus !== "out_of_stock") {
+      const startIndex = skip;
+      const endIndex = startIndex + limit;
+      products = products.slice(startIndex, endIndex);
+    }
+
+    // Get total count
+    let total: number;
+    if (stockStatus === "out_of_stock") {
+      total = await prisma.product.count({ where });
+    } else if (stockStatus === "low_stock") {
+      const allProducts = await prisma.product.findMany({
+        where: { stock: { gt: 0 } },
+        select: { stock: true, minStock: true },
+      });
+      total = allProducts.filter((p) => p.stock > 0 && p.stock <= p.minStock).length;
+    } else if (stockStatus === "in_stock") {
+      const allProducts = await prisma.product.findMany({
+        where: { stock: { gt: 0 } },
+        select: { stock: true, minStock: true },
+      });
+      total = allProducts.filter((p) => p.stock > p.minStock).length;
+    } else {
+      total = await prisma.product.count({ where });
+    }
 
     return NextResponse.json({
       products,

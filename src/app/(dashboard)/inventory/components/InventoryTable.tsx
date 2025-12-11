@@ -55,6 +55,7 @@ export function InventoryTable() {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
+  const [stockStatus, setStockStatus] = useState("all");
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -73,7 +74,7 @@ export function InventoryTable() {
   useEffect(() => {
     fetchProducts();
     fetchCategories();
-  }, [page, search, category]);
+  }, [page, search, category, stockStatus]);
 
   // Expose refresh function for external use
   useEffect(() => {
@@ -92,6 +93,7 @@ export function InventoryTable() {
       });
       if (search) params.append("search", search);
       if (category && category !== "all") params.append("category", category);
+      if (stockStatus && stockStatus !== "all") params.append("stockStatus", stockStatus);
 
       const response = await fetch(`/api/inventory?${params}`);
       const data = await response.json();
@@ -199,6 +201,23 @@ export function InventoryTable() {
                   ))}
                 </SelectContent>
               </Select>
+              <Select
+                value={stockStatus}
+                onValueChange={(value) => {
+                  setStockStatus(value);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Stock Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Stock Status</SelectItem>
+                  <SelectItem value="in_stock">In Stock</SelectItem>
+                  <SelectItem value="low_stock">Low Stock</SelectItem>
+                  <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardHeader>
@@ -269,12 +288,16 @@ export function InventoryTable() {
                     <TableCell className="hidden sm:table-cell">
                       <span
                         className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                          product.stock <= product.minStock
+                          product.stock === 0
+                            ? "bg-gray-500/20 text-gray-500"
+                            : product.stock <= product.minStock
                             ? "bg-red-500/20 text-red-500"
                             : "bg-green-500/20 text-green-500"
                         }`}
                       >
-                        {product.stock <= product.minStock
+                        {product.stock === 0
+                          ? "Out of Stock"
+                          : product.stock <= product.minStock
                           ? "Low Stock"
                           : "In Stock"}
                       </span>
