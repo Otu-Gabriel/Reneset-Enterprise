@@ -20,7 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 import { Loader2 } from "lucide-react";
 import {
   Table,
@@ -65,6 +66,7 @@ export function RecordPaymentModal({
   plan,
   onPaymentRecorded,
 }: RecordPaymentModalProps) {
+  const formatCurrency = useCurrency();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [payments, setPayments] = useState<InstallmentPayment[]>([]);

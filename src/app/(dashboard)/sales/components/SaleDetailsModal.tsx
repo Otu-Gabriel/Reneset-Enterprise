@@ -8,7 +8,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 import { Printer, X } from "lucide-react";
 
 interface Sale {
@@ -49,6 +50,8 @@ export function SaleDetailsModal({
   open,
   onOpenChange,
 }: SaleDetailsModalProps) {
+  const formatCurrency = useCurrency();
+  
   if (!sale) return null;
 
   const handlePrint = () => {

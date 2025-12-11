@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { AuditAction, AuditEntity } from "@prisma/client";
+import { formatCurrencyWithSettings } from "@/lib/formatting";
 
 interface AuditLogData {
   userId: string;
@@ -117,12 +118,13 @@ export const auditLogger = {
     totalAmount: number,
     metadata?: { ipAddress?: string; userAgent?: string }
   ) {
+    const formattedAmount = await formatCurrencyWithSettings(totalAmount);
     await createAuditLog({
       userId,
       action: AuditAction.CREATE,
       entity: AuditEntity.SALE,
       entityId: saleId,
-      description: `Created sale: ${saleNumber} (Total: $${totalAmount.toFixed(2)})`,
+      description: `Created sale: ${saleNumber} (Total: ${formattedAmount})`,
       details: { saleId, saleNumber, totalAmount },
       ...metadata,
     });
@@ -418,7 +420,11 @@ export const auditLogger = {
     });
   },
 
-  async installmentCreated(userId: string, installmentId: string, saleNumber: string) {
+  async installmentCreated(
+    userId: string,
+    installmentId: string,
+    saleNumber: string
+  ) {
     await createAuditLog({
       userId,
       action: AuditAction.CREATE,
@@ -436,12 +442,13 @@ export const auditLogger = {
     amount: number,
     metadata?: { ipAddress?: string; userAgent?: string }
   ) {
+    const formattedAmount = await formatCurrencyWithSettings(amount);
     await createAuditLog({
       userId,
       action: AuditAction.CREATE,
       entity: AuditEntity.INSTALLMENT_PAYMENT,
       entityId: paymentId,
-      description: `Recorded payment: $${amount.toFixed(2)}`,
+      description: `Recorded payment: ${formattedAmount}`,
       details: { paymentId, installmentPlanId, amount },
       ...metadata,
     });
@@ -506,4 +513,3 @@ export const auditLogger = {
     });
   },
 };
-

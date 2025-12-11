@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface Product {
   id: string;
@@ -71,6 +71,7 @@ export function EditSaleModal({
   onOpenChange,
   onSaleUpdated,
 }: EditSaleModalProps) {
+  const formatCurrency = useCurrency();
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [customerName, setCustomerName] = useState("");

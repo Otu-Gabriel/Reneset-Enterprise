@@ -23,7 +23,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 import { Loader2, AlertTriangle } from "lucide-react";
 
 interface InventoryReportProps {
@@ -40,6 +40,7 @@ const COLORS = [
 ];
 
 export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
+  const formatCurrency = useCurrency();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

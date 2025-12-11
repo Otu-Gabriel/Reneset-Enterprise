@@ -13,7 +13,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface SalesOverviewProps {
   data: Array<{
@@ -23,6 +23,8 @@ interface SalesOverviewProps {
 }
 
 export function SalesOverview({ data }: SalesOverviewProps) {
+  const formatCurrency = useCurrency();
+  
   return (
     <Card className="bg-card">
       <CardHeader>
@@ -91,6 +93,8 @@ const COLORS = [
 ];
 
 export function SalesByCategory({ data }: CategorySalesProps) {
+  const formatCurrency = useCurrency();
+  
   if (data.length === 0) {
     return (
       <Card className="bg-card">

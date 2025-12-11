@@ -12,7 +12,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 import { Edit, Trash2, Search } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
@@ -31,6 +32,7 @@ interface Employee {
 }
 
 export function EmployeeTable() {
+  const formatCurrency = useCurrency();
   const { data: session } = useSession();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);

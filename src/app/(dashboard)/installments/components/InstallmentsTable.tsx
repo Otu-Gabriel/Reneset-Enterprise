@@ -12,7 +12,8 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 import { Loader2, DollarSign, Eye } from "lucide-react";
 import { RecordPaymentModal } from "./RecordPaymentModal";
 import { InstallmentDetailsModal } from "./InstallmentDetailsModal";
@@ -55,6 +56,7 @@ interface InstallmentsTableProps {
 }
 
 export function InstallmentsTable({ filters }: InstallmentsTableProps) {
+  const formatCurrency = useCurrency();
   const { data: session } = useSession();
   const [plans, setPlans] = useState<InstallmentPlan[]>([]);
   const [loading, setLoading] = useState(true);

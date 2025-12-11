@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface Product {
   id: string;
@@ -38,6 +38,8 @@ export function ProductDetailsModal({
   open,
   onOpenChange,
 }: ProductDetailsModalProps) {
+  const formatCurrency = useCurrency();
+  
   if (!product) return null;
 
   return (

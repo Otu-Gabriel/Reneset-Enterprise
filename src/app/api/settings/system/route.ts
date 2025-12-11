@@ -53,7 +53,7 @@ export async function PUT(request: NextRequest) {
     const { currency, dateFormat, timeFormat, language } = body;
 
     // Validate inputs
-    const validCurrencies = ["USD", "EUR", "GBP", "NGN", "JPY", "CNY"];
+    const validCurrencies = ["USD", "EUR", "GBP", "NGN", "GHS", "JPY", "CNY"];
     const validDateFormats = [
       "MM/DD/YYYY",
       "DD/MM/YYYY",

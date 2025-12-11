@@ -21,7 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useRouter } from "next/navigation";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface Product {
@@ -43,6 +44,7 @@ interface AddSaleModalProps {
 }
 
 export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
+  const formatCurrency = useCurrency();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);

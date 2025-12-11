@@ -185,6 +185,7 @@ export function SystemPreferences() {
                 <SelectItem value="EUR">EUR - Euro (€)</SelectItem>
                 <SelectItem value="GBP">GBP - British Pound (£)</SelectItem>
                 <SelectItem value="NGN">NGN - Nigerian Naira (₦)</SelectItem>
+                <SelectItem value="GHS">GHS - Ghana Cedis (₵)</SelectItem>
                 <SelectItem value="JPY">JPY - Japanese Yen (¥)</SelectItem>
                 <SelectItem value="CNY">CNY - Chinese Yuan (¥)</SelectItem>
               </SelectContent>

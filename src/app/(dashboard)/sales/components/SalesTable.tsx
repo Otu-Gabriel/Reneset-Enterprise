@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 import { Edit, Trash2, Eye } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
@@ -60,6 +61,7 @@ interface SalesTableProps {
 
 export const SalesTable = forwardRef<SalesTableRef, SalesTableProps>(
   ({ filters = { search: "", status: "", productId: "" } }, ref) => {
+    const formatCurrency = useCurrency();
     const { data: session } = useSession();
     const [sales, setSales] = useState<Sale[]>([]);
     const [loading, setLoading] = useState(true);

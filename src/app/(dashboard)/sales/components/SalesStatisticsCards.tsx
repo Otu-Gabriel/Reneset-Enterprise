@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 import { DollarSign, Calendar, TrendingUp, Package } from "lucide-react";
 
 interface Statistics {
@@ -13,6 +13,7 @@ interface Statistics {
 }
 
 export function SalesStatisticsCards() {
+  const formatCurrency = useCurrency();
   const [stats, setStats] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState(true);
 

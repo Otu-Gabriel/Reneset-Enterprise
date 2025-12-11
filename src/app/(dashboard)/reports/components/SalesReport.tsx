@@ -25,7 +25,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 import { Loader2 } from "lucide-react";
 
 interface SalesReportProps {
@@ -48,6 +49,7 @@ const COLORS = [
 ];
 
 export function SalesReport({ startDate, endDate }: SalesReportProps) {
+  const formatCurrency = useCurrency();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

@@ -8,7 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 import { Loader2, Clock } from "lucide-react";
 import {
   Table,
@@ -80,6 +81,7 @@ export function InstallmentDetailsModal({
   onOpenChange,
   planId,
 }: InstallmentDetailsModalProps) {
+  const formatCurrency = useCurrency();
   const [loading, setLoading] = useState(false);
   const [plan, setPlan] = useState<InstallmentPlan | null>(null);
 

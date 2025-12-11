@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 import { cn } from "@/lib/utils";
 
 interface StatCardProps {
@@ -18,6 +18,7 @@ export function StatCard({
   change,
   isCurrency = false,
 }: StatCardProps) {
+  const formatCurrency = useCurrency();
   const isPositive = change >= 0;
   const formattedValue = isCurrency ? formatCurrency(Number(value)) : value;
 

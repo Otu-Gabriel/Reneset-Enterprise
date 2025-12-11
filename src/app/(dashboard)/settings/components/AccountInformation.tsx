@@ -11,7 +11,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 import { Loader2, Shield, User, Mail, Calendar, TrendingUp, DollarSign, Link as LinkIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
@@ -33,6 +34,7 @@ interface AccountInfo {
 }
 
 export function AccountInformation() {
+  const formatCurrency = useCurrency();
   const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
   const [accountInfo, setAccountInfo] = useState<AccountInfo | null>(null);

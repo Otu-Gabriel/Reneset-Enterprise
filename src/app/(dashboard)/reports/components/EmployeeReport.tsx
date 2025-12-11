@@ -23,7 +23,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 import { Loader2 } from "lucide-react";
 
 interface EmployeeReportProps {
@@ -40,6 +41,7 @@ const COLORS = [
 ];
 
 export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
+  const formatCurrency = useCurrency();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

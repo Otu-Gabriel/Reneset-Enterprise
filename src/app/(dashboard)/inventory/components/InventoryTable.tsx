@@ -12,7 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 import { Edit, Trash2, Search, Eye, Plus } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
@@ -47,6 +47,7 @@ interface Product {
 }
 
 export function InventoryTable() {
+  const formatCurrency = useCurrency();
   const { data: session } = useSession();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);

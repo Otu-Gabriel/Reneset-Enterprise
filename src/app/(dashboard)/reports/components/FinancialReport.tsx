@@ -23,7 +23,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 import { Loader2, TrendingUp, TrendingDown } from "lucide-react";
 
 interface FinancialReportProps {
@@ -32,6 +32,7 @@ interface FinancialReportProps {
 }
 
 export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
+  const formatCurrency = useCurrency();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
