@@ -10,7 +10,17 @@ import {
 } from "@/components/ui/dialog";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatDate } from "@/lib/utils";
-import { Loader2, Mail, Phone, MapPin, Tag, Calendar, DollarSign, ShoppingCart, CreditCard } from "lucide-react";
+import {
+  Loader2,
+  Mail,
+  Phone,
+  MapPin,
+  Tag,
+  Calendar,
+  DollarSign,
+  ShoppingCart,
+  CreditCard,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -154,18 +164,22 @@ export function CustomerDetailsModal({
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Name</p>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Name
+                      </p>
                       <p className="text-base font-semibold">{customer.name}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Status</p>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Status
+                      </p>
                       <Badge
                         className={
                           customer.status === "active"
                             ? "bg-green-500/20 text-green-500"
                             : customer.status === "blocked"
-                            ? "bg-red-500/20 text-red-500"
-                            : "bg-gray-500/20 text-gray-500"
+                              ? "bg-red-500/20 text-red-500"
+                              : "bg-gray-500/20 text-gray-500"
                         }
                       >
                         {customer.status}
@@ -175,7 +189,9 @@ export function CustomerDetailsModal({
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4 text-muted-foreground" />
                         <div>
-                          <p className="text-sm font-medium text-muted-foreground">Email</p>
+                          <p className="text-sm font-medium text-muted-foreground">
+                            Email
+                          </p>
                           <p className="text-base">{customer.email}</p>
                         </div>
                       </div>
@@ -184,7 +200,9 @@ export function CustomerDetailsModal({
                       <div className="flex items-center gap-2">
                         <Phone className="h-4 w-4 text-muted-foreground" />
                         <div>
-                          <p className="text-sm font-medium text-muted-foreground">Phone</p>
+                          <p className="text-sm font-medium text-muted-foreground">
+                            Phone
+                          </p>
                           <p className="text-base">{customer.phone}</p>
                         </div>
                       </div>
@@ -193,7 +211,9 @@ export function CustomerDetailsModal({
                       <div className="flex items-start gap-2 md:col-span-2">
                         <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
                         <div>
-                          <p className="text-sm font-medium text-muted-foreground">Address</p>
+                          <p className="text-sm font-medium text-muted-foreground">
+                            Address
+                          </p>
                           <p className="text-base">
                             {[
                               customer.address,
@@ -210,7 +230,9 @@ export function CustomerDetailsModal({
                     )}
                     {customer.tags.length > 0 && (
                       <div className="md:col-span-2">
-                        <p className="text-sm font-medium text-muted-foreground mb-2">Tags</p>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">
+                          Tags
+                        </p>
                         <div className="flex flex-wrap gap-2">
                           {customer.tags.map((tag) => (
                             <Badge key={tag} variant="outline">
@@ -222,15 +244,23 @@ export function CustomerDetailsModal({
                     )}
                     {customer.notes && (
                       <div className="md:col-span-2">
-                        <p className="text-sm font-medium text-muted-foreground">Notes</p>
-                        <p className="text-base whitespace-pre-wrap">{customer.notes}</p>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Notes
+                        </p>
+                        <p className="text-base whitespace-pre-wrap">
+                          {customer.notes}
+                        </p>
                       </div>
                     )}
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">Member Since</p>
-                        <p className="text-base">{formatDate(customer.createdAt)}</p>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Member Since
+                        </p>
+                        <p className="text-base">
+                          {formatDate(customer.createdAt)}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -290,7 +320,8 @@ export function CustomerDetailsModal({
                     </div>
                     {customer.statistics.pendingPayments > 0 && (
                       <p className="text-xs text-red-600 mt-1">
-                        {formatCurrency(customer.statistics.pendingPayments)} pending
+                        {formatCurrency(customer.statistics.pendingPayments)}{" "}
+                        pending
                       </p>
                     )}
                   </CardContent>
@@ -306,7 +337,9 @@ export function CustomerDetailsModal({
                   <div className="space-y-2">
                     {customer.statistics.firstPurchaseDate && (
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">First Purchase</span>
+                        <span className="text-sm text-muted-foreground">
+                          First Purchase
+                        </span>
                         <span className="text-sm font-medium">
                           {formatDate(customer.statistics.firstPurchaseDate)}
                         </span>
@@ -314,7 +347,9 @@ export function CustomerDetailsModal({
                     )}
                     {customer.statistics.lastPurchaseDate && (
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Last Purchase</span>
+                        <span className="text-sm text-muted-foreground">
+                          Last Purchase
+                        </span>
                         <span className="text-sm font-medium">
                           {formatDate(customer.statistics.lastPurchaseDate)}
                         </span>
@@ -322,12 +357,16 @@ export function CustomerDetailsModal({
                     )}
                     {customer.statistics.totalSales > 0 && (
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Days Since Last Purchase</span>
+                        <span className="text-sm text-muted-foreground">
+                          Days Since Last Purchase
+                        </span>
                         <span className="text-sm font-medium">
                           {customer.statistics.lastPurchaseDate
                             ? Math.floor(
                                 (new Date().getTime() -
-                                  new Date(customer.statistics.lastPurchaseDate).getTime()) /
+                                  new Date(
+                                    customer.statistics.lastPurchaseDate
+                                  ).getTime()) /
                                   (1000 * 60 * 60 * 24)
                               )
                             : "-"}
@@ -342,7 +381,9 @@ export function CustomerDetailsModal({
             <TabsContent value="sales" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Purchase History ({customer.sales.length})</CardTitle>
+                  <CardTitle>
+                    Purchase History ({customer.sales.length})
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {customer.sales.length === 0 ? (
@@ -384,15 +425,17 @@ export function CustomerDetailsModal({
                                   )}
                                 </div>
                               </TableCell>
-                              <TableCell>{formatCurrency(sale.totalAmount)}</TableCell>
+                              <TableCell>
+                                {formatCurrency(sale.totalAmount)}
+                              </TableCell>
                               <TableCell>
                                 <Badge
                                   className={
                                     sale.status === "completed"
                                       ? "bg-green-500/20 text-green-500"
                                       : sale.status === "cancelled"
-                                      ? "bg-red-500/20 text-red-500"
-                                      : "bg-yellow-500/20 text-yellow-500"
+                                        ? "bg-red-500/20 text-red-500"
+                                        : "bg-yellow-500/20 text-yellow-500"
                                   }
                                 >
                                   {sale.status}
@@ -400,9 +443,9 @@ export function CustomerDetailsModal({
                               </TableCell>
                               <TableCell>
                                 {sale.paymentMethod
-                                  ? sale.paymentMethod.replace("_", " ").replace(/\b\w/g, (l) =>
-                                      l.toUpperCase()
-                                    )
+                                  ? sale.paymentMethod
+                                      .replace("_", " ")
+                                      .replace(/\b\w/g, (l) => l.toUpperCase())
                                   : "-"}
                               </TableCell>
                               <TableCell>{sale.user?.name || "-"}</TableCell>
@@ -423,14 +466,17 @@ export function CustomerDetailsModal({
                     Installment Plans (
                     {
                       customer.sales.filter(
-                        (s) => s.installmentPlan && s.installmentPlan.status === "active"
+                        (s) =>
+                          s.installmentPlan &&
+                          s.installmentPlan.status === "active"
                       ).length
                     }
                     )
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {customer.sales.filter((s) => s.installmentPlan).length === 0 ? (
+                  {customer.sales.filter((s) => s.installmentPlan).length ===
+                  0 ? (
                     <p className="text-center py-8 text-muted-foreground">
                       No installment plans
                     </p>
@@ -441,7 +487,8 @@ export function CustomerDetailsModal({
                         .map((sale) => {
                           const plan = sale.installmentPlan!;
                           const pendingPayments = plan.payments.filter(
-                            (p) => p.status === "pending" || p.status === "overdue"
+                            (p) =>
+                              p.status === "pending" || p.status === "overdue"
                           );
                           const totalPending = pendingPayments.reduce(
                             (sum, p) => sum + (p.amount - p.paidAmount),
@@ -465,8 +512,8 @@ export function CustomerDetailsModal({
                                       plan.status === "active"
                                         ? "bg-yellow-500/20 text-yellow-500"
                                         : plan.status === "completed"
-                                        ? "bg-green-500/20 text-green-500"
-                                        : "bg-red-500/20 text-red-500"
+                                          ? "bg-green-500/20 text-green-500"
+                                          : "bg-red-500/20 text-red-500"
                                     }
                                   >
                                     {plan.status}
@@ -476,56 +523,78 @@ export function CustomerDetailsModal({
                               <CardContent className="space-y-4">
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                   <div>
-                                    <p className="text-sm text-muted-foreground">Total Amount</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      Total Amount
+                                    </p>
                                     <p className="text-base font-semibold">
-                                      {formatCurrency(plan.totalAmount)}
+                                      {formatCurrency(sale.totalAmount)}
                                     </p>
                                   </div>
                                   <div>
-                                    <p className="text-sm text-muted-foreground">Remaining</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      Remaining
+                                    </p>
                                     <p className="text-base font-semibold">
                                       {formatCurrency(plan.remainingAmount)}
                                     </p>
                                   </div>
                                   <div>
-                                    <p className="text-sm text-muted-foreground">Pending Payments</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      Pending Payments
+                                    </p>
                                     <p className="text-base font-semibold text-red-600">
                                       {formatCurrency(totalPending)}
                                     </p>
                                   </div>
                                   <div>
-                                    <p className="text-sm text-muted-foreground">Payments</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      Payments
+                                    </p>
                                     <p className="text-base font-semibold">
-                                      {plan.payments.filter((p) => p.status === "paid").length} /{" "}
-                                      {plan.payments.length}
+                                      {
+                                        plan.payments.filter(
+                                          (p) => p.status === "paid"
+                                        ).length
+                                      }{" "}
+                                      / {plan.payments.length}
                                     </p>
                                   </div>
                                 </div>
                                 {pendingPayments.length > 0 && (
                                   <div>
-                                    <p className="text-sm font-medium mb-2">Upcoming Payments</p>
+                                    <p className="text-sm font-medium mb-2">
+                                      Upcoming Payments
+                                    </p>
                                     <div className="space-y-2">
-                                      {pendingPayments.slice(0, 3).map((payment, idx) => (
-                                        <div
-                                          key={idx}
-                                          className="flex justify-between items-center p-2 bg-background rounded"
-                                        >
-                                          <div>
-                                            <p className="text-sm font-medium">
-                                              Installment #{payment.installmentNumber}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">
-                                              Due: {formatDate(payment.dueDate)}
+                                      {pendingPayments
+                                        .slice(0, 3)
+                                        .map((payment, idx) => (
+                                          <div
+                                            key={idx}
+                                            className="flex justify-between items-center p-2 bg-background rounded"
+                                          >
+                                            <div>
+                                              <p className="text-sm font-medium">
+                                                Installment #
+                                                {payment.installmentNumber}
+                                              </p>
+                                              <p className="text-xs text-muted-foreground">
+                                                Due:{" "}
+                                                {formatDate(payment.dueDate)}
+                                              </p>
+                                            </div>
+                                            <p className="text-sm font-semibold">
+                                              {formatCurrency(
+                                                payment.amount -
+                                                  payment.paidAmount
+                                              )}
                                             </p>
                                           </div>
-                                          <p className="text-sm font-semibold">
-                                            {formatCurrency(payment.amount - payment.paidAmount)}
-                                          </p>
-                                        </div>
-                                      ))}
+                                        ))}
                                       {pendingPayments.length > 3 && (
                                         <p className="text-xs text-muted-foreground text-center">
-                                          +{pendingPayments.length - 3} more payments
+                                          +{pendingPayments.length - 3} more
+                                          payments
                                         </p>
                                       )}
                                     </div>
@@ -546,5 +615,3 @@ export function CustomerDetailsModal({
     </Dialog>
   );
 }
-
-

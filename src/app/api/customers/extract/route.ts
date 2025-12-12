@@ -18,16 +18,43 @@ export async function POST(request: NextRequest) {
 
     console.log("Starting customer extraction from sales...");
 
-    // Get all unique customer combinations from sales
-    const sales = await prisma.sale.findMany({
+    // Get all sales with customer information
+    const allSales = await prisma.sale.findMany({
       select: {
         customerName: true,
         customerEmail: true,
         customerPhone: true,
+        customerId: true,
       },
-      distinct: ["customerName", "customerEmail", "customerPhone"],
     });
 
+    // Create a map to track unique customer combinations
+    const uniqueCustomers = new Map<
+      string,
+      {
+        customerName: string;
+        customerEmail: string | null;
+        customerPhone: string | null;
+      }
+    >();
+
+    // Extract unique customer combinations
+    for (const sale of allSales) {
+      if (!sale.customerName) continue;
+
+      // Create a unique key based on name, email, and phone
+      const key = `${sale.customerName.toLowerCase()}|${sale.customerEmail?.toLowerCase() || ""}|${sale.customerPhone || ""}`;
+
+      if (!uniqueCustomers.has(key)) {
+        uniqueCustomers.set(key, {
+          customerName: sale.customerName,
+          customerEmail: sale.customerEmail,
+          customerPhone: sale.customerPhone,
+        });
+      }
+    }
+
+    const sales = Array.from(uniqueCustomers.values());
     console.log(`Found ${sales.length} unique customer combinations`);
 
     let created = 0;
@@ -42,16 +69,13 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        // Check if customer already exists
+        // Check if customer already exists by name, email, or phone
         const existing = await prisma.customer.findFirst({
           where: {
             OR: [
-              ...(sale.customerEmail
-                ? [{ email: sale.customerEmail }]
-                : []),
-              ...(sale.customerPhone
-                ? [{ phone: sale.customerPhone }]
-                : []),
+              { name: { equals: sale.customerName, mode: "insensitive" } },
+              ...(sale.customerEmail ? [{ email: sale.customerEmail }] : []),
+              ...(sale.customerPhone ? [{ phone: sale.customerPhone }] : []),
             ],
           },
         });
@@ -79,8 +103,12 @@ export async function POST(request: NextRequest) {
         const updateResult = await prisma.sale.updateMany({
           where: {
             customerName: sale.customerName,
-            ...(sale.customerEmail ? { customerEmail: sale.customerEmail } : {}),
-            ...(sale.customerPhone ? { customerPhone: sale.customerPhone } : {}),
+            ...(sale.customerEmail
+              ? { customerEmail: sale.customerEmail }
+              : {}),
+            ...(sale.customerPhone
+              ? { customerPhone: sale.customerPhone }
+              : {}),
             customerId: null,
           },
           data: {
@@ -118,5 +146,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-

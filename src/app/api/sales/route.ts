@@ -121,48 +121,111 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find or create customer (only if Customer model exists)
+    // Find or create customer - MANDATORY when customerName is provided
     let customerIdToUse: string | null = null;
-    try {
-      if (customerId) {
-        // Verify customer exists
-        const customer = await prisma.customer.findUnique({
-          where: { id: customerId },
-        });
-        if (customer) {
-          customerIdToUse = customerId;
-        }
-      } else if (customerName) {
-        // Try to find existing customer by email or phone
-        const existingCustomer = await prisma.customer.findFirst({
-          where: {
-            OR: [
-              ...(customerEmail ? [{ email: customerEmail }] : []),
-              ...(customerPhone ? [{ phone: customerPhone }] : []),
-            ],
-          },
-        });
+    let finalCustomerName = customerName;
 
-        if (existingCustomer) {
-          customerIdToUse = existingCustomer.id;
-        } else {
-          // Create new customer
+    if (customerId) {
+      // Verify customer exists
+      const customer = await prisma.customer.findUnique({
+        where: { id: customerId },
+      });
+      if (!customer) {
+        return NextResponse.json(
+          { error: "Customer not found" },
+          { status: 404 }
+        );
+      }
+      customerIdToUse = customerId;
+    } else if (customerName) {
+      // Trim and validate customer name
+      const trimmedName = customerName.trim();
+      if (!trimmedName || trimmedName.length === 0) {
+        return NextResponse.json(
+          { error: "Customer name cannot be empty" },
+          { status: 400 }
+        );
+      }
+
+      // Try to find existing customer by name, email, or phone
+      const existingCustomer = await prisma.customer.findFirst({
+        where: {
+          OR: [
+            { name: { equals: trimmedName, mode: "insensitive" } },
+            ...(customerEmail ? [{ email: customerEmail.trim() }] : []),
+            ...(customerPhone ? [{ phone: customerPhone.trim() }] : []),
+          ],
+        },
+      });
+
+      if (existingCustomer) {
+        customerIdToUse = existingCustomer.id;
+        // Update customer info if we have more details
+        try {
+          const updateData: any = {};
+          if (customerEmail && !existingCustomer.email) {
+            updateData.email = customerEmail;
+          }
+          if (customerPhone && !existingCustomer.phone) {
+            updateData.phone = customerPhone;
+          }
+          if (Object.keys(updateData).length > 0) {
+            await prisma.customer.update({
+              where: { id: existingCustomer.id },
+              data: updateData,
+            });
+          }
+        } catch (updateError: any) {
+          console.error("Error updating customer info:", updateError);
+          // Continue even if update fails - customer exists and is linked
+        }
+      } else {
+        // Create new customer - MANDATORY
+        try {
           const newCustomer = await prisma.customer.create({
             data: {
-              name: customerName,
-              email: customerEmail || null,
-              phone: customerPhone || null,
+              name: trimmedName,
+              email: customerEmail?.trim() || null,
+              phone: customerPhone?.trim() || null,
               status: "active",
             },
           });
           customerIdToUse = newCustomer.id;
+          console.log(
+            `Created new customer: ${newCustomer.id} - ${newCustomer.name}`
+          );
+
+          // Log audit for customer creation
+          const metadata = getRequestMetadata(request);
+          try {
+            await auditLogger.customerCreated(
+              session.user.id,
+              newCustomer.id,
+              newCustomer.name,
+              metadata
+            );
+          } catch (auditError) {
+            // Don't fail sale creation if audit logging fails
+            console.error("Error logging customer creation audit:", auditError);
+          }
+        } catch (createError: any) {
+          console.error("Error creating customer:", createError);
+          // Return error - customer creation is mandatory
+          return NextResponse.json(
+            {
+              error: "Failed to create customer",
+              details: createError.message || "Unknown error occurred",
+            },
+            { status: 500 }
+          );
         }
       }
-    } catch (error: any) {
-      // If Customer model doesn't exist yet, continue without linking
-      // This allows sales to work before migration is run
-      console.warn("Customer model not available, continuing without customer link:", error.message);
-      customerIdToUse = null;
+    } else {
+      // No customerId and no customerName - this should not happen due to validation above
+      return NextResponse.json(
+        { error: "Customer information is required" },
+        { status: 400 }
+      );
     }
 
     // Calculate total amount
@@ -225,7 +288,7 @@ export async function POST(request: NextRequest) {
             return isNaN(num) ? 2000 : num;
           })
           .filter((n) => n >= 2000);
-        
+
         if (numbers.length > 0) {
           maxNumber = Math.max(...numbers);
         }
@@ -234,15 +297,30 @@ export async function POST(request: NextRequest) {
       const nextNumber = maxNumber + 1;
       saleNumber = `#${String(nextNumber).padStart(4, "0")}`;
 
+      // Ensure customerId is set when customerName was provided
+      // This is a safety check - customerIdToUse should always be set at this point
+      if (customerName && !customerIdToUse) {
+        console.error(
+          "Critical error: customerName provided but customerIdToUse is null"
+        );
+        return NextResponse.json(
+          {
+            error:
+              "Failed to create or link customer to sale. Please try again.",
+          },
+          { status: 500 }
+        );
+      }
+
       // Try to create the sale with this number
       try {
         const sale = await prisma.sale.create({
           data: {
             saleNumber,
             customerId: customerIdToUse,
-            customerName,
-            customerEmail,
-            customerPhone,
+            customerName: finalCustomerName,
+            customerEmail: customerEmail?.trim() || null,
+            customerPhone: customerPhone?.trim() || null,
             totalAmount,
             status,
             paymentMethod,
@@ -266,9 +344,14 @@ export async function POST(request: NextRequest) {
         if (installmentPlan && installmentPlan.numberOfInstallments > 0) {
           // Check if Prisma Client has been regenerated
           if (!prisma.installmentPlan) {
-            console.error("Prisma Client not regenerated. Please run: npm run db:generate");
+            console.error(
+              "Prisma Client not regenerated. Please run: npm run db:generate"
+            );
             return NextResponse.json(
-              { error: "Installment feature not available. Please regenerate Prisma Client." },
+              {
+                error:
+                  "Installment feature not available. Please regenerate Prisma Client.",
+              },
               { status: 500 }
             );
           }
@@ -333,11 +416,16 @@ export async function POST(request: NextRequest) {
 
           // Check if Prisma Client has been regenerated for payments
           if (!prisma.installmentPayment) {
-            console.error("Prisma Client not regenerated. Please run: npm run db:generate");
+            console.error(
+              "Prisma Client not regenerated. Please run: npm run db:generate"
+            );
             // Delete the plan if payment creation fails
             await prisma.installmentPlan.delete({ where: { id: plan.id } });
             return NextResponse.json(
-              { error: "Installment feature not available. Please regenerate Prisma Client." },
+              {
+                error:
+                  "Installment feature not available. Please regenerate Prisma Client.",
+              },
               { status: 500 }
             );
           }
@@ -363,8 +451,9 @@ export async function POST(request: NextRequest) {
               where: { id: item.productId },
               data: {
                 stock: {
-                  decrement: items.find((i: any) => i.productId === item.productId)
-                    .quantity,
+                  decrement: items.find(
+                    (i: any) => i.productId === item.productId
+                  ).quantity,
                 },
               },
             });
@@ -376,8 +465,9 @@ export async function POST(request: NextRequest) {
               where: { id: item.productId },
               data: {
                 stock: {
-                  decrement: items.find((i: any) => i.productId === item.productId)
-                    .quantity,
+                  decrement: items.find(
+                    (i: any) => i.productId === item.productId
+                  ).quantity,
                 },
               },
             });
@@ -431,4 +521,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

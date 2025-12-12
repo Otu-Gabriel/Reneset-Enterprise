@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Search, X } from "lucide-react";
 
 interface Product {
   id: string;
@@ -36,6 +37,17 @@ interface SaleItem {
   productId: string;
   quantity: number;
   discount: number;
+}
+
+interface Customer {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
 }
 
 interface AddSaleModalProps {
@@ -52,6 +64,17 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(
+    null
+  );
+  const [customerSearchQuery, setCustomerSearchQuery] = useState("");
+  const [customerSuggestions, setCustomerSuggestions] = useState<Customer[]>(
+    []
+  );
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isNewCustomer, setIsNewCustomer] = useState(false);
+  const customerInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState("completed");
@@ -69,6 +92,85 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  // Debounced customer search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (customerSearchQuery.length >= 2 && !selectedCustomerId) {
+        searchCustomers(customerSearchQuery);
+      } else {
+        setCustomerSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [customerSearchQuery, selectedCustomerId]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node) &&
+        customerInputRef.current &&
+        !customerInputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const searchCustomers = async (query: string) => {
+    try {
+      const response = await fetch(
+        `/api/customers/search?q=${encodeURIComponent(query)}&limit=10`
+      );
+      const data = await response.json();
+      setCustomerSuggestions(data.customers || []);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error("Error searching customers:", error);
+      setCustomerSuggestions([]);
+    }
+  };
+
+  const handleCustomerSelect = (customer: Customer) => {
+    setSelectedCustomerId(customer.id);
+    setCustomerName(customer.name);
+    setCustomerEmail(customer.email || "");
+    setCustomerPhone(customer.phone || "");
+    setCustomerSearchQuery(customer.name);
+    setCustomerSuggestions([]);
+    setShowSuggestions(false);
+    setIsNewCustomer(false);
+  };
+
+  const handleCustomerNameChange = (value: string) => {
+    setCustomerName(value);
+    setCustomerSearchQuery(value);
+    setSelectedCustomerId(null);
+    setIsNewCustomer(true);
+    if (value.length < 2) {
+      setCustomerSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const clearCustomerSelection = () => {
+    setSelectedCustomerId(null);
+    setCustomerName("");
+    setCustomerEmail("");
+    setCustomerPhone("");
+    setCustomerSearchQuery("");
+    setCustomerSuggestions([]);
+    setShowSuggestions(false);
+    setIsNewCustomer(true);
+    customerInputRef.current?.focus();
+  };
 
   const fetchProducts = async () => {
     try {
@@ -173,9 +275,10 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          customerId: selectedCustomerId || undefined,
           customerName,
-          customerEmail,
-          customerPhone,
+          customerEmail: customerEmail || undefined,
+          customerPhone: customerPhone || undefined,
           paymentMethod,
           notes,
           status: isInstallment ? "installment" : status,
@@ -196,6 +299,10 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
         setCustomerName("");
         setCustomerEmail("");
         setCustomerPhone("");
+        setSelectedCustomerId(null);
+        setCustomerSearchQuery("");
+        setCustomerSuggestions([]);
+        setIsNewCustomer(true);
         setPaymentMethod("cash");
         setNotes("");
         setStatus("completed");
@@ -229,14 +336,76 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="space-y-2 relative">
               <Label htmlFor="customerName">Customer Name *</Label>
-              <Input
-                id="customerName"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="customerName"
+                  ref={customerInputRef}
+                  value={customerSearchQuery}
+                  onChange={(e) => handleCustomerNameChange(e.target.value)}
+                  onFocus={() => {
+                    if (customerSuggestions.length > 0) {
+                      setShowSuggestions(true);
+                    }
+                  }}
+                  placeholder="Type to search or enter new customer..."
+                  required
+                  className="pl-9 pr-9"
+                />
+                {selectedCustomerId && (
+                  <button
+                    type="button"
+                    onClick={clearCustomerSelection}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    title="Clear customer selection"
+                    aria-label="Clear customer selection"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+                {showSuggestions && customerSuggestions.length > 0 && (
+                  <div
+                    ref={suggestionsRef}
+                    className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-auto"
+                  >
+                    {customerSuggestions.map((customer) => (
+                      <div
+                        key={customer.id}
+                        onClick={() => handleCustomerSelect(customer)}
+                        className="px-4 py-2 hover:bg-accent cursor-pointer border-b last:border-0"
+                      >
+                        <div className="font-medium">{customer.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {customer.email && <span>{customer.email}</span>}
+                          {customer.email && customer.phone && <span> • </span>}
+                          {customer.phone && <span>{customer.phone}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {showSuggestions &&
+                  customerSuggestions.length === 0 &&
+                  customerSearchQuery.length >= 2 && (
+                    <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg p-4 text-sm text-muted-foreground">
+                      No customers found. A new customer will be created.
+                    </div>
+                  )}
+              </div>
+              {selectedCustomerId && (
+                <p className="text-xs text-muted-foreground">
+                  ✓ Existing customer selected
+                </p>
+              )}
+              {isNewCustomer &&
+                customerName.length >= 2 &&
+                !selectedCustomerId && (
+                  <p className="text-xs text-blue-600">
+                    ℹ New customer will be created
+                  </p>
+                )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="customerEmail">Customer Email</Label>
@@ -245,6 +414,8 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                 type="email"
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
+                disabled={!!selectedCustomerId}
+                className={selectedCustomerId ? "bg-muted" : ""}
               />
             </div>
           </div>
@@ -255,6 +426,8 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                 id="customerPhone"
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
+                disabled={!!selectedCustomerId}
+                className={selectedCustomerId ? "bg-muted" : ""}
               />
             </div>
             <div className="space-y-2">
@@ -294,7 +467,9 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
               <Checkbox
                 id="installment"
                 checked={isInstallment}
-                onCheckedChange={(checked) => setIsInstallment(checked as boolean)}
+                onCheckedChange={(checked) =>
+                  setIsInstallment(checked as boolean)
+                }
               />
               <Label htmlFor="installment" className="cursor-pointer">
                 Create Installment Plan
@@ -317,7 +492,9 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                     step="0.01"
                     value={downPayment}
                     onChange={(e) =>
-                      setDownPayment(Math.min(total, parseFloat(e.target.value) || 0))
+                      setDownPayment(
+                        Math.min(total, parseFloat(e.target.value) || 0)
+                      )
                     }
                   />
                   <p className="text-xs text-muted-foreground">
