@@ -47,6 +47,9 @@ enum Permission {
   MANAGE_INSTALLMENTS
   VIEW_AUDIT_LOGS
   VIEW_CUSTOMERS
+  CREATE_CUSTOMERS
+  EDIT_CUSTOMERS
+  DELETE_CUSTOMERS
   FULL_ACCESS
 }
 
@@ -91,10 +94,35 @@ model Product {
   saleItems   SaleItem[]
 }
 
+model Customer {
+  id            String     @id @default(cuid())
+  name          String
+  email         String?
+  phone         String?
+  address       String?
+  city          String?
+  state         String?
+  country       String?
+  postalCode    String?
+  notes         String?
+  tags          String[]   @default([])
+  status        String     @default("active") // active, inactive, blocked
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  sales         Sale[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([name])
+  @@index([status])
+}
+
 model Sale {
   id            String     @id @default(cuid())
   saleNumber    String     @unique
-  customerName  String
+  customerId    String?
+  customer      Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName  String     // Keep for backward compatibility
   customerEmail String?
   customerPhone String?
   totalAmount   Float
@@ -108,6 +136,9 @@ model Sale {
   user          User       @relation(fields: [userId], references: [id])
   items         SaleItem[]
   installmentPlan InstallmentPlan?
+
+  @@index([customerId])
+  @@index([saleDate])
 }
 
 model SaleItem {
@@ -228,6 +259,7 @@ enum AuditEntity {
   PROFILE
   SETTINGS
   SYSTEM
+  CUSTOMER
 }
 
 model AuditLog {

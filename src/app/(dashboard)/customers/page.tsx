@@ -1,9 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { CustomersTable } from "./components/CustomersTable";
+import { CustomerStatisticsCards } from "./components/CustomerStatisticsCards";
 
 export default async function CustomersPage() {
   const session = await getServerSession(authOptions);
@@ -19,18 +20,12 @@ export default async function CustomersPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Customers</h1>
-        <p className="text-muted-foreground">Manage your customers</p>
+        <p className="text-muted-foreground">
+          Manage your customers and view their purchase history
+        </p>
       </div>
-      <Card className="bg-card">
-        <CardHeader>
-          <CardTitle>Customers</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Customers feature coming soon...
-          </p>
-        </CardContent>
-      </Card>
+      <CustomerStatisticsCards />
+      <CustomersTable />
     </div>
   );
 }

@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const {
+      customerId,
       customerName,
       customerEmail,
       customerPhone,
@@ -113,11 +114,55 @@ export async function POST(request: NextRequest) {
       installmentPlan, // { downPayment, numberOfInstallments, frequency, startDate }
     } = body;
 
-    if (!customerName || !items || items.length === 0) {
+    if ((!customerId && !customerName) || !items || items.length === 0) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
+    }
+
+    // Find or create customer (only if Customer model exists)
+    let customerIdToUse: string | null = null;
+    try {
+      if (customerId) {
+        // Verify customer exists
+        const customer = await prisma.customer.findUnique({
+          where: { id: customerId },
+        });
+        if (customer) {
+          customerIdToUse = customerId;
+        }
+      } else if (customerName) {
+        // Try to find existing customer by email or phone
+        const existingCustomer = await prisma.customer.findFirst({
+          where: {
+            OR: [
+              ...(customerEmail ? [{ email: customerEmail }] : []),
+              ...(customerPhone ? [{ phone: customerPhone }] : []),
+            ],
+          },
+        });
+
+        if (existingCustomer) {
+          customerIdToUse = existingCustomer.id;
+        } else {
+          // Create new customer
+          const newCustomer = await prisma.customer.create({
+            data: {
+              name: customerName,
+              email: customerEmail || null,
+              phone: customerPhone || null,
+              status: "active",
+            },
+          });
+          customerIdToUse = newCustomer.id;
+        }
+      }
+    } catch (error: any) {
+      // If Customer model doesn't exist yet, continue without linking
+      // This allows sales to work before migration is run
+      console.warn("Customer model not available, continuing without customer link:", error.message);
+      customerIdToUse = null;
     }
 
     // Calculate total amount
@@ -194,6 +239,7 @@ export async function POST(request: NextRequest) {
         const sale = await prisma.sale.create({
           data: {
             saleNumber,
+            customerId: customerIdToUse,
             customerName,
             customerEmail,
             customerPhone,

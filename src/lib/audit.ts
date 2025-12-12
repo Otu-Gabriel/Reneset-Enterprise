@@ -512,4 +512,56 @@ export const auditLogger = {
       description: `User logged out`,
     });
   },
+
+  async customerCreated(
+    userId: string,
+    customerId: string,
+    customerName: string,
+    metadata?: { ipAddress?: string; userAgent?: string }
+  ) {
+    await createAuditLog({
+      userId,
+      action: AuditAction.CREATE,
+      entity: AuditEntity.CUSTOMER,
+      entityId: customerId,
+      description: `Created customer: ${customerName}`,
+      details: { customerId, customerName },
+      ...metadata,
+    });
+  },
+
+  async customerUpdated(
+    userId: string,
+    customerId: string,
+    customerName: string,
+    changes?: Record<string, any>,
+    metadata?: { ipAddress?: string; userAgent?: string }
+  ) {
+    await createAuditLog({
+      userId,
+      action: AuditAction.UPDATE,
+      entity: AuditEntity.CUSTOMER,
+      entityId: customerId,
+      description: `Updated customer: ${customerName}`,
+      details: { customerId, customerName, changes },
+      ...metadata,
+    });
+  },
+
+  async customerDeleted(
+    userId: string,
+    customerId: string,
+    customerName: string,
+    metadata?: { ipAddress?: string; userAgent?: string }
+  ) {
+    await createAuditLog({
+      userId,
+      action: AuditAction.DELETE,
+      entity: AuditEntity.CUSTOMER,
+      entityId: customerId,
+      description: `Deleted customer: ${customerName}`,
+      details: { customerId, customerName },
+      ...metadata,
+    });
+  },
 };
