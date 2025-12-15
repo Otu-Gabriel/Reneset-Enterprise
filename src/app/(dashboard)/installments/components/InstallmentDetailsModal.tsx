@@ -109,11 +109,23 @@ export function InstallmentDetailsModal({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "paid":
-        return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Paid</Badge>;
+        return (
+          <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
+            Paid
+          </Badge>
+        );
       case "overdue":
-        return <Badge className="bg-red-500/10 text-red-600 border-red-500/20">Overdue</Badge>;
+        return (
+          <Badge className="bg-red-500/10 text-red-600 border-red-500/20">
+            Overdue
+          </Badge>
+        );
       case "partial":
-        return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">Partial</Badge>;
+        return (
+          <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+            Partial
+          </Badge>
+        );
       default:
         return <Badge variant="outline">Pending</Badge>;
     }
@@ -146,7 +158,9 @@ export function InstallmentDetailsModal({
           <div className="grid grid-cols-4 gap-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Amount
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -156,7 +170,9 @@ export function InstallmentDetailsModal({
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Paid</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Paid
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
@@ -180,11 +196,14 @@ export function InstallmentDetailsModal({
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {plan.statistics.paidInstallments} / {plan.numberOfInstallments}
+                  {plan.statistics.paidInstallments} /{" "}
+                  {plan.numberOfInstallments}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {Math.round(
-                    (plan.statistics.paidInstallments / plan.numberOfInstallments) * 100
+                    (plan.statistics.paidInstallments /
+                      plan.numberOfInstallments) *
+                      100
                   )}
                   % Complete
                 </div>
@@ -203,25 +222,37 @@ export function InstallmentDetailsModal({
                   <span className="text-muted-foreground">Customer:</span>
                   <div className="font-medium">{plan.sale.customerName}</div>
                   {plan.sale.customerEmail && (
-                    <div className="text-muted-foreground">{plan.sale.customerEmail}</div>
+                    <div className="text-muted-foreground">
+                      {plan.sale.customerEmail}
+                    </div>
                   )}
                   {plan.sale.customerPhone && (
-                    <div className="text-muted-foreground">{plan.sale.customerPhone}</div>
+                    <div className="text-muted-foreground">
+                      {plan.sale.customerPhone}
+                    </div>
                   )}
                 </div>
                 <div>
                   <span className="text-muted-foreground">Frequency:</span>
                   <div className="font-medium capitalize">{plan.frequency}</div>
                   <span className="text-muted-foreground">Start Date:</span>
-                  <div className="font-medium">{formatDate(plan.startDate)}</div>
+                  <div className="font-medium">
+                    {formatDate(plan.startDate)}
+                  </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Down Payment:</span>
-                  <div className="font-medium">{formatCurrency(plan.downPayment)}</div>
+                  <div className="font-medium">
+                    {formatCurrency(plan.downPayment)}
+                  </div>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Per Installment:</span>
-                  <div className="font-medium">{formatCurrency(plan.installmentAmount)}</div>
+                  <span className="text-muted-foreground">
+                    Per Installment:
+                  </span>
+                  <div className="font-medium">
+                    {formatCurrency(plan.installmentAmount)}
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -280,12 +311,16 @@ export function InstallmentDetailsModal({
                       <TableCell>{payment.installmentNumber}</TableCell>
                       <TableCell>{formatDate(payment.dueDate)}</TableCell>
                       <TableCell>{formatCurrency(payment.amount)}</TableCell>
-                      <TableCell>{formatCurrency(payment.paidAmount)}</TableCell>
+                      <TableCell>
+                        {formatCurrency(payment.paidAmount)}
+                      </TableCell>
                       <TableCell>
                         {formatCurrency(payment.amount - payment.paidAmount)}
                       </TableCell>
                       <TableCell>
-                        {payment.paymentDate ? formatDate(payment.paymentDate) : "-"}
+                        {payment.paymentDate
+                          ? formatDate(payment.paymentDate)
+                          : "-"}
                       </TableCell>
                       <TableCell>{getStatusBadge(payment.status)}</TableCell>
                     </TableRow>
@@ -322,8 +357,11 @@ interface PaymentHistorySectionProps {
 }
 
 function PaymentHistorySection({ planId }: PaymentHistorySectionProps) {
+  const formatCurrency = useCurrency();
   const [loading, setLoading] = useState(true);
-  const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>([]);
+  const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>(
+    []
+  );
 
   useEffect(() => {
     fetchPaymentHistory();
@@ -332,7 +370,9 @@ function PaymentHistorySection({ planId }: PaymentHistorySectionProps) {
   const fetchPaymentHistory = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/installments/${planId}/payment-history`);
+      const response = await fetch(
+        `/api/installments/${planId}/payment-history`
+      );
       if (response.ok) {
         const data = await response.json();
         setPaymentHistory(data.paymentHistory || []);
@@ -442,4 +482,3 @@ function PaymentHistorySection({ planId }: PaymentHistorySectionProps) {
     </Card>
   );
 }
-

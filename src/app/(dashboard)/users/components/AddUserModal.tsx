@@ -144,16 +144,18 @@ export function AddUserModal({
     const hasAll = groupPermissions.every((p) => permissions.includes(p));
     if (hasAll) {
       setPermissions(
-        permissions.filter((p) => !groupPermissions.includes(p))
+        permissions.filter((p) => !groupPermissions.includes(p)) as Permission[]
       );
     } else {
       const newPermissions = permissions.filter(
         (p) => p !== Permission.FULL_ACCESS
-      );
+      ) as Permission[];
       setPermissions([
         ...newPermissions,
-        ...groupPermissions.filter((p) => !newPermissions.includes(p)),
-      ]);
+        ...(groupPermissions.filter(
+          (p) => !newPermissions.includes(p)
+        ) as Permission[]),
+      ] as Permission[]);
     }
   };
 
@@ -248,7 +250,10 @@ export function AddUserModal({
           <div className="space-y-2">
             <Label htmlFor="role">Role *</Label>
             <div className="flex gap-2">
-              <Select value={role} onValueChange={(value) => setRole(value as Role)}>
+              <Select
+                value={role}
+                onValueChange={(value) => setRole(value as Role)}
+              >
                 <SelectTrigger className="flex-1">
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
@@ -308,44 +313,47 @@ export function AddUserModal({
               </Button>
             </div>
             <div className="space-y-4">
-              {Object.entries(permissionGroups).map(([groupName, groupPermissions]) => (
-                <div key={groupName} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="font-semibold">{groupName}</Label>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => selectAllInGroup(groupPermissions)}
-                    >
-                      Select All
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 pl-4">
-                    {groupPermissions.map((permission) => (
-                      <div
-                        key={permission}
-                        className="flex items-center space-x-2"
+              {Object.entries(permissionGroups).map(
+                ([groupName, groupPermissions]) => (
+                  <div key={groupName} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="font-semibold">{groupName}</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => selectAllInGroup(groupPermissions)}
                       >
-                        <Checkbox
-                          id={permission}
-                          checked={permissions.includes(permission)}
-                          onCheckedChange={() => togglePermission(permission)}
-                          disabled={
-                            hasFullAccess && permission !== Permission.FULL_ACCESS
-                          }
-                        />
-                        <Label
-                          htmlFor={permission}
-                          className="text-sm font-normal cursor-pointer"
+                        Select All
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 pl-4">
+                      {groupPermissions.map((permission) => (
+                        <div
+                          key={permission}
+                          className="flex items-center space-x-2"
                         >
-                          {permission.replace(/_/g, " ")}
-                        </Label>
-                      </div>
-                    ))}
+                          <Checkbox
+                            id={permission}
+                            checked={permissions.includes(permission)}
+                            onCheckedChange={() => togglePermission(permission)}
+                            disabled={
+                              hasFullAccess &&
+                              permission !== Permission.FULL_ACCESS
+                            }
+                          />
+                          <Label
+                            htmlFor={permission}
+                            className="text-sm font-normal cursor-pointer"
+                          >
+                            {permission.replace(/_/g, " ")}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -365,4 +373,3 @@ export function AddUserModal({
     </Dialog>
   );
 }
-

@@ -158,17 +158,18 @@ export function EditUserModal({
   const selectAllInGroup = (groupPermissions: Permission[]) => {
     const hasAll = groupPermissions.every((p) => permissions.includes(p));
     if (hasAll) {
-      setPermissions(
-        permissions.filter((p) => !groupPermissions.includes(p))
-      );
+      setPermissions(permissions.filter((p) => !groupPermissions.includes(p)));
     } else {
       const newPermissions = permissions.filter(
         (p) => p !== Permission.FULL_ACCESS
-      );
+      ) as Permission[];
+      const additionalPermissions = groupPermissions.filter(
+        (p) => !newPermissions.includes(p as Permission)
+      ) as Permission[];
       setPermissions([
         ...newPermissions,
-        ...groupPermissions.filter((p) => !newPermissions.includes(p)),
-      ]);
+        ...additionalPermissions,
+      ] as Permission[]);
     }
   };
 
@@ -212,7 +213,9 @@ export function EditUserModal({
               <Checkbox
                 id="changePassword"
                 checked={changePassword}
-                onCheckedChange={(checked) => setChangePassword(checked as boolean)}
+                onCheckedChange={(checked) =>
+                  setChangePassword(checked as boolean)
+                }
               />
               <Label htmlFor="changePassword" className="cursor-pointer">
                 Change Password
@@ -232,7 +235,9 @@ export function EditUserModal({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-confirmPassword">Confirm Password *</Label>
+                  <Label htmlFor="edit-confirmPassword">
+                    Confirm Password *
+                  </Label>
                   <Input
                     id="edit-confirmPassword"
                     type="password"
@@ -247,7 +252,10 @@ export function EditUserModal({
           </div>
           <div className="space-y-2">
             <Label htmlFor="edit-role">Role *</Label>
-            <Select value={role} onValueChange={(value) => setRole(value as Role)}>
+            <Select
+              value={role}
+              onValueChange={(value) => setRole(value as Role)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
@@ -277,44 +285,47 @@ export function EditUserModal({
               </Button>
             </div>
             <div className="space-y-4">
-              {Object.entries(permissionGroups).map(([groupName, groupPermissions]) => (
-                <div key={groupName} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="font-semibold">{groupName}</Label>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => selectAllInGroup(groupPermissions)}
-                    >
-                      Select All
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 pl-4">
-                    {groupPermissions.map((permission) => (
-                      <div
-                        key={permission}
-                        className="flex items-center space-x-2"
+              {Object.entries(permissionGroups).map(
+                ([groupName, groupPermissions]) => (
+                  <div key={groupName} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="font-semibold">{groupName}</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => selectAllInGroup(groupPermissions)}
                       >
-                        <Checkbox
-                          id={`edit-${permission}`}
-                          checked={permissions.includes(permission)}
-                          onCheckedChange={() => togglePermission(permission)}
-                          disabled={
-                            hasFullAccess && permission !== Permission.FULL_ACCESS
-                          }
-                        />
-                        <Label
-                          htmlFor={`edit-${permission}`}
-                          className="text-sm font-normal cursor-pointer"
+                        Select All
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 pl-4">
+                      {groupPermissions.map((permission) => (
+                        <div
+                          key={permission}
+                          className="flex items-center space-x-2"
                         >
-                          {permission.replace(/_/g, " ")}
-                        </Label>
-                      </div>
-                    ))}
+                          <Checkbox
+                            id={`edit-${permission}`}
+                            checked={permissions.includes(permission)}
+                            onCheckedChange={() => togglePermission(permission)}
+                            disabled={
+                              hasFullAccess &&
+                              permission !== Permission.FULL_ACCESS
+                            }
+                          />
+                          <Label
+                            htmlFor={`edit-${permission}`}
+                            className="text-sm font-normal cursor-pointer"
+                          >
+                            {permission.replace(/_/g, " ")}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -334,4 +345,3 @@ export function EditUserModal({
     </Dialog>
   );
 }
-

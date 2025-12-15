@@ -32,7 +32,9 @@ interface Sale {
   paymentMethod?: string;
   notes?: string;
   items: Array<{
+    productId?: string;
     product: {
+      id?: string;
       name: string;
       sku: string;
       cost?: number | null;

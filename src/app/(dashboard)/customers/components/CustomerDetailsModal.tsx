@@ -568,29 +568,43 @@ export function CustomerDetailsModal({
                                     <div className="space-y-2">
                                       {pendingPayments
                                         .slice(0, 3)
-                                        .map((payment, idx) => (
-                                          <div
-                                            key={idx}
-                                            className="flex justify-between items-center p-2 bg-background rounded"
-                                          >
-                                            <div>
-                                              <p className="text-sm font-medium">
-                                                Installment #
-                                                {payment.installmentNumber}
-                                              </p>
-                                              <p className="text-xs text-muted-foreground">
-                                                Due:{" "}
-                                                {formatDate(payment.dueDate)}
+                                        .map((payment, idx) => {
+                                          // Find the original index in the full payments array to get installment number
+                                          const originalIndex =
+                                            plan.payments.findIndex(
+                                              (p) =>
+                                                p.dueDate === payment.dueDate &&
+                                                p.amount === payment.amount
+                                            );
+                                          const installmentNumber =
+                                            originalIndex >= 0
+                                              ? originalIndex + 1
+                                              : idx + 1;
+
+                                          return (
+                                            <div
+                                              key={idx}
+                                              className="flex justify-between items-center p-2 bg-background rounded"
+                                            >
+                                              <div>
+                                                <p className="text-sm font-medium">
+                                                  Installment #
+                                                  {installmentNumber}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                  Due:{" "}
+                                                  {formatDate(payment.dueDate)}
+                                                </p>
+                                              </div>
+                                              <p className="text-sm font-semibold">
+                                                {formatCurrency(
+                                                  payment.amount -
+                                                    payment.paidAmount
+                                                )}
                                               </p>
                                             </div>
-                                            <p className="text-sm font-semibold">
-                                              {formatCurrency(
-                                                payment.amount -
-                                                  payment.paidAmount
-                                              )}
-                                            </p>
-                                          </div>
-                                        ))}
+                                          );
+                                        })}
                                       {pendingPayments.length > 3 && (
                                         <p className="text-xs text-muted-foreground text-center">
                                           +{pendingPayments.length - 3} more

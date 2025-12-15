@@ -44,12 +44,14 @@ interface Sale {
   paymentMethod?: string;
   notes?: string;
   items: Array<{
-    productId: string;
+    productId?: string;
     product: {
-      id: string;
+      id?: string;
       name: string;
-      price: number;
-      stock: number;
+      price?: number;
+      stock?: number;
+      sku?: string;
+      cost?: number | null;
     };
     quantity: number;
     price: number;
@@ -96,7 +98,7 @@ export function EditSaleModal({
       setNotes(sale.notes || "");
       setItems(
         sale.items.map((item) => ({
-          productId: item.productId,
+          productId: item.productId || item.product?.id || "",
           quantity: item.quantity,
           discount: item.discount || 0,
         }))
@@ -199,7 +201,9 @@ export function EditSaleModal({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Sale - {sale.saleNumber}</DialogTitle>
-          <DialogDescription>Update sale information and items</DialogDescription>
+          <DialogDescription>
+            Update sale information and items
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -362,8 +366,8 @@ export function EditSaleModal({
                   </div>
                   {stockWarning && (
                     <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
-                      ⚠️ Insufficient stock! Available: {selectedProduct?.stock},
-                      Requested: {item.quantity}
+                      ⚠️ Insufficient stock! Available: {selectedProduct?.stock}
+                      , Requested: {item.quantity}
                     </div>
                   )}
                   {selectedProduct &&

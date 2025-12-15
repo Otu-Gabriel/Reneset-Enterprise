@@ -91,11 +91,20 @@ export async function PUT(
     });
 
     // Log audit
-    const metadata = getRequestMetadata(request);
+    const rawMetadata = getRequestMetadata(request);
+    const metadata = {
+      ipAddress: rawMetadata.ipAddress ?? undefined,
+      userAgent: rawMetadata.userAgent ?? undefined,
+    };
     const changes: Record<string, any> = {};
     if (oldCategory) {
-      if (name && name !== oldCategory.name) changes.name = { from: oldCategory.name, to: name };
-      if (description !== undefined && description !== oldCategory.description) changes.description = { from: oldCategory.description, to: description };
+      if (name && name !== oldCategory.name)
+        changes.name = { from: oldCategory.name, to: name };
+      if (description !== undefined && description !== oldCategory.description)
+        changes.description = {
+          from: oldCategory.description,
+          to: description,
+        };
     }
     await auditLogger.categoryUpdated(
       session.user.id,
@@ -149,7 +158,8 @@ export async function DELETE(
     if (category._count.brands > 0) {
       return NextResponse.json(
         {
-          error: "Cannot delete category with associated brands. Please delete brands first.",
+          error:
+            "Cannot delete category with associated brands. Please delete brands first.",
         },
         { status: 400 }
       );
@@ -160,7 +170,11 @@ export async function DELETE(
     });
 
     // Log audit
-    const metadata = getRequestMetadata(request);
+    const rawMetadata = getRequestMetadata(request);
+    const metadata = {
+      ipAddress: rawMetadata.ipAddress ?? undefined,
+      userAgent: rawMetadata.userAgent ?? undefined,
+    };
     await auditLogger.categoryDeleted(
       session.user.id,
       category.id,
@@ -177,4 +191,3 @@ export async function DELETE(
     );
   }
 }
-

@@ -191,7 +191,10 @@ export async function PUT(
       customer.id,
       customer.name,
       body,
-      metadata
+      {
+        ipAddress: metadata.ipAddress ?? undefined,
+        userAgent: metadata.userAgent ?? undefined,
+      }
     );
 
     return NextResponse.json(customer);
@@ -253,7 +256,10 @@ export async function DELETE(
       session.user.id,
       customer.id,
       customer.name,
-      metadata
+      {
+        ipAddress: metadata.ipAddress ?? undefined,
+        userAgent: metadata.userAgent ?? undefined,
+      }
     );
 
     return NextResponse.json({ message: "Customer deleted successfully" });
@@ -265,6 +271,7 @@ export async function DELETE(
     );
   }
 }
+
 
 
 

@@ -138,7 +138,11 @@ export async function POST(request: NextRequest) {
     });
 
     // Log audit
-    const metadata = getRequestMetadata(request);
+    const rawMetadata = getRequestMetadata(request);
+    const metadata = {
+      ipAddress: rawMetadata.ipAddress ?? undefined,
+      userAgent: rawMetadata.userAgent ?? undefined,
+    };
     await auditLogger.brandCreated(
       session.user.id,
       brand.id,
@@ -155,4 +159,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

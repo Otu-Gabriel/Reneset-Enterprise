@@ -127,11 +127,17 @@ export async function PUT(
     });
 
     // Log audit
-    const metadata = getRequestMetadata(request);
+    const rawMetadata = getRequestMetadata(request);
+    const metadata = {
+      ipAddress: rawMetadata.ipAddress ?? undefined,
+      userAgent: rawMetadata.userAgent ?? undefined,
+    };
     const changes: Record<string, any> = {};
     if (oldBrand) {
-      if (name && name !== oldBrand.name) changes.name = { from: oldBrand.name, to: name };
-      if (categoryId && categoryId !== oldBrand.categoryId) changes.categoryId = { from: oldBrand.categoryId, to: categoryId };
+      if (name && name !== oldBrand.name)
+        changes.name = { from: oldBrand.name, to: name };
+      if (categoryId && categoryId !== oldBrand.categoryId)
+        changes.categoryId = { from: oldBrand.categoryId, to: categoryId };
     }
     await auditLogger.brandUpdated(
       session.user.id,
@@ -179,7 +185,11 @@ export async function DELETE(
     });
 
     // Log audit
-    const metadata = getRequestMetadata(request);
+    const rawMetadata = getRequestMetadata(request);
+    const metadata = {
+      ipAddress: rawMetadata.ipAddress ?? undefined,
+      userAgent: rawMetadata.userAgent ?? undefined,
+    };
     await auditLogger.brandDeleted(
       session.user.id,
       brand.id,
@@ -196,4 +206,3 @@ export async function DELETE(
     );
   }
 }
-

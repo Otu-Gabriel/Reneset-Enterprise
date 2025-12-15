@@ -22,10 +22,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File;
 
     if (!file) {
-      return NextResponse.json(
-        { error: "No file provided" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
     // Read file buffer
@@ -49,7 +46,11 @@ export async function POST(request: NextRequest) {
       errors: [] as string[],
     };
 
-    const metadata = getRequestMetadata(request);
+    const rawMetadata = getRequestMetadata(request);
+    const metadata = {
+      ipAddress: rawMetadata.ipAddress ?? undefined,
+      userAgent: rawMetadata.userAgent ?? undefined,
+    };
 
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
@@ -115,7 +116,9 @@ export async function POST(request: NextRequest) {
         results.success++;
       } catch (error: any) {
         results.failed++;
-        results.errors.push(`Row ${i + 2}: ${error.message || "Unknown error"}`);
+        results.errors.push(
+          `Row ${i + 2}: ${error.message || "Unknown error"}`
+        );
       }
     }
 
@@ -131,6 +134,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-
-

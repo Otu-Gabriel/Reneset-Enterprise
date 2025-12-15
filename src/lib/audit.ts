@@ -41,16 +41,16 @@ export async function createAuditLog(data: AuditLogData): Promise<void> {
  * Helper to extract IP and user agent from NextRequest
  */
 export function getRequestMetadata(request: Request): {
-  ipAddress: string | null;
-  userAgent: string | null;
+  ipAddress: string | undefined;
+  userAgent: string | undefined;
 } {
   const forwardedFor = request.headers.get("x-forwarded-for");
   const realIp = request.headers.get("x-real-ip");
   const userAgent = request.headers.get("user-agent");
 
   return {
-    ipAddress: forwardedFor || realIp || null,
-    userAgent: userAgent || null,
+    ipAddress: forwardedFor || realIp || undefined,
+    userAgent: userAgent || undefined,
   };
 }
 
@@ -408,7 +408,8 @@ export const auditLogger = {
     targetUserId: string,
     userName: string,
     oldPermissions: string[],
-    newPermissions: string[]
+    newPermissions: string[],
+    metadata?: { ipAddress?: string; userAgent?: string }
   ) {
     await createAuditLog({
       userId,

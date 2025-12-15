@@ -13,7 +13,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrency } from "@/hooks/useCurrency";
-import { Edit, Trash2, Search, Eye, Plus, Download, Upload } from "lucide-react";
+import {
+  Edit,
+  Trash2,
+  Search,
+  Eye,
+  Plus,
+  Download,
+  Upload,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
@@ -71,7 +79,9 @@ export function InventoryTable() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editOpen, setEditOpen] = useState(false);
-  const [addingStockProduct, setAddingStockProduct] = useState<Product | null>(null);
+  const [addingStockProduct, setAddingStockProduct] = useState<Product | null>(
+    null
+  );
   const [addStockOpen, setAddStockOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -115,7 +125,8 @@ export function InventoryTable() {
       });
       if (search) params.append("search", search);
       if (category && category !== "all") params.append("category", category);
-      if (stockStatus && stockStatus !== "all") params.append("stockStatus", stockStatus);
+      if (stockStatus && stockStatus !== "all")
+        params.append("stockStatus", stockStatus);
 
       const response = await fetch(`/api/inventory?${params}`);
       const data = await response.json();
@@ -132,9 +143,9 @@ export function InventoryTable() {
     try {
       const response = await fetch("/api/inventory?limit=1000");
       const data = await response.json();
-      const uniqueCategories = [
-        ...new Set(data.products?.map((p: Product) => p.category) || []),
-      ];
+      const uniqueCategories = Array.from(
+        new Set(data.products?.map((p: Product) => p.category) || [])
+      );
       setCategories(uniqueCategories as string[]);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -224,9 +235,12 @@ export function InventoryTable() {
       const params = new URLSearchParams();
       if (search) params.append("search", search);
       if (category && category !== "all") params.append("category", category);
-      if (stockStatus && stockStatus !== "all") params.append("stockStatus", stockStatus);
+      if (stockStatus && stockStatus !== "all")
+        params.append("stockStatus", stockStatus);
 
-      const response = await fetch(`/api/inventory/export?${params.toString()}`);
+      const response = await fetch(
+        `/api/inventory/export?${params.toString()}`
+      );
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -329,7 +343,10 @@ export function InventoryTable() {
                     <DialogHeader>
                       <DialogTitle>Import Products from Excel</DialogTitle>
                       <DialogDescription>
-                        Upload an Excel file with columns: Name, SKU, Category, Price, Description (optional), Brand (optional), Cost (optional), Stock (optional), Min Stock (optional), Unit (optional), Image URL (optional)
+                        Upload an Excel file with columns: Name, SKU, Category,
+                        Price, Description (optional), Brand (optional), Cost
+                        (optional), Stock (optional), Min Stock (optional), Unit
+                        (optional), Image URL (optional)
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
@@ -356,12 +373,15 @@ export function InventoryTable() {
                                 Errors:
                               </p>
                               <ul className="text-sm text-muted-foreground list-disc list-inside">
-                                {importResults.errors.slice(0, 10).map((error, idx) => (
-                                  <li key={idx}>{error}</li>
-                                ))}
+                                {importResults.errors
+                                  .slice(0, 10)
+                                  .map((error, idx) => (
+                                    <li key={idx}>{error}</li>
+                                  ))}
                                 {importResults.errors.length > 10 && (
                                   <li>
-                                    ... and {importResults.errors.length - 10} more
+                                    ... and {importResults.errors.length - 10}{" "}
+                                    more
                                   </li>
                                 )}
                               </ul>
@@ -381,7 +401,10 @@ export function InventoryTable() {
                       >
                         Close
                       </Button>
-                      <Button onClick={handleImport} disabled={importing || !importFile}>
+                      <Button
+                        onClick={handleImport}
+                        disabled={importing || !importFile}
+                      >
                         {importing ? "Importing..." : "Import"}
                       </Button>
                     </DialogFooter>
@@ -394,131 +417,139 @@ export function InventoryTable() {
         <CardContent className="p-0 sm:p-6">
           <div className="overflow-x-auto">
             <Table className="min-w-full">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="hidden sm:table-cell">Image</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead className="hidden md:table-cell">SKU</TableHead>
-                <TableHead className="hidden lg:table-cell">Category</TableHead>
-                <TableHead className="hidden lg:table-cell">Brand</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead className="hidden sm:table-cell">Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.length === 0 ? (
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8">
-                    No products found
-                  </TableCell>
+                  <TableHead className="hidden sm:table-cell">Image</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="hidden md:table-cell">SKU</TableHead>
+                  <TableHead className="hidden lg:table-cell">
+                    Category
+                  </TableHead>
+                  <TableHead className="hidden lg:table-cell">Brand</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Stock</TableHead>
+                  <TableHead className="hidden sm:table-cell">Status</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ) : (
-                products.map((product) => (
-                  <TableRow
-                    key={product.id}
-                    className="cursor-pointer hover:bg-accent/50 transition-colors"
-                    onClick={() => handleRowClick(product)}
-                  >
-                    <TableCell className="hidden sm:table-cell">
-                      {product.imageUrl ? (
-                        <div className="relative w-12 h-12 rounded-md overflow-hidden bg-muted">
-                          <img
-                            src={product.imageUrl}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = "none";
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center text-muted-foreground text-xs">
-                          No Image
-                        </div>
-                      )}
+              </TableHeader>
+              <TableBody>
+                {products.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8">
+                      No products found
                     </TableCell>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell className="hidden md:table-cell">{product.sku}</TableCell>
-                    <TableCell className="hidden lg:table-cell">{product.category}</TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      {product.brand ? (
-                        <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                          {product.brand.name}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>{formatCurrency(product.price)}</TableCell>
-                    <TableCell>
-                      {product.stock} {product.unit}
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                          product.stock === 0
-                            ? "bg-gray-500/20 text-gray-500"
-                            : product.stock <= product.minStock
-                            ? "bg-red-500/20 text-red-500"
-                            : "bg-green-500/20 text-green-500"
-                        }`}
-                      >
-                        {product.stock === 0
-                          ? "Out of Stock"
-                          : product.stock <= product.minStock
-                          ? "Low Stock"
-                          : "In Stock"}
-                      </span>
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => handleViewClick(e, product)}
-                          title="View Details"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        {canEdit && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => handleAddStockClick(e, product)}
-                              title="Add Stock"
-                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => handleEditClick(e, product)}
-                              title="Edit Product"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </>
+                  </TableRow>
+                ) : (
+                  products.map((product) => (
+                    <TableRow
+                      key={product.id}
+                      className="cursor-pointer hover:bg-accent/50 transition-colors"
+                      onClick={() => handleRowClick(product)}
+                    >
+                      <TableCell className="hidden sm:table-cell">
+                        {product.imageUrl ? (
+                          <div className="relative w-12 h-12 rounded-md overflow-hidden bg-muted">
+                            <img
+                              src={product.imageUrl}
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center text-muted-foreground text-xs">
+                            No Image
+                          </div>
                         )}
-                        {canDelete && (
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {product.name}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {product.sku}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {product.category}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {product.brand ? (
+                          <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                            {product.brand.name}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>{formatCurrency(product.price)}</TableCell>
+                      <TableCell>
+                        {product.stock} {product.unit}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                            product.stock === 0
+                              ? "bg-gray-500/20 text-gray-500"
+                              : product.stock <= product.minStock
+                                ? "bg-red-500/20 text-red-500"
+                                : "bg-green-500/20 text-green-500"
+                          }`}
+                        >
+                          {product.stock === 0
+                            ? "Out of Stock"
+                            : product.stock <= product.minStock
+                              ? "Low Stock"
+                              : "In Stock"}
+                        </span>
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-2">
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDelete(product.id)}
+                            onClick={(e) => handleViewClick(e, product)}
+                            title="View Details"
                           >
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                            <Eye className="h-4 w-4" />
                           </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                          {canEdit && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => handleAddStockClick(e, product)}
+                                title="Add Stock"
+                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => handleEditClick(e, product)}
+                                title="Edit Product"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                          {canDelete && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(product.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
           {totalPages > 1 && (
             <div className="flex items-center justify-end gap-2 mt-4">

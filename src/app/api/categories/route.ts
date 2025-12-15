@@ -110,7 +110,10 @@ export async function POST(request: NextRequest) {
       session.user.id,
       category.id,
       category.name,
-      metadata
+      {
+        ipAddress: metadata.ipAddress ?? undefined,
+        userAgent: metadata.userAgent ?? undefined,
+      }
     );
 
     return NextResponse.json(category, { status: 201 });
