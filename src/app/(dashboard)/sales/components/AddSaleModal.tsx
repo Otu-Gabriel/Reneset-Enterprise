@@ -389,8 +389,8 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                 {showSuggestions &&
                   customerSuggestions.length === 0 &&
                   customerSearchQuery.length >= 2 && (
-                    <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg p-4 text-sm text-muted-foreground">
-                      No customers found. A new customer will be created.
+                    <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg p-2 text-sm text-muted-foreground">
+                       A new customer will be created.
                     </div>
                   )}
               </div>
