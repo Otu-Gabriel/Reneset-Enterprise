@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCurrency } from "@/hooks/useCurrency";
 import { DollarSign, Calendar, TrendingUp, Package } from "lucide-react";
@@ -12,7 +12,11 @@ interface Statistics {
   bestSellingProduct: { name: string; quantity: number; revenue: number };
 }
 
-export function SalesStatisticsCards() {
+export interface SalesStatisticsCardsRef {
+  refresh: () => void;
+}
+
+export const SalesStatisticsCards = forwardRef<SalesStatisticsCardsRef>((props, ref) => {
   const formatCurrency = useCurrency();
   const [stats, setStats] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +38,10 @@ export function SalesStatisticsCards() {
       setLoading(false);
     }
   };
+
+  useImperativeHandle(ref, () => ({
+    refresh: fetchStatistics,
+  }));
 
   if (loading) {
     return (
@@ -122,5 +130,6 @@ export function SalesStatisticsCards() {
       </Card>
     </div>
   );
-}
+});
 
+SalesStatisticsCards.displayName = "SalesStatisticsCards";
