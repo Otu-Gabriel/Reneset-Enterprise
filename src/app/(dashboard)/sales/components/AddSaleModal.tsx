@@ -24,13 +24,16 @@ import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, X } from "lucide-react";
+import { Search, X, ScanLine } from "lucide-react";
+import { ProductSearchInput } from "@/components/ProductSearchInput";
 
 interface Product {
   id: string;
   name: string;
   price: number;
   stock: number;
+  sku?: string;
+  category?: string;
 }
 
 interface SaleItem {
@@ -60,6 +63,8 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [loading, setLoading] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -88,10 +93,35 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
   const [items, setItems] = useState<SaleItem[]>([
     { productId: "", quantity: 1, discount: 0 },
   ]);
+  const [skuInputs, setSkuInputs] = useState<string[]>([""]);
 
   useEffect(() => {
-    fetchProducts();
+    fetchCategories();
   }, []);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!open) {
+      setItems([{ productId: "", quantity: 1, discount: 0 }]);
+      setSkuInputs([""]);
+      setSelectedCategory("all");
+      setCustomerName("");
+      setCustomerEmail("");
+      setCustomerPhone("");
+      setSelectedCustomerId(null);
+      setCustomerSearchQuery("");
+      setCustomerSuggestions([]);
+      setIsNewCustomer(true);
+      setPaymentMethod("cash");
+      setNotes("");
+      setStatus("completed");
+      setIsInstallment(false);
+      setDownPayment(0);
+      setNumberOfInstallments(3);
+      setFrequency("monthly");
+      setStartDate(new Date().toISOString().split("T")[0]);
+    }
+  }, [open]);
 
   // Debounced customer search
   useEffect(() => {
@@ -172,22 +202,64 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
     customerInputRef.current?.focus();
   };
 
-  const fetchProducts = async () => {
+  const fetchCategories = async () => {
     try {
       const response = await fetch("/api/inventory?limit=1000");
       const data = await response.json();
-      setProducts(data.products || []);
+      const uniqueCategories = Array.from(
+        new Set(
+          data.products?.map((p: Product) => p.category).filter(Boolean) || []
+        )
+      );
+      setCategories(uniqueCategories as string[]);
     } catch (error) {
-      console.error("Error fetching products:", error);
+      console.error("Error fetching categories:", error);
+    }
+  };
+
+  const fetchProductBySku = async (sku: string, index: number) => {
+    if (!sku || sku.trim().length === 0) return;
+
+    try {
+      const response = await fetch(
+        `/api/inventory/search?q=${encodeURIComponent(sku)}&limit=1`
+      );
+      const data = await response.json();
+
+      if (data.products && data.products.length > 0) {
+        const product = data.products[0];
+        // Check if SKU matches exactly (case-insensitive)
+        if (product.sku.toLowerCase() === sku.toLowerCase()) {
+          updateItem(index, "productId", product.id);
+          // Clear SKU input after successful match
+          const newSkuInputs = [...skuInputs];
+          newSkuInputs[index] = "";
+          setSkuInputs(newSkuInputs);
+        }
+      }
+    } catch (error) {
+      console.error("Error searching product by SKU:", error);
     }
   };
 
   const addItem = () => {
     setItems([...items, { productId: "", quantity: 1, discount: 0 }]);
+    setSkuInputs([...skuInputs, ""]);
+    // Auto-focus the new SKU input field after a short delay to allow DOM update
+    setTimeout(() => {
+      const newIndex = items.length;
+      const skuInput = document.getElementById(
+        `sku-${newIndex}`
+      ) as HTMLInputElement;
+      if (skuInput) {
+        skuInput.focus();
+      }
+    }, 100);
   };
 
   const removeItem = (index: number) => {
     setItems(items.filter((_, i) => i !== index));
+    setSkuInputs(skuInputs.filter((_, i) => i !== index));
   };
 
   const updateItem = (
@@ -200,8 +272,63 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
     setItems(newItems);
   };
 
+  // Fetch product details when needed
+  const fetchProductDetails = async (
+    productId: string
+  ): Promise<Product | null> => {
+    try {
+      const response = await fetch(`/api/inventory/${productId}`);
+      if (response.ok) {
+        const product = await response.json();
+        return {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          stock: product.stock,
+          sku: product.sku,
+          category: product.category,
+        };
+      }
+    } catch (error) {
+      console.error("Error fetching product details:", error);
+    }
+    return null;
+  };
+
   // Calculate totals
-  const calculateTotals = () => {
+  const calculateTotals = async () => {
+    let subtotal = 0;
+    let totalDiscount = 0;
+
+    for (const item of items) {
+      if (item.productId) {
+        // Try to find in cached products first
+        let product = products.find((p) => p.id === item.productId);
+
+        // If not found, fetch it
+        if (!product) {
+          const fetchedProduct = await fetchProductDetails(item.productId);
+          if (fetchedProduct) {
+            product = fetchedProduct;
+            setProducts([...products, fetchedProduct]);
+          }
+        }
+
+        if (product) {
+          const itemSubtotal = product.price * item.quantity;
+          const itemDiscount = item.discount || 0;
+          subtotal += itemSubtotal;
+          totalDiscount += itemDiscount;
+        }
+      }
+    }
+
+    const total = subtotal - totalDiscount;
+    return { subtotal, totalDiscount, total };
+  };
+
+  // Synchronous version for display (uses cached products)
+  const calculateTotalsSync = () => {
     let subtotal = 0;
     let totalDiscount = 0;
 
@@ -221,7 +348,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
     return { subtotal, totalDiscount, total };
   };
 
-  const { subtotal, totalDiscount, total } = calculateTotals();
+  const { subtotal, totalDiscount, total } = calculateTotalsSync();
 
   // Calculate installment details
   const remainingAmount = total - downPayment;
@@ -296,22 +423,6 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
 
       if (response.ok) {
         setOpen(false);
-        setCustomerName("");
-        setCustomerEmail("");
-        setCustomerPhone("");
-        setSelectedCustomerId(null);
-        setCustomerSearchQuery("");
-        setCustomerSuggestions([]);
-        setIsNewCustomer(true);
-        setPaymentMethod("cash");
-        setNotes("");
-        setStatus("completed");
-        setIsInstallment(false);
-        setDownPayment(0);
-        setNumberOfInstallments(3);
-        setFrequency("monthly");
-        setStartDate(new Date().toISOString().split("T")[0]);
-        setItems([{ productId: "", quantity: 1, discount: 0 }]);
         router.refresh();
         onSaleCreated?.();
       } else {
@@ -390,7 +501,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                   customerSuggestions.length === 0 &&
                   customerSearchQuery.length >= 2 && (
                     <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg p-2 text-sm text-muted-foreground">
-                       A new customer will be created.
+                      A new customer will be created.
                     </div>
                   )}
               </div>
@@ -583,14 +694,29 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Items</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addItem}
-              >
-                Add Item
-              </Button>
+              <div className="flex gap-2">
+                {categories.length > 0 && (
+                  <Select
+                    value={selectedCategory}
+                    onValueChange={setSelectedCategory}
+                  >
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Filter by category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                <Button type="button" size="sm" onClick={addItem}>
+                  Add Item
+                </Button>
+              </div>
             </div>
             {items.map((item, index) => {
               const selectedProduct = products.find(
@@ -602,34 +728,91 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                 status === "completed";
 
               return (
-                <div key={index} className="space-y-2">
-                  <div className="flex gap-2 items-end">
-                    <div className="flex-1 space-y-2">
-                      <Label>Product</Label>
-                      <Select
-                        value={item.productId}
-                        onValueChange={(value) =>
-                          updateItem(index, "productId", value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select product" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {products.map((product) => (
-                            <SelectItem key={product.id} value={product.id}>
-                              {product.name} - Stock: {product.stock} - $
-                              {product.price}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                <div key={index} className="space-y-2 border rounded-lg p-4">
+                  <div className="grid grid-cols-1 gap-4">
+                    {/* SKU/Barcode Input */}
+                    <div className="space-y-2">
+                      <Label htmlFor={`sku-${index}`}>
+                        <ScanLine className="inline h-4 w-4 mr-1" />
+                        Scan Barcode or Enter SKU
+                      </Label>
+                      <div className="relative">
+                        <ScanLine className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          id={`sku-${index}`}
+                          type="text"
+                          value={skuInputs[index] || ""}
+                          onChange={(e) => {
+                            const newSkuInputs = [...skuInputs];
+                            newSkuInputs[index] = e.target.value;
+                            setSkuInputs(newSkuInputs);
+                          }}
+                          onKeyDown={async (e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              const sku = skuInputs[index] || "";
+                              if (sku.trim()) {
+                                await fetchProductBySku(sku.trim(), index);
+                                // After successful scan, move focus to quantity field or next item
+                                const quantityInput = document.querySelector(
+                                  `input[type="number"][data-item-index="${index}"]`
+                                ) as HTMLInputElement;
+                                if (quantityInput) {
+                                  quantityInput.focus();
+                                  quantityInput.select();
+                                }
+                              }
+                            }
+                          }}
+                          onBlur={async () => {
+                            const sku = skuInputs[index];
+                            if (sku && sku.trim()) {
+                              await fetchProductBySku(sku.trim(), index);
+                            }
+                          }}
+                          autoFocus={
+                            index === items.length - 1 && items.length > 0
+                          }
+                          placeholder="Scan barcode or type SKU and press Enter"
+                          className="pl-9"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Or search by name below
+                      </p>
                     </div>
-                    <div className="w-24 space-y-2">
+
+                    {/* Product Search */}
+                    <ProductSearchInput
+                      value={item.productId}
+                      onChange={(productId) =>
+                        updateItem(index, "productId", productId)
+                      }
+                      onProductSelect={(product) => {
+                        // Cache the product for totals calculation
+                        if (!products.find((p) => p.id === product.id)) {
+                          setProducts([...products, product]);
+                        }
+                      }}
+                      category={
+                        selectedCategory && selectedCategory !== "all"
+                          ? selectedCategory
+                          : undefined
+                      }
+                      inStockOnly={status === "completed"}
+                      label="Search Product"
+                      placeholder="Type product name, SKU, or scan barcode..."
+                    />
+                  </div>
+
+                  {/* Quantity and Discount */}
+                  <div className="flex gap-2 items-end">
+                    <div className="w-32 space-y-2">
                       <Label>Quantity</Label>
                       <Input
                         type="number"
                         min="1"
+                        data-item-index={index}
                         value={item.quantity}
                         onChange={(e) =>
                           updateItem(
@@ -640,7 +823,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                         }
                       />
                     </div>
-                    <div className="w-24 space-y-2">
+                    <div className="w-32 space-y-2">
                       <Label>Discount ($)</Label>
                       <Input
                         type="number"
@@ -656,17 +839,32 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                         }
                       />
                     </div>
+                    {selectedProduct && (
+                      <div className="flex-1 text-sm text-muted-foreground pt-2">
+                        <div>
+                          Price: {formatCurrency(selectedProduct.price)} ×{" "}
+                          {item.quantity} ={" "}
+                          {formatCurrency(
+                            selectedProduct.price * item.quantity -
+                              (item.discount || 0)
+                          )}
+                        </div>
+                      </div>
+                    )}
                     {items.length > 1 && (
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
                         onClick={() => removeItem(index)}
+                        className="mb-2"
                       >
                         ×
                       </Button>
                     )}
                   </div>
+
+                  {/* Stock Warnings */}
                   {stockWarning && (
                     <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
                       ⚠️ Insufficient stock! Available: {selectedProduct?.stock}
@@ -685,6 +883,17 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                 </div>
               );
             })}
+          </div>
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              // variant="outline"
+              size="sm"
+              onClick={addItem}
+              className=""
+            >
+              Add Item
+            </Button>
           </div>
           <div className="border-t pt-4 space-y-2">
             <div className="flex justify-between text-sm">

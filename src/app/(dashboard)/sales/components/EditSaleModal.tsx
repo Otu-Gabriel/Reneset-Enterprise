@@ -20,12 +20,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCurrency } from "@/hooks/useCurrency";
+import { ProductSearchInput } from "@/components/ProductSearchInput";
+import { ScanLine } from "lucide-react";
 
 interface Product {
   id: string;
   name: string;
   price: number;
   stock: number;
+  sku?: string;
+  category?: string;
 }
 
 interface SaleItem {
@@ -76,6 +80,8 @@ export function EditSaleModal({
   const formatCurrency = useCurrency();
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -83,9 +89,10 @@ export function EditSaleModal({
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<SaleItem[]>([]);
+  const [skuInputs, setSkuInputs] = useState<string[]>([]);
 
   useEffect(() => {
-    fetchProducts();
+    fetchCategories();
   }, []);
 
   useEffect(() => {
@@ -96,32 +103,81 @@ export function EditSaleModal({
       setStatus(sale.status);
       setPaymentMethod(sale.paymentMethod || "cash");
       setNotes(sale.notes || "");
-      setItems(
-        sale.items.map((item) => ({
-          productId: item.productId || item.product?.id || "",
-          quantity: item.quantity,
-          discount: item.discount || 0,
-        }))
-      );
+      const saleItems = sale.items.map((item) => ({
+        productId: item.productId || item.product?.id || "",
+        quantity: item.quantity,
+        discount: item.discount || 0,
+      }));
+      setItems(saleItems);
+      setSkuInputs(new Array(saleItems.length).fill(""));
+      
+      // Cache products from sale items
+      const saleProducts = sale.items
+        .map((item) => item.product)
+        .filter((p) => p.id)
+        .map((p) => ({
+          id: p.id!,
+          name: p.name,
+          price: p.price || 0,
+          stock: p.stock || 0,
+          sku: p.sku,
+        }));
+      setProducts(saleProducts);
     }
   }, [sale]);
 
-  const fetchProducts = async () => {
+  const fetchCategories = async () => {
     try {
       const response = await fetch("/api/inventory?limit=1000");
       const data = await response.json();
-      setProducts(data.products || []);
+      const uniqueCategories = Array.from(
+        new Set(data.products?.map((p: Product) => p.category).filter(Boolean) || [])
+      );
+      setCategories(uniqueCategories as string[]);
     } catch (error) {
-      console.error("Error fetching products:", error);
+      console.error("Error fetching categories:", error);
+    }
+  };
+
+  const fetchProductBySku = async (sku: string, index: number) => {
+    if (!sku || sku.trim().length === 0) return;
+
+    try {
+      const response = await fetch(`/api/inventory/search?q=${encodeURIComponent(sku)}&limit=1`);
+      const data = await response.json();
+      
+      if (data.products && data.products.length > 0) {
+        const product = data.products[0];
+        // Check if SKU matches exactly (case-insensitive)
+        if (product.sku.toLowerCase() === sku.toLowerCase()) {
+          updateItem(index, "productId", product.id);
+          // Clear SKU input after successful match
+          const newSkuInputs = [...skuInputs];
+          newSkuInputs[index] = "";
+          setSkuInputs(newSkuInputs);
+        }
+      }
+    } catch (error) {
+      console.error("Error searching product by SKU:", error);
     }
   };
 
   const addItem = () => {
     setItems([...items, { productId: "", quantity: 1, discount: 0 }]);
+    setSkuInputs([...skuInputs, ""]);
+    // Auto-focus the new SKU input field after a short delay to allow DOM update
+    setTimeout(() => {
+      const newIndex = items.length;
+      const skuInput = document.getElementById(`sku-${newIndex}`) as HTMLInputElement;
+      if (skuInput) {
+        skuInput.focus();
+      }
+    }, 100);
   };
 
   const removeItem = (index: number) => {
     setItems(items.filter((_, i) => i !== index));
+    setSkuInputs(skuInputs.filter((_, i) => i !== index));
   };
 
   const updateItem = (
@@ -280,14 +336,34 @@ export function EditSaleModal({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Items</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addItem}
-              >
-                Add Item
-              </Button>
+              <div className="flex gap-2">
+                {categories.length > 0 && (
+                  <Select
+                    value={selectedCategory}
+                    onValueChange={setSelectedCategory}
+                  >
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Filter by category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addItem}
+                >
+                  Add Item
+                </Button>
+              </div>
             </div>
             {items.map((item, index) => {
               const selectedProduct = products.find(
@@ -299,34 +375,85 @@ export function EditSaleModal({
                 status === "completed";
 
               return (
-                <div key={index} className="space-y-2">
-                  <div className="flex gap-2 items-end">
-                    <div className="flex-1 space-y-2">
-                      <Label>Product</Label>
-                      <Select
-                        value={item.productId}
-                        onValueChange={(value) =>
-                          updateItem(index, "productId", value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select product" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {products.map((product) => (
-                            <SelectItem key={product.id} value={product.id}>
-                              {product.name} - Stock: {product.stock} - $
-                              {product.price}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                <div key={index} className="space-y-2 border rounded-lg p-4">
+                  <div className="grid grid-cols-1 gap-4">
+                    {/* SKU/Barcode Input */}
+                    <div className="space-y-2">
+                      <Label htmlFor={`sku-${index}`}>
+                        <ScanLine className="inline h-4 w-4 mr-1" />
+                        Scan Barcode or Enter SKU
+                      </Label>
+                      <div className="relative">
+                        <ScanLine className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          id={`sku-${index}`}
+                          type="text"
+                          value={skuInputs[index] || ""}
+                          onChange={(e) => {
+                            const newSkuInputs = [...skuInputs];
+                            newSkuInputs[index] = e.target.value;
+                            setSkuInputs(newSkuInputs);
+                          }}
+                          onKeyDown={async (e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              const sku = skuInputs[index] || "";
+                              if (sku.trim()) {
+                                await fetchProductBySku(sku.trim(), index);
+                                // After successful scan, move focus to quantity field
+                                const quantityInput = document.querySelector(
+                                  `input[type="number"][data-item-index="${index}"]`
+                                ) as HTMLInputElement;
+                                if (quantityInput) {
+                                  quantityInput.focus();
+                                  quantityInput.select();
+                                }
+                              }
+                            }
+                          }}
+                          onBlur={async () => {
+                            const sku = skuInputs[index];
+                            if (sku && sku.trim()) {
+                              await fetchProductBySku(sku.trim(), index);
+                            }
+                          }}
+                          autoFocus={index === items.length - 1 && items.length > 0}
+                          placeholder="Scan barcode or type SKU and press Enter"
+                          className="pl-9"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Or search by name below
+                      </p>
                     </div>
-                    <div className="w-24 space-y-2">
+
+                    {/* Product Search */}
+                    <ProductSearchInput
+                      value={item.productId}
+                      onChange={(productId) =>
+                        updateItem(index, "productId", productId)
+                      }
+                      onProductSelect={(product) => {
+                        // Cache the product for totals calculation
+                        if (!products.find((p) => p.id === product.id)) {
+                          setProducts([...products, product]);
+                        }
+                      }}
+                      category={selectedCategory && selectedCategory !== "all" ? selectedCategory : undefined}
+                      inStockOnly={status === "completed"}
+                      label="Search Product"
+                      placeholder="Type product name, SKU, or scan barcode..."
+                    />
+                  </div>
+
+                  {/* Quantity and Discount */}
+                  <div className="flex gap-2 items-end">
+                    <div className="w-32 space-y-2">
                       <Label>Quantity</Label>
                       <Input
                         type="number"
                         min="1"
+                        data-item-index={index}
                         value={item.quantity}
                         onChange={(e) =>
                           updateItem(
@@ -337,7 +464,7 @@ export function EditSaleModal({
                         }
                       />
                     </div>
-                    <div className="w-24 space-y-2">
+                    <div className="w-32 space-y-2">
                       <Label>Discount ($)</Label>
                       <Input
                         type="number"
@@ -353,17 +480,32 @@ export function EditSaleModal({
                         }
                       />
                     </div>
+                    {selectedProduct && (
+                      <div className="flex-1 text-sm text-muted-foreground pt-2">
+                        <div>
+                          Price: {formatCurrency(selectedProduct.price)} ×{" "}
+                          {item.quantity} ={" "}
+                          {formatCurrency(
+                            selectedProduct.price * item.quantity -
+                              (item.discount || 0)
+                          )}
+                        </div>
+                      </div>
+                    )}
                     {items.length > 1 && (
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
                         onClick={() => removeItem(index)}
+                        className="mb-2"
                       >
                         ×
                       </Button>
                     )}
                   </div>
+
+                  {/* Stock Warnings */}
                   {stockWarning && (
                     <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
                       ⚠️ Insufficient stock! Available: {selectedProduct?.stock}
