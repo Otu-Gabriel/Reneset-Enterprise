@@ -103,7 +103,7 @@ export function ProductSearchInput({
     }
   };
 
-  const searchProducts = async (query: string) => {
+  const searchProducts = async (query: string): Promise<Product[]> => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -115,11 +115,14 @@ export function ProductSearchInput({
 
       const response = await fetch(`/api/inventory/search?${params}`);
       const data = await response.json();
-      setProducts(data.products || []);
+      const results: Product[] = data.products || [];
+      setProducts(results);
       setShowSuggestions(true);
+      return results;
     } catch (error) {
       console.error("Error searching products:", error);
       setProducts([]);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -149,10 +152,55 @@ export function ProductSearchInput({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Escape") {
       setShowSuggestions(false);
-    } else if (e.key === "ArrowDown" && products.length > 0) {
+      return;
+    }
+
+    if (e.key === "Enter") {
+      const query = searchQuery.trim();
+      if (!query) {
+        return;
+      }
+
+      e.preventDefault();
+
+      // Prefer already loaded results, otherwise fetch fresh ones
+      let results = products;
+      if (results.length === 0) {
+        results = await searchProducts(query);
+      }
+
+      if (results.length === 0) {
+        return;
+      }
+
+      // Try to find an exact match by SKU or name (case-insensitive)
+      const lower = query.toLowerCase();
+      const exact =
+        results.find(
+          (p) =>
+            p.sku.toLowerCase() === lower || p.name.toLowerCase() === lower
+        ) || null;
+
+      if (exact) {
+        handleProductSelect(exact);
+        return;
+      }
+
+      // If only one result, select it automatically
+      if (results.length === 1) {
+        handleProductSelect(results[0]);
+        return;
+      }
+
+      // Otherwise, just open the suggestion list
+      setShowSuggestions(true);
+      return;
+    }
+
+    if (e.key === "ArrowDown" && products.length > 0) {
       e.preventDefault();
       const firstItem = suggestionsRef.current?.querySelector(
         "[data-product-item]"

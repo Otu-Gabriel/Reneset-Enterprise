@@ -223,13 +223,23 @@ export async function GET(request: NextRequest) {
       }
 
       case "employees": {
+        // Build employee filter - optionally filter by hire date if date range is provided
+        const employeeWhere: any = {};
+        if (dateFilter) {
+          employeeWhere.hireDate = dateFilter;
+        }
+
         const employees = await prisma.employee.findMany({
+          where: employeeWhere,
           include: {
             createdBy: {
               select: {
                 name: true,
               },
             },
+          },
+          orderBy: {
+            hireDate: "desc",
           },
         });
 
@@ -303,10 +313,15 @@ export async function GET(request: NextRequest) {
             id: e.id,
             name: e.name,
             email: e.email,
+            phone: e.phone,
             position: e.position,
             department: e.department,
+            salary: e.salary,
             status: e.status,
             hireDate: e.hireDate,
+            address: e.address,
+            createdAt: e.createdAt,
+            updatedAt: e.updatedAt,
           })),
         });
       }

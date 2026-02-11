@@ -14,6 +14,7 @@ interface SalesPageClientProps {
 
 export function SalesPageClient({ canCreate }: SalesPageClientProps) {
   const salesTableRef = useRef<SalesTableRef>(null);
+  const [statsVersion, setStatsVersion] = useState(0);
   const [filters, setFilters] = useState({
     search: "",
     status: "",
@@ -22,6 +23,11 @@ export function SalesPageClient({ canCreate }: SalesPageClientProps) {
 
   const handleSaleCreated = () => {
     salesTableRef.current?.refresh();
+    setStatsVersion((v) => v + 1);
+  };
+
+  const handleSalesChanged = () => {
+    setStatsVersion((v) => v + 1);
   };
 
   const handleFilterChange = useCallback((newFilters: {
@@ -50,9 +56,13 @@ export function SalesPageClient({ canCreate }: SalesPageClientProps) {
           </AddSaleModal>
         )}
       </div>
-      <SalesStatisticsCards />
+      <SalesStatisticsCards key={statsVersion} />
       <Filters onFilterChange={handleFilterChange} />
-      <SalesTable ref={salesTableRef} filters={filters} />
+      <SalesTable
+        ref={salesTableRef}
+        filters={filters}
+        onSalesChanged={handleSalesChanged}
+      />
     </div>
   );
 }

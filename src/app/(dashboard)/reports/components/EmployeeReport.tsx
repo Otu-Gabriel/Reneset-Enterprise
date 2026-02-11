@@ -87,13 +87,16 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.summary.totalEmployees}</div>
+            <div className="text-2xl font-bold">{data.summary?.totalEmployees || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {data.employees?.length || 0} in current view
+            </p>
           </CardContent>
         </Card>
         <Card className="bg-card">
@@ -102,8 +105,13 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {data.summary.activeEmployees}
+              {data.summary?.activeEmployees || 0}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {data.summary?.totalEmployees 
+                ? `${Math.round((data.summary.activeEmployees / data.summary.totalEmployees) * 100)}% of total`
+                : "0% of total"}
+            </p>
           </CardContent>
         </Card>
         <Card className="bg-card">
@@ -112,8 +120,34 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {data.summary.inactiveEmployees}
+              {data.summary?.inactiveEmployees || 0}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {data.summary?.totalEmployees 
+                ? `${Math.round((data.summary.inactiveEmployees / data.summary.totalEmployees) * 100)}% of total`
+                : "0% of total"}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Salary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {(() => {
+                const employeesWithSalary = data.employees?.filter((e: any) => e.salary) || [];
+                if (employeesWithSalary.length === 0) return "N/A";
+                const avgSalary = employeesWithSalary.reduce((sum: number, e: any) => sum + (e.salary || 0), 0) / employeesWithSalary.length;
+                return formatCurrency(avgSalary);
+              })()}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {(() => {
+                const employeesWithSalary = data.employees?.filter((e: any) => e.salary) || [];
+                return `${employeesWithSalary.length} employees with salary data`;
+              })()}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -125,31 +159,37 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
             <CardTitle>Employees by Department</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={data.departmentBreakdown}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                <XAxis
-                  dataKey="department"
-                  stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={100}
-                />
-                <YAxis
-                  stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Bar dataKey="count" fill="hsl(217, 91%, 60%)" />
-              </BarChart>
-            </ResponsiveContainer>
+            {data.departmentBreakdown && data.departmentBreakdown.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={data.departmentBreakdown}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                  <XAxis
+                    dataKey="department"
+                    stroke="hsl(var(--muted-foreground))"
+                    style={{ fontSize: "12px" }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={100}
+                  />
+                  <YAxis
+                    stroke="hsl(var(--muted-foreground))"
+                    style={{ fontSize: "12px" }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--popover))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                    }}
+                  />
+                  <Bar dataKey="count" fill="hsl(217, 91%, 60%)" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                No department data available
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -158,34 +198,40 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
             <CardTitle>Employees by Position</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={data.positionBreakdown}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, count }) => `${name}: ${count}`}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="count"
-                >
-                  {data.positionBreakdown.map((entry: any, index: number) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {data.positionBreakdown && data.positionBreakdown.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={data.positionBreakdown}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ position, count }) => `${position}: ${count}`}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="count"
+                  >
+                    {data.positionBreakdown.map((entry: any, index: number) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--popover))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                No position data available
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -232,33 +278,53 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
                 <TableHead>Position</TableHead>
                 <TableHead>Department</TableHead>
+                <TableHead>Salary</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Hire Date</TableHead>
+                <TableHead>Address</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.employees.map((employee: any) => (
-                <TableRow key={employee.id}>
-                  <TableCell className="font-medium">{employee.name}</TableCell>
-                  <TableCell>{employee.email}</TableCell>
-                  <TableCell>{employee.position}</TableCell>
-                  <TableCell>{employee.department || "N/A"}</TableCell>
-                  <TableCell>
-                    <span
-                      className={
-                        employee.status === "active"
-                          ? "text-green-600 font-medium"
-                          : "text-red-600 font-medium"
-                      }
-                    >
-                      {employee.status}
-                    </span>
+              {data.employees && data.employees.length > 0 ? (
+                data.employees.map((employee: any) => (
+                  <TableRow key={employee.id}>
+                    <TableCell className="font-medium">{employee.name || "N/A"}</TableCell>
+                    <TableCell>{employee.email || "N/A"}</TableCell>
+                    <TableCell>{employee.phone || "N/A"}</TableCell>
+                    <TableCell>{employee.position || "N/A"}</TableCell>
+                    <TableCell>{employee.department || "N/A"}</TableCell>
+                    <TableCell>
+                      {employee.salary ? formatCurrency(employee.salary) : "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={
+                          employee.status === "active"
+                            ? "text-green-600 font-medium"
+                            : "text-red-600 font-medium"
+                        }
+                      >
+                        {employee.status || "N/A"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {employee.hireDate ? formatDate(employee.hireDate) : "N/A"}
+                    </TableCell>
+                    <TableCell className="max-w-xs truncate">
+                      {employee.address || "N/A"}
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                    No employees found
                   </TableCell>
-                  <TableCell>{formatDate(employee.hireDate)}</TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>

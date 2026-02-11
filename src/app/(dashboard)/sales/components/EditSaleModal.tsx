@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/select";
 import { useCurrency } from "@/hooks/useCurrency";
 import { ProductSearchInput } from "@/components/ProductSearchInput";
-import { ScanLine } from "lucide-react";
 
 interface Product {
   id: string;
@@ -89,7 +88,6 @@ export function EditSaleModal({
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<SaleItem[]>([]);
-  const [skuInputs, setSkuInputs] = useState<string[]>([]);
 
   useEffect(() => {
     fetchCategories();
@@ -109,7 +107,6 @@ export function EditSaleModal({
         discount: item.discount || 0,
       }));
       setItems(saleItems);
-      setSkuInputs(new Array(saleItems.length).fill(""));
       
       // Cache products from sale items
       const saleProducts = sale.items
@@ -139,45 +136,12 @@ export function EditSaleModal({
     }
   };
 
-  const fetchProductBySku = async (sku: string, index: number) => {
-    if (!sku || sku.trim().length === 0) return;
-
-    try {
-      const response = await fetch(`/api/inventory/search?q=${encodeURIComponent(sku)}&limit=1`);
-      const data = await response.json();
-      
-      if (data.products && data.products.length > 0) {
-        const product = data.products[0];
-        // Check if SKU matches exactly (case-insensitive)
-        if (product.sku.toLowerCase() === sku.toLowerCase()) {
-          updateItem(index, "productId", product.id);
-          // Clear SKU input after successful match
-          const newSkuInputs = [...skuInputs];
-          newSkuInputs[index] = "";
-          setSkuInputs(newSkuInputs);
-        }
-      }
-    } catch (error) {
-      console.error("Error searching product by SKU:", error);
-    }
-  };
-
   const addItem = () => {
     setItems([...items, { productId: "", quantity: 1, discount: 0 }]);
-    setSkuInputs([...skuInputs, ""]);
-    // Auto-focus the new SKU input field after a short delay to allow DOM update
-    setTimeout(() => {
-      const newIndex = items.length;
-      const skuInput = document.getElementById(`sku-${newIndex}`) as HTMLInputElement;
-      if (skuInput) {
-        skuInput.focus();
-      }
-    }, 100);
   };
 
   const removeItem = (index: number) => {
     setItems(items.filter((_, i) => i !== index));
-    setSkuInputs(skuInputs.filter((_, i) => i !== index));
   };
 
   const updateItem = (
@@ -377,56 +341,6 @@ export function EditSaleModal({
               return (
                 <div key={index} className="space-y-2 border rounded-lg p-4">
                   <div className="grid grid-cols-1 gap-4">
-                    {/* SKU/Barcode Input */}
-                    <div className="space-y-2">
-                      <Label htmlFor={`sku-${index}`}>
-                        <ScanLine className="inline h-4 w-4 mr-1" />
-                        Scan Barcode or Enter SKU
-                      </Label>
-                      <div className="relative">
-                        <ScanLine className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          id={`sku-${index}`}
-                          type="text"
-                          value={skuInputs[index] || ""}
-                          onChange={(e) => {
-                            const newSkuInputs = [...skuInputs];
-                            newSkuInputs[index] = e.target.value;
-                            setSkuInputs(newSkuInputs);
-                          }}
-                          onKeyDown={async (e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              const sku = skuInputs[index] || "";
-                              if (sku.trim()) {
-                                await fetchProductBySku(sku.trim(), index);
-                                // After successful scan, move focus to quantity field
-                                const quantityInput = document.querySelector(
-                                  `input[type="number"][data-item-index="${index}"]`
-                                ) as HTMLInputElement;
-                                if (quantityInput) {
-                                  quantityInput.focus();
-                                  quantityInput.select();
-                                }
-                              }
-                            }
-                          }}
-                          onBlur={async () => {
-                            const sku = skuInputs[index];
-                            if (sku && sku.trim()) {
-                              await fetchProductBySku(sku.trim(), index);
-                            }
-                          }}
-                          autoFocus={index === items.length - 1 && items.length > 0}
-                          placeholder="Scan barcode or type SKU and press Enter"
-                          className="pl-9"
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Or search by name below
-                      </p>
-                    </div>
-
                     {/* Product Search */}
                     <ProductSearchInput
                       value={item.productId}
@@ -441,8 +355,8 @@ export function EditSaleModal({
                       }}
                       category={selectedCategory && selectedCategory !== "all" ? selectedCategory : undefined}
                       inStockOnly={status === "completed"}
-                      label="Search Product"
-                      placeholder="Type product name, SKU, or scan barcode..."
+                      label="Product (scan barcode or search)"
+                      placeholder="Scan barcode or type product name / SKU..."
                     />
                   </div>
 
