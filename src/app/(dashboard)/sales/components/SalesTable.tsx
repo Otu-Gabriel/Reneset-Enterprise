@@ -60,11 +60,11 @@ interface SalesTableProps {
     status: string;
     productId: string;
   };
-  onSalesChanged?: () => void; // Notify parent when sales data changes
+  onSaleChanged?: () => void; // Callback when sale is created, updated, or deleted
 }
 
 export const SalesTable = forwardRef<SalesTableRef, SalesTableProps>(
-  ({ filters = { search: "", status: "", productId: "" }, onSalesChanged }, ref) => {
+  ({ filters = { search: "", status: "", productId: "" }, onSaleChanged }, ref) => {
     const formatCurrency = useCurrency();
     const { data: session } = useSession();
     const [sales, setSales] = useState<Sale[]>([]);
@@ -125,7 +125,7 @@ export const SalesTable = forwardRef<SalesTableRef, SalesTableProps>(
 
         if (response.ok) {
           fetchSales();
-          onSalesChanged?.();
+          onSaleChanged?.();
         }
       } catch (error) {
         console.error("Error deleting sale:", error);
@@ -307,7 +307,7 @@ export const SalesTable = forwardRef<SalesTableRef, SalesTableProps>(
           onOpenChange={setEditOpen}
           onSaleUpdated={() => {
             fetchSales();
-            onSalesChanged?.();
+            onSaleChanged?.();
           }}
         />
       </Card>

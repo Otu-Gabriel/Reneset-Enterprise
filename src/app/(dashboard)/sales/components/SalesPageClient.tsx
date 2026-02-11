@@ -3,7 +3,7 @@
 import { useRef, useState, useCallback } from "react";
 import { SalesTable, SalesTableRef } from "./SalesTable";
 import { AddSaleModal } from "./AddSaleModal";
-import { SalesStatisticsCards } from "./SalesStatisticsCards";
+import { SalesStatisticsCards, SalesStatisticsCardsRef } from "./SalesStatisticsCards";
 import { Filters } from "./Filters";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -14,7 +14,7 @@ interface SalesPageClientProps {
 
 export function SalesPageClient({ canCreate }: SalesPageClientProps) {
   const salesTableRef = useRef<SalesTableRef>(null);
-  const [statsVersion, setStatsVersion] = useState(0);
+  const statisticsCardsRef = useRef<SalesStatisticsCardsRef>(null);
   const [filters, setFilters] = useState({
     search: "",
     status: "",
@@ -23,11 +23,11 @@ export function SalesPageClient({ canCreate }: SalesPageClientProps) {
 
   const handleSaleCreated = () => {
     salesTableRef.current?.refresh();
-    setStatsVersion((v) => v + 1);
+    statisticsCardsRef.current?.refresh();
   };
 
-  const handleSalesChanged = () => {
-    setStatsVersion((v) => v + 1);
+  const handleSaleChanged = () => {
+    statisticsCardsRef.current?.refresh();
   };
 
   const handleFilterChange = useCallback((newFilters: {
@@ -56,13 +56,9 @@ export function SalesPageClient({ canCreate }: SalesPageClientProps) {
           </AddSaleModal>
         )}
       </div>
-      <SalesStatisticsCards key={statsVersion} />
+      <SalesStatisticsCards ref={statisticsCardsRef} />
       <Filters onFilterChange={handleFilterChange} />
-      <SalesTable
-        ref={salesTableRef}
-        filters={filters}
-        onSalesChanged={handleSalesChanged}
-      />
+      <SalesTable ref={salesTableRef} filters={filters} onSaleChanged={handleSaleChanged} />
     </div>
   );
 }
