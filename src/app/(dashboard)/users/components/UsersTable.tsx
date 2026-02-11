@@ -161,15 +161,15 @@ export function UsersTable() {
     <>
       <Card className="bg-card">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center sm:flex-row flex-col gap-3 justify-between">
             <CardTitle>Users</CardTitle>
-            <div className="flex items-center gap-4">
-              <div className="relative">
+            <div className="flex items-center gap-4 flex-col w-full sm:w-auto sm:flex-row sm:flex-wrap">
+              <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Search users..."
-                  className="pl-9 w-64"
+                  className="pl-9 w-full sm:w-64"
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);
@@ -178,7 +178,7 @@ export function UsersTable() {
                 />
               </div>
               <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-full sm:w-auto">
                   <SelectValue placeholder="All Roles" />
                 </SelectTrigger>
                 <SelectContent>
@@ -192,6 +192,7 @@ export function UsersTable() {
                 onClick={() => setAddOpen(true)}
                 disabled={!canEdit}
                 title={!canEdit ? "You don't have permission to manage users" : ""}
+                className="w-full sm:w-auto"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Add User

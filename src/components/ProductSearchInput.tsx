@@ -155,7 +155,7 @@ export function ProductSearchInput({
     } else if (e.key === "ArrowDown" && products.length > 0) {
       e.preventDefault();
       const firstItem = suggestionsRef.current?.querySelector(
-        "[data-product-item]"
+        "[data-product-item]",
       ) as HTMLElement;
       firstItem?.focus();
     }
@@ -267,8 +267,8 @@ export function ProductSearchInput({
                         product.stock === 0
                           ? "text-red-600"
                           : product.stock < 10
-                          ? "text-yellow-600"
-                          : "text-green-600"
+                            ? "text-yellow-600"
+                            : "text-green-600"
                       }`}
                     >
                       {product.stock === 0 ? (
@@ -299,4 +299,3 @@ export function ProductSearchInput({
     </div>
   );
 }
-

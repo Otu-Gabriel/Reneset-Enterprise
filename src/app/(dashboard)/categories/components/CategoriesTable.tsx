@@ -157,9 +157,9 @@ export function CategoriesTable({
     <>
       <Card className="bg-card">
         <CardHeader>
-          <div className="flex items-center flex-col sm:flex-row gap-5 sm:gap-0 sm:justify-between">
+          <div className="flex items-center flex-col sm:flex-row gap-5 sm:gap-3 sm:justify-between">
             <CardTitle className="hidden sm:block">Categories</CardTitle>
-            <div className="flex items-center flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <div className="flex items-center flex-col sm:flex-row sm:flex-wrap gap-2 w-full sm:w-auto">
               {canCreate && (
                 <>
                   <AddCategoryModal onSuccess={fetchCategories}>
@@ -246,7 +246,7 @@ export function CategoriesTable({
                   </Dialog>
                 </>
               )}
-              <div className="relative w-full sm:w-auto">
+              <div className="relative w-full sm:w-auto ">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
