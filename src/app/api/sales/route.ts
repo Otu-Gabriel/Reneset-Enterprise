@@ -101,6 +101,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Verify the user exists in the database
+    const userExists = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true },
+    });
+
+    if (!userExists) {
+      console.error(
+        `User ID ${session.user.id} from session does not exist in database`
+      );
+      return NextResponse.json(
+        {
+          error:
+            "Your session is invalid. Please log out and log back in.",
+          code: "INVALID_SESSION",
+        },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const {
       customerId,
