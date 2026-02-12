@@ -183,9 +183,9 @@ export function BrandsTable({
     <>
       <Card className="bg-card">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 justify-between">
             <CardTitle className="hidden sm:block">Brands</CardTitle>
-            <div className="flex items-center gap-2 flex-col sm:flex-row w-full sm:w-auto">
+            <div className="flex items-center gap-2 flex-col sm:flex-row sm:flex-wrap w-full sm:w-auto">
               {canCreate && (
                 <>
                   <AddBrandModal onSuccess={fetchBrands}>

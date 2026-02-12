@@ -70,11 +70,11 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(
-    null
+    null,
   );
   const [customerSearchQuery, setCustomerSearchQuery] = useState("");
   const [customerSuggestions, setCustomerSuggestions] = useState<Customer[]>(
-    []
+    [],
   );
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isNewCustomer, setIsNewCustomer] = useState(false);
@@ -88,7 +88,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
   const [numberOfInstallments, setNumberOfInstallments] = useState(3);
   const [frequency, setFrequency] = useState("monthly");
   const [startDate, setStartDate] = useState(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
   const [items, setItems] = useState<SaleItem[]>([
     { productId: "", quantity: 1, discount: 0 },
@@ -155,7 +155,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
   const searchCustomers = async (query: string) => {
     try {
       const response = await fetch(
-        `/api/customers/search?q=${encodeURIComponent(query)}&limit=10`
+        `/api/customers/search?q=${encodeURIComponent(query)}&limit=10`,
       );
       const data = await response.json();
       setCustomerSuggestions(data.customers || []);
@@ -206,8 +206,8 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
       const data = await response.json();
       const uniqueCategories = Array.from(
         new Set(
-          data.products?.map((p: Product) => p.category).filter(Boolean) || []
-        )
+          data.products?.map((p: Product) => p.category).filter(Boolean) || [],
+        ),
       );
       setCategories(uniqueCategories as string[]);
     } catch (error) {
@@ -226,7 +226,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
   const updateItem = (
     index: number,
     field: keyof SaleItem,
-    value: string | number
+    value: string | number,
   ) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
@@ -235,7 +235,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
 
   // Fetch product details when needed
   const fetchProductDetails = async (
-    productId: string
+    productId: string,
   ): Promise<Product | null> => {
     try {
       const response = await fetch(`/api/inventory/${productId}`);
@@ -565,7 +565,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                     value={downPayment}
                     onChange={(e) =>
                       setDownPayment(
-                        Math.min(total, parseFloat(e.target.value) || 0)
+                        Math.min(total, parseFloat(e.target.value) || 0),
                       )
                     }
                   />
@@ -585,7 +585,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                     value={numberOfInstallments}
                     onChange={(e) =>
                       setNumberOfInstallments(
-                        Math.max(1, parseInt(e.target.value) || 1)
+                        Math.max(1, parseInt(e.target.value) || 1),
                       )
                     }
                   />
@@ -681,7 +681,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
             </div>
             {items.map((item, index) => {
               const selectedProduct = products.find(
-                (p) => p.id === item.productId
+                (p) => p.id === item.productId,
               );
               const stockWarning =
                 selectedProduct &&
@@ -727,7 +727,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                           updateItem(
                             index,
                             "quantity",
-                            parseInt(e.target.value) || 1
+                            parseInt(e.target.value) || 1,
                           )
                         }
                       />
@@ -743,7 +743,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                           updateItem(
                             index,
                             "discount",
-                            parseFloat(e.target.value) || 0
+                            parseFloat(e.target.value) || 0,
                           )
                         }
                       />
@@ -755,7 +755,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                           {item.quantity} ={" "}
                           {formatCurrency(
                             selectedProduct.price * item.quantity -
-                              (item.discount || 0)
+                              (item.discount || 0),
                           )}
                         </div>
                       </div>
