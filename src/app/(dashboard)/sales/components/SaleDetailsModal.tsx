@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useSystemSettings } from "@/hooks/useSystemSettings";
 import { Printer, X } from "lucide-react";
 
 interface Sale {
@@ -51,8 +52,13 @@ export function SaleDetailsModal({
   onOpenChange,
 }: SaleDetailsModalProps) {
   const formatCurrency = useCurrency();
+  const { settings } = useSystemSettings();
   
   if (!sale) return null;
+
+  const companyName = settings?.companyName || "GabyGod Technologies";
+  const businessAddress = settings?.businessAddress || "Suhum, Eastern Region";
+  const businessPhone = settings?.businessPhone || "0546880541 / 0550127317";
 
   const handlePrint = () => {
     const printWindow = window.open("", "_blank");
@@ -124,9 +130,9 @@ export function SaleDetailsModal({
         </head>
         <body>
           <div class="header">
-            <h1>Reneset Enterprise</h1>
-            <p>Suhum, Eastern Region</p>
-            <p>Tel: 0546880541 / 0550127317</p>
+            <h1>${companyName}</h1>
+            ${businessAddress ? `<p>${businessAddress}</p>` : ""}
+            ${businessPhone ? `<p>Tel: ${businessPhone}</p>` : ""}
             <p style="margin-top: 10px; font-weight: bold;">Sales Receipt</p>
             <p>${sale.saleNumber}</p>
           </div>
@@ -200,9 +206,13 @@ export function SaleDetailsModal({
         </DialogHeader>
         <div className="space-y-6">
           <div className="border-b pb-4 text-center">
-            <h2 className="text-2xl font-bold">Reneset Enterprise</h2>
-            <p className="text-sm text-muted-foreground">Suhum, Eastern Region</p>
-            <p className="text-sm text-muted-foreground">Tel: 0546880541 / 0550127317</p>
+            <h2 className="text-2xl font-bold">{companyName}</h2>
+            {businessAddress && (
+              <p className="text-sm text-muted-foreground">{businessAddress}</p>
+            )}
+            {businessPhone && (
+              <p className="text-sm text-muted-foreground">Tel: {businessPhone}</p>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

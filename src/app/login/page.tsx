@@ -14,13 +14,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Grid3x3 } from "lucide-react";
+import { useSystemSettings } from "@/hooks/useSystemSettings";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { settings } = useSystemSettings();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  
+  const companyName = settings?.companyName || "GabyGod Technologies";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +57,7 @@ export default function LoginPage() {
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Grid3x3 className="h-8 w-8 text-primary" />
-            <CardTitle className="text-2xl">Welcom to Reneset Enterprise</CardTitle>
+            <CardTitle className="text-2xl">Welcome to {companyName}</CardTitle>
           </div>
           <CardDescription>
             Enter your credentials to access the system

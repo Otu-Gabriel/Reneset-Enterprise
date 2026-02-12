@@ -17,6 +17,7 @@ export async function GET() {
       settings = await prisma.systemSettings.create({
         data: {
           id: "system",
+          companyName: "GabyGod Technologies",
           currency: "USD",
           dateFormat: "MM/DD/YYYY",
           timeFormat: "12h",
@@ -50,7 +51,17 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { currency, dateFormat, timeFormat, language } = body;
+    const {
+      companyName,
+      logoUrl,
+      faviconUrl,
+      businessAddress,
+      businessPhone,
+      currency,
+      dateFormat,
+      timeFormat,
+      language,
+    } = body;
 
     // Validate inputs
     const validCurrencies = ["USD", "EUR", "GBP", "NGN", "GHS", "JPY", "CNY"];
@@ -89,6 +100,11 @@ export async function PUT(request: NextRequest) {
     const settings = await prisma.systemSettings.upsert({
       where: { id: "system" },
       update: {
+        ...(companyName !== undefined && { companyName }),
+        ...(logoUrl !== undefined && { logoUrl }),
+        ...(faviconUrl !== undefined && { faviconUrl }),
+        ...(businessAddress !== undefined && { businessAddress }),
+        ...(businessPhone !== undefined && { businessPhone }),
         ...(currency && { currency }),
         ...(dateFormat && { dateFormat }),
         ...(timeFormat && { timeFormat }),
@@ -97,6 +113,11 @@ export async function PUT(request: NextRequest) {
       },
       create: {
         id: "system",
+        companyName: companyName || "GabyGod Technologies",
+        logoUrl: logoUrl || null,
+        faviconUrl: faviconUrl || null,
+        businessAddress: businessAddress || null,
+        businessPhone: businessPhone || null,
         currency: currency || "USD",
         dateFormat: dateFormat || "MM/DD/YYYY",
         timeFormat: timeFormat || "12h",

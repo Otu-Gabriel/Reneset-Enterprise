@@ -3,6 +3,11 @@
 import { useState, useEffect } from "react";
 
 interface SystemSettings {
+  companyName: string;
+  logoUrl: string | null;
+  faviconUrl: string | null;
+  businessAddress: string | null;
+  businessPhone: string | null;
   currency: string;
   dateFormat: string;
   timeFormat: string;

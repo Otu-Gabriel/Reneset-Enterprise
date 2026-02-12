@@ -18,7 +18,11 @@ export async function POST(request: NextRequest) {
 
     if (
       !session ||
-      !hasPermission(session.user.permissions, Permission.CREATE_INVENTORY)
+      (!hasPermission(session.user.permissions, Permission.CREATE_INVENTORY) &&
+        !hasPermission(
+          session.user.permissions,
+          Permission.MANAGE_SYSTEM_SETTINGS
+        ))
     ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -48,6 +52,10 @@ export async function POST(request: NextRequest) {
         {
           folder: "reneset-products",
           resource_type: "image",
+          transformation: [
+            { width: 2000, height: 2000, crop: "limit" }, // Limit size for logos/favicons
+            { quality: "auto" },
+          ],
         },
         (error, result) => {
           if (error) reject(error);

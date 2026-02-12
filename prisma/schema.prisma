@@ -283,14 +283,19 @@ model AuditLog {
 }
 
 model SystemSettings {
-  id          String   @id @default("system") // Singleton - only one record
-  currency    String   @default("USD")
-  dateFormat  String   @default("MM/DD/YYYY")
-  timeFormat  String   @default("12h")
-  language    String   @default("en")
-  updatedAt   DateTime @updatedAt
-  updatedById String?
-  updatedBy   User?    @relation("SettingsUpdatedBy", fields: [updatedById], references: [id])
+  id              String   @id @default("system") // Singleton - only one record
+  companyName     String   @default("GabyGod Technologies")
+  logoUrl         String?
+  faviconUrl      String?
+  businessAddress String?
+  businessPhone   String?
+  currency        String   @default("USD")
+  dateFormat      String   @default("MM/DD/YYYY")
+  timeFormat      String   @default("12h")
+  language        String   @default("en")
+  updatedAt       DateTime @updatedAt
+  updatedById     String?
+  updatedBy       User?    @relation("SettingsUpdatedBy", fields: [updatedById], references: [id])
 
   @@map("system_settings")
 }

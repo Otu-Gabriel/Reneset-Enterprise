@@ -25,6 +25,8 @@ import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { useSidebar } from "./SidebarContext";
 import { Button } from "@/components/ui/button";
+import { useSystemSettings } from "@/hooks/useSystemSettings";
+import Image from "next/image";
 
 const navigation = [
   {
@@ -110,6 +112,10 @@ export function Sidebar() {
   const { data: session } = useSession();
   const { isCollapsed, isMobileOpen, toggleSidebar, closeMobile } =
     useSidebar();
+  const { settings } = useSystemSettings();
+  
+  const companyName = settings?.companyName || "GabyGod Technologies";
+  const logoUrl = settings?.logoUrl;
 
   // Filter navigation based on permissions
   const visibleNav = navigation.filter(
@@ -160,9 +166,20 @@ export function Sidebar() {
               isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
             )}
           >
-            <Grid3x3 className="h-6 w-6 text-primary flex-shrink-0" />
+            {logoUrl ? (
+              <div className="h-6 w-6 flex-shrink-0 relative">
+                <Image
+                  src={logoUrl}
+                  alt={companyName}
+                  fill
+                  className="object-contain"
+                />
+              </div>
+            ) : (
+              <Grid3x3 className="h-6 w-6 text-primary flex-shrink-0" />
+            )}
             <span className="text-lg font-semibold text-foreground whitespace-nowrap">
-              Reneset Enterprise
+              {companyName}
             </span>
           </div>
           <div className="flex items-center gap-2">
