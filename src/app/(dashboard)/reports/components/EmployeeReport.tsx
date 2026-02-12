@@ -44,23 +44,39 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
   const formatCurrency = useCurrency();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startDate, endDate]);
 
   const fetchData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams({ type: "employees" });
       if (startDate) params.append("startDate", startDate);
       if (endDate) params.append("endDate", endDate);
 
       const response = await fetch(`/api/reports?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch employee report: ${response.statusText}`);
+      }
+      
       const result = await response.json();
+      
+      // Verify we got valid data from the database
+      if (!result || typeof result !== 'object') {
+        throw new Error('Invalid data received from server');
+      }
+      
       setData(result);
     } catch (error) {
       console.error("Error fetching employee report:", error);
+      setError(error instanceof Error ? error.message : "Failed to load employee data");
+      setData(null);
     } finally {
       setLoading(false);
     }
@@ -71,6 +87,25 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center space-y-2">
+            <p className="text-destructive font-medium">Error loading employee report</p>
+            <p className="text-sm text-muted-foreground">{error}</p>
+            <button
+              onClick={fetchData}
+              className="text-sm text-primary hover:underline"
+            >
+              Try again
+            </button>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
