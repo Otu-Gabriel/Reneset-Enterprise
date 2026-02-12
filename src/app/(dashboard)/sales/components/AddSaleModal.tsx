@@ -215,27 +215,6 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
     }
   };
 
-  const fetchProductBySku = async (sku: string, index: number) => {
-    if (!sku || sku.trim().length === 0) return;
-
-    try {
-      const response = await fetch(
-        `/api/inventory/search?q=${encodeURIComponent(sku)}&limit=1`
-      );
-      const data = await response.json();
-
-      if (data.products && data.products.length > 0) {
-        const product = data.products[0];
-        // Check if SKU matches exactly (case-insensitive)
-        if (product.sku.toLowerCase() === sku.toLowerCase()) {
-          updateItem(index, "productId", product.id);
-        }
-      }
-    } catch (error) {
-      console.error("Error searching product by SKU:", error);
-    }
-  };
-
   const addItem = () => {
     setItems([...items, { productId: "", quantity: 1, discount: 0 }]);
   };
@@ -428,7 +407,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
           <DialogDescription>Create a new sales transaction</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 bg-muted/50 p-4 rounded-lg">
             <div className="space-y-2 relative">
               <Label htmlFor="customerName">Customer Name *</Label>
               <div className="relative">
@@ -512,7 +491,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 bg-muted/50 p-4 rounded-lg">
             <div className="space-y-2">
               <Label htmlFor="customerPhone">Customer Phone</Label>
               <Input
@@ -539,7 +518,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 bg-muted/50 p-4 rounded-lg">
             <div className="space-y-2">
               <Label htmlFor="status">Status *</Label>
               <Select
@@ -663,7 +642,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
               </div>
             </div>
           )}
-          <div className="space-y-2">
+          <div className="space-y-2 bg-muted/50 p-4 rounded-lg">
             <Label htmlFor="notes">Notes</Label>
             <textarea
               id="notes"
@@ -673,7 +652,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
               placeholder="Additional notes about this sale..."
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 bg-muted/50 p-4 rounded-lg">
             <div className="flex items-center justify-between">
               <Label>Items</Label>
               <div className="flex gap-2">
@@ -695,9 +674,9 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                     </SelectContent>
                   </Select>
                 )}
-                <Button type="button" size="sm" onClick={addItem}>
+                {/* <Button type="button" size="sm" onClick={addItem}>
                   Add Item
-                </Button>
+                </Button> */}
               </div>
             </div>
             {items.map((item, index) => {
@@ -710,7 +689,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                 status === "completed";
 
               return (
-                <div key={index} className="space-y-2 border rounded-lg p-4">
+                <div key={index} className="space-y-2 border rounded-lg p-4 bg-accent ">
                   <div className="grid grid-cols-1 gap-4">
                     {/* Product Search */}
                     <ProductSearchInput
@@ -822,10 +801,10 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
               onClick={addItem}
               className=""
             >
-              Add Item
+              Buy More
             </Button>
           </div>
-          <div className="border-t pt-4 space-y-2">
+          <div className="border-t pt-4 space-y-2 bg-muted/50 p-4 rounded-lg">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Subtotal:</span>
               <span className="font-medium">{formatCurrency(subtotal)}</span>

@@ -36,7 +36,7 @@ export function ProductSearchInput({
   onProductSelect,
   category,
   inStockOnly = false,
-  placeholder = "Search by name, SKU, or scan barcode...",
+  placeholder = "Search by name, SKU, category, brand, or scan barcode...",
   label = "Product",
   disabled = false,
 }: ProductSearchInputProps) {
