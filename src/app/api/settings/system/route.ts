@@ -5,6 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 
+// Force dynamic rendering - prevent static generation/prerendering
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET() {
   try {
     // Get system settings (no auth required for reading)
@@ -26,7 +30,11 @@ export async function GET() {
       });
     }
 
-    return NextResponse.json(settings);
+    return NextResponse.json(settings, {
+      headers: {
+        "Cache-Control": "no-store, max-age=0",
+      },
+    });
   } catch (error) {
     console.error("Error fetching system settings:", error);
     return NextResponse.json(
@@ -126,7 +134,11 @@ export async function PUT(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(settings);
+    return NextResponse.json(settings, {
+      headers: {
+        "Cache-Control": "no-store, max-age=0",
+      },
+    });
   } catch (error) {
     console.error("Error updating system settings:", error);
     return NextResponse.json(
@@ -134,4 +146,16 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// Handle OPTIONS for CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Methods": "GET, PUT, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Cache-Control": "no-store, max-age=0",
+    },
+  });
 }
