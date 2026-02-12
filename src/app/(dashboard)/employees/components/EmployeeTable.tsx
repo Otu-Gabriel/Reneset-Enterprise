@@ -18,6 +18,7 @@ import { Edit, Trash2, Search } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
+import { EditEmployeeModal } from "./EditEmployeeModal";
 
 interface Employee {
   id: string;
@@ -31,7 +32,11 @@ interface Employee {
   status: string;
 }
 
-export function EmployeeTable() {
+interface EmployeeTableProps {
+  refreshTrigger?: number;
+}
+
+export function EmployeeTable({ refreshTrigger }: EmployeeTableProps = {}) {
   const formatCurrency = useCurrency();
   const { data: session } = useSession();
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -39,6 +44,8 @@ export function EmployeeTable() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   const canEdit =
     session?.user?.permissions &&
@@ -49,7 +56,7 @@ export function EmployeeTable() {
 
   useEffect(() => {
     fetchEmployees();
-  }, [page, search]);
+  }, [page, search, refreshTrigger]);
 
   const fetchEmployees = async () => {
     try {
@@ -71,7 +78,37 @@ export function EmployeeTable() {
     }
   };
 
+  const handleEdit = async (employee: Employee) => {
+    if (!canEdit) {
+      alert("You don't have permission to edit employees");
+      return;
+    }
+    try {
+      // Fetch full employee data to ensure we have all fields
+      const response = await fetch(`/api/employees/${employee.id}`);
+      if (response.ok) {
+        const fullEmployee = await response.json();
+        setEditingEmployee(fullEmployee);
+        setEditModalOpen(true);
+      } else {
+        console.error("Failed to fetch employee details");
+        // Fallback to using the employee from table
+        setEditingEmployee(employee);
+        setEditModalOpen(true);
+      }
+    } catch (error) {
+      console.error("Error fetching employee details:", error);
+      // Fallback to using the employee from table
+      setEditingEmployee(employee);
+      setEditModalOpen(true);
+    }
+  };
+
   const handleDelete = async (id: string) => {
+    if (!canDelete) {
+      alert("You don't have permission to delete employees");
+      return;
+    }
     if (!confirm("Are you sure you want to delete this employee?")) return;
 
     try {
@@ -81,9 +118,13 @@ export function EmployeeTable() {
 
       if (response.ok) {
         fetchEmployees();
+      } else {
+        const error = await response.json();
+        alert(error.error || "Failed to delete employee");
       }
     } catch (error) {
       console.error("Error deleting employee:", error);
+      alert("Failed to delete employee");
     }
   };
 
@@ -121,7 +162,7 @@ export function EmployeeTable() {
               <TableHead>Department</TableHead>
               <TableHead>Salary</TableHead>
               <TableHead>Status</TableHead>
-              {(canEdit || canDelete) && <TableHead>Actions</TableHead>}
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -152,26 +193,30 @@ export function EmployeeTable() {
                       {employee.status}
                     </span>
                   </TableCell>
-                  {(canEdit || canDelete) && (
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {canEdit && (
-                          <Button variant="ghost" size="icon">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {canDelete && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(employee.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  )}
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(employee)}
+                        disabled={!canEdit}
+                        title={canEdit ? "Edit Employee" : "No permission to edit"}
+                        className={!canEdit ? "opacity-50 cursor-not-allowed" : ""}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(employee.id)}
+                        disabled={!canDelete}
+                        title={canDelete ? "Delete Employee" : "No permission to delete"}
+                        className={!canDelete ? "opacity-50 cursor-not-allowed" : ""}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -201,6 +246,15 @@ export function EmployeeTable() {
           </div>
         )}
       </CardContent>
+      <EditEmployeeModal
+        employee={editingEmployee}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        onSuccess={() => {
+          fetchEmployees();
+          setEditingEmployee(null);
+        }}
+      />
     </Card>
   );
 }

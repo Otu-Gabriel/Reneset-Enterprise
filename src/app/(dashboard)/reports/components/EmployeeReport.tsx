@@ -25,7 +25,8 @@ import {
 } from "recharts";
 import { formatDate } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface EmployeeReportProps {
   startDate: string;
@@ -71,6 +72,25 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
       if (!result || typeof result !== 'object') {
         throw new Error('Invalid data received from server');
       }
+      
+      // Ensure summary data exists
+      if (!result.summary) {
+        throw new Error('Invalid report data: missing summary');
+      }
+      
+      // Debug: Log received data
+      console.log('[EmployeeReport Component] Data received from API:', {
+        summary: result.summary,
+        employeesCount: result.employees?.length,
+        employees: result.employees?.map((e: any) => ({
+          id: e.id,
+          name: e.name,
+          email: e.email,
+          status: e.status,
+          position: e.position,
+          department: e.department
+        }))
+      });
       
       setData(result);
     } catch (error) {
@@ -121,6 +141,27 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
 
   return (
     <div className="space-y-6">
+      {/* Header with refresh button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Employee Report</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {startDate || endDate 
+              ? `Showing employees hired between ${startDate || "start"} and ${endDate || "end"}`
+              : "Showing all employees"}
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={fetchData}
+          disabled={loading}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
+      </div>
+
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-card">
@@ -130,7 +171,7 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
           <CardContent>
             <div className="text-2xl font-bold">{data.summary?.totalEmployees || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {data.employees?.length || 0} in current view
+              {data.employees?.length || 0} {startDate || endDate ? "in date range" : "total"}
             </p>
           </CardContent>
         </Card>
@@ -166,23 +207,29 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Salary</CardTitle>
+            <CardTitle className="text-sm font-medium">Top Sales Employee</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {(() => {
-                const employeesWithSalary = data.employees?.filter((e: any) => e.salary) || [];
-                if (employeesWithSalary.length === 0) return "N/A";
-                const avgSalary = employeesWithSalary.reduce((sum: number, e: any) => sum + (e.salary || 0), 0) / employeesWithSalary.length;
-                return formatCurrency(avgSalary);
-              })()}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {(() => {
-                const employeesWithSalary = data.employees?.filter((e: any) => e.salary) || [];
-                return `${employeesWithSalary.length} employees with salary data`;
-              })()}
-            </p>
+            {data.summary?.topSalesEmployee ? (
+              <>
+                <div className="text-lg font-bold truncate">
+                  {data.summary.topSalesEmployee.name}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formatCurrency(data.summary.topSalesEmployee.totalRevenue)} revenue
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {data.summary.topSalesEmployee.salesCount} {data.summary.topSalesEmployee.salesCount === 1 ? "sale" : "sales"}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-muted-foreground">N/A</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  No sales data available
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -272,12 +319,12 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
       </div>
 
       {/* Employee Sales Performance */}
-      {data.employeeSales && data.employeeSales.length > 0 && (
-        <Card className="bg-card">
-          <CardHeader>
-            <CardTitle>Sales Performance by Employee</CardTitle>
-          </CardHeader>
-          <CardContent>
+      <Card className="bg-card">
+        <CardHeader>
+          <CardTitle>Sales Performance by Employee</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {data.employeeSales && data.employeeSales.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -289,23 +336,34 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
               </TableHeader>
               <TableBody>
                 {data.employeeSales.map((employee: any) => (
-                  <TableRow key={employee.userId}>
-                    <TableCell className="font-medium">{employee.name}</TableCell>
-                    <TableCell>{employee.email}</TableCell>
-                    <TableCell>{employee.salesCount}</TableCell>
-                    <TableCell>{formatCurrency(employee.totalRevenue)}</TableCell>
+                  <TableRow key={employee.userId || employee.email}>
+                    <TableCell className="font-medium">{employee.name || "Unknown"}</TableCell>
+                    <TableCell>{employee.email || "N/A"}</TableCell>
+                    <TableCell>{employee.salesCount || 0}</TableCell>
+                    <TableCell>{formatCurrency(employee.totalRevenue || 0)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No sales data available for the selected period
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Employee List */}
       <Card className="bg-card">
         <CardHeader>
-          <CardTitle>All Employees</CardTitle>
+          <CardTitle>
+            {startDate || endDate ? "Employees in Date Range" : "All Employees"}
+            {data.employees && data.employees.length > 0 && (
+              <span className="text-sm font-normal text-muted-foreground ml-2">
+                ({data.employees.length} {data.employees.length === 1 ? "employee" : "employees"})
+              </span>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -348,7 +406,7 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
                     <TableCell>
                       {employee.hireDate ? formatDate(employee.hireDate) : "N/A"}
                     </TableCell>
-                    <TableCell className="max-w-xs truncate">
+                    <TableCell className="max-w-xs truncate" title={employee.address || ""}>
                       {employee.address || "N/A"}
                     </TableCell>
                   </TableRow>
@@ -356,7 +414,9 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
               ) : (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                    No employees found
+                    {startDate || endDate 
+                      ? "No employees found in the selected date range"
+                      : "No employees found"}
                   </TableCell>
                 </TableRow>
               )}

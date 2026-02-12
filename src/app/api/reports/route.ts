@@ -24,13 +24,20 @@ export async function GET(request: NextRequest) {
     let start: Date | undefined;
     let end: Date | undefined;
 
-    if (startDate) {
-      start = new Date(startDate);
-      start.setHours(0, 0, 0, 0);
+    // Only create dates if valid date strings are provided
+    if (startDate && startDate.trim() !== "") {
+      const parsedStart = new Date(startDate);
+      if (!isNaN(parsedStart.getTime())) {
+        start = parsedStart;
+        start.setHours(0, 0, 0, 0);
+      }
     }
-    if (endDate) {
-      end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
+    if (endDate && endDate.trim() !== "") {
+      const parsedEnd = new Date(endDate);
+      if (!isNaN(parsedEnd.getTime())) {
+        end = parsedEnd;
+        end.setHours(23, 59, 59, 999);
+      }
     }
 
     const dateFilter = start || end ? {
@@ -223,41 +230,64 @@ export async function GET(request: NextRequest) {
       }
 
       case "employees": {
-        // Build employee filter - optionally filter by hire date if date range is provided
-        const employeeWhere: any = {};
-        if (dateFilter) {
-          employeeWhere.hireDate = dateFilter;
-        }
-
-        const employees = await prisma.employee.findMany({
-          where: employeeWhere,
-          include: {
-            createdBy: {
-              select: {
-                name: true,
-              },
-            },
-          },
+        // Always fetch ALL employees for accurate stats (not filtered by date)
+        // Date filter only affects sales performance data and employee list display
+        const allEmployees = await prisma.employee.findMany({
           orderBy: {
             hireDate: "desc",
           },
         });
 
-        const totalEmployees = employees.length;
-        const activeEmployees = employees.filter((e) => e.status === "active").length;
-        const inactiveEmployees = totalEmployees - activeEmployees;
+        // Debug: Log raw employee data from database
+        console.log(`[Employee Report API] Fetched ${allEmployees.length} employees from database`);
+        console.log(`[Employee Report API] Employee details:`, 
+          allEmployees.map(e => ({
+            id: e.id,
+            name: e.name,
+            email: e.email,
+            status: e.status,
+            position: e.position,
+            department: e.department
+          }))
+        );
 
-        // Employees by department
+        // Calculate stats from ALL employees (always current/live data)
+        const totalEmployees = allEmployees.length;
+        // Count active employees - check for various active status values
+        const activeEmployees = allEmployees.filter((e) => {
+          const status = (e.status || "").toLowerCase().trim();
+          return status === "active" || status === "";
+        }).length;
+        const inactiveEmployees = totalEmployees - activeEmployees;
+        
+        console.log(`[Employee Report API] Stats calculated:`, {
+          total: totalEmployees,
+          active: activeEmployees,
+          inactive: inactiveEmployees
+        });
+
+        // For display, optionally filter by hire date if date range is provided
+        // Only filter if BOTH start and end dates are valid
+        let employees = allEmployees;
+        if (dateFilter && start && end) {
+          employees = allEmployees.filter((e) => {
+            const hireDate = new Date(e.hireDate);
+            hireDate.setHours(0, 0, 0, 0);
+            return hireDate >= start && hireDate <= end;
+          });
+        }
+
+        // Employees by department - use ALL employees for accurate breakdown
         const departmentMap = new Map<string, number>();
-        employees.forEach((employee) => {
+        allEmployees.forEach((employee) => {
           const dept = employee.department || "Unassigned";
           const current = departmentMap.get(dept) || 0;
           departmentMap.set(dept, current + 1);
         });
 
-        // Employees by position
+        // Employees by position - use ALL employees for accurate breakdown
         const positionMap = new Map<string, number>();
-        employees.forEach((employee) => {
+        allEmployees.forEach((employee) => {
           const pos = employee.position;
           const current = positionMap.get(pos) || 0;
           positionMap.set(pos, current + 1);
@@ -293,12 +323,41 @@ export async function GET(request: NextRequest) {
           })
         );
 
-        return NextResponse.json({
+        // Find employee with highest sales
+        const topSalesEmployee = employeeSales.length > 0
+          ? employeeSales.sort((a, b) => b.totalRevenue - a.totalRevenue)[0]
+          : null;
+
+        const mappedEmployees = employees.map((e) => {
+          // Ensure all fields are properly mapped
+          return {
+            id: e.id,
+            name: e.name || "",
+            email: e.email || "",
+            phone: e.phone || null,
+            position: e.position || "",
+            department: e.department || null,
+            salary: e.salary || null,
+            status: e.status || "active",
+            hireDate: e.hireDate,
+            address: e.address || null,
+            createdAt: e.createdAt,
+            updatedAt: e.updatedAt,
+          };
+        });
+
+        const responseData = {
           type: "employees",
           summary: {
             totalEmployees,
             activeEmployees,
             inactiveEmployees,
+            topSalesEmployee: topSalesEmployee ? {
+              name: topSalesEmployee.name,
+              email: topSalesEmployee.email,
+              salesCount: topSalesEmployee.salesCount,
+              totalRevenue: topSalesEmployee.totalRevenue,
+            } : null,
           },
           departmentBreakdown: Array.from(departmentMap.entries()).map(([department, count]) => ({
             department,
@@ -309,21 +368,15 @@ export async function GET(request: NextRequest) {
             count,
           })),
           employeeSales: employeeSales.sort((a, b) => b.totalRevenue - a.totalRevenue),
-          employees: employees.map((e) => ({
-            id: e.id,
-            name: e.name,
-            email: e.email,
-            phone: e.phone,
-            position: e.position,
-            department: e.department,
-            salary: e.salary,
-            status: e.status,
-            hireDate: e.hireDate,
-            address: e.address,
-            createdAt: e.createdAt,
-            updatedAt: e.updatedAt,
-          })),
-        });
+          employees: mappedEmployees,
+        };
+        
+        // Debug: Log final response data
+        console.log(`[Employee Report API] Returning ${responseData.employees.length} employees in response`);
+        console.log(`[Employee Report API] Summary:`, responseData.summary);
+        console.log(`[Employee Report API] Employee IDs:`, responseData.employees.map(e => e.id));
+        
+        return NextResponse.json(responseData);
       }
 
       case "financial": {

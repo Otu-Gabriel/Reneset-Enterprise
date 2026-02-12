@@ -92,6 +92,12 @@ const adminNavigation = [
     permission: Permission.MANAGE_USERS,
   },
   {
+    name: "Employees",
+    href: "/employees",
+    icon: Users,
+    permission: Permission.VIEW_EMPLOYEES,
+  },
+  {
     name: "Installments",
     href: "/installments",
     icon: CreditCard,
