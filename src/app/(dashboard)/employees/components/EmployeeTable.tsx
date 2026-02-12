@@ -200,8 +200,12 @@ export function EmployeeTable({ refreshTrigger }: EmployeeTableProps = {}) {
                         size="icon"
                         onClick={() => handleEdit(employee)}
                         disabled={!canEdit}
-                        title={canEdit ? "Edit Employee" : "No permission to edit"}
-                        className={!canEdit ? "opacity-50 cursor-not-allowed" : ""}
+                        title={
+                          canEdit ? "Edit Employee" : "No permission to edit"
+                        }
+                        className={
+                          !canEdit ? "opacity-50 cursor-not-allowed" : ""
+                        }
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -210,8 +214,14 @@ export function EmployeeTable({ refreshTrigger }: EmployeeTableProps = {}) {
                         size="icon"
                         onClick={() => handleDelete(employee.id)}
                         disabled={!canDelete}
-                        title={canDelete ? "Delete Employee" : "No permission to delete"}
-                        className={!canDelete ? "opacity-50 cursor-not-allowed" : ""}
+                        title={
+                          canDelete
+                            ? "Delete Employee"
+                            : "No permission to delete"
+                        }
+                        className={
+                          !canDelete ? "opacity-50 cursor-not-allowed" : ""
+                        }
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -258,4 +268,3 @@ export function EmployeeTable({ refreshTrigger }: EmployeeTableProps = {}) {
     </Card>
   );
 }
-

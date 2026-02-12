@@ -17,7 +17,10 @@ export function EmployeesPageClient({ canCreate }: EmployeesPageClientProps) {
 
   return (
     <div className="space-y-6">
-      <EmployeesHeader canCreate={canCreate} onEmployeeCreated={handleEmployeeCreated} />
+      <EmployeesHeader
+        canCreate={canCreate}
+        onEmployeeCreated={handleEmployeeCreated}
+      />
       <EmployeeTable refreshTrigger={refreshTrigger} />
     </div>
   );

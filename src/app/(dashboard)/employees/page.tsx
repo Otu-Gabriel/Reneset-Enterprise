@@ -19,9 +19,8 @@ export default async function EmployeesPage() {
 
   const canCreate = hasPermission(
     session.user.permissions,
-    Permission.CREATE_EMPLOYEES
+    Permission.CREATE_EMPLOYEES,
   );
 
   return <EmployeesPageClient canCreate={canCreate} />;
 }
-
