@@ -7,6 +7,9 @@ import { hasPermission } from "@/lib/auth";
 import { auditLogger, getRequestMetadata } from "@/lib/audit";
 import * as XLSX from "xlsx";
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);

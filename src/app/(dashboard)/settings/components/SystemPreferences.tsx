@@ -22,8 +22,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Check, Loader2, Upload, X, Image as ImageIcon } from "lucide-react";
 import { useSystemSettings } from "@/hooks/useSystemSettings";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export function SystemPreferences() {
+  const router = useRouter();
   const {
     settings,
     loading: settingsLoading,
@@ -230,10 +232,8 @@ export function SystemPreferences() {
         // Clear file selections
         setLogoFile(null);
         setFaviconFile(null);
-        // Clear cache to force refresh
-        if (typeof window !== "undefined") {
-          window.location.reload();
-        }
+        // Refresh the page to show updated settings
+        router.refresh();
       } else {
         setMessage({
           type: "error",

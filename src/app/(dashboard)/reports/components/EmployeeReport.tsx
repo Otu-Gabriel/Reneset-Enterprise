@@ -78,20 +78,6 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
         throw new Error('Invalid report data: missing summary');
       }
       
-      // Debug: Log received data
-      console.log('[EmployeeReport Component] Data received from API:', {
-        summary: result.summary,
-        employeesCount: result.employees?.length,
-        employees: result.employees?.map((e: any) => ({
-          id: e.id,
-          name: e.name,
-          email: e.email,
-          status: e.status,
-          position: e.position,
-          department: e.department
-        }))
-      });
-      
       setData(result);
     } catch (error) {
       console.error("Error fetching employee report:", error);

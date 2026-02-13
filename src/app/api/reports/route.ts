@@ -5,6 +5,9 @@ import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -238,19 +241,6 @@ export async function GET(request: NextRequest) {
           },
         });
 
-        // Debug: Log raw employee data from database
-        console.log(`[Employee Report API] Fetched ${allEmployees.length} employees from database`);
-        console.log(`[Employee Report API] Employee details:`, 
-          allEmployees.map(e => ({
-            id: e.id,
-            name: e.name,
-            email: e.email,
-            status: e.status,
-            position: e.position,
-            department: e.department
-          }))
-        );
-
         // Calculate stats from ALL employees (always current/live data)
         const totalEmployees = allEmployees.length;
         // Count active employees - check for various active status values
@@ -259,12 +249,6 @@ export async function GET(request: NextRequest) {
           return status === "active" || status === "";
         }).length;
         const inactiveEmployees = totalEmployees - activeEmployees;
-        
-        console.log(`[Employee Report API] Stats calculated:`, {
-          total: totalEmployees,
-          active: activeEmployees,
-          inactive: inactiveEmployees
-        });
 
         // For display, optionally filter by hire date if date range is provided
         // Only filter if BOTH start and end dates are valid
@@ -370,11 +354,6 @@ export async function GET(request: NextRequest) {
           employeeSales: employeeSales.sort((a, b) => b.totalRevenue - a.totalRevenue),
           employees: mappedEmployees,
         };
-        
-        // Debug: Log final response data
-        console.log(`[Employee Report API] Returning ${responseData.employees.length} employees in response`);
-        console.log(`[Employee Report API] Summary:`, responseData.summary);
-        console.log(`[Employee Report API] Employee IDs:`, responseData.employees.map(e => e.id));
         
         return NextResponse.json(responseData);
       }

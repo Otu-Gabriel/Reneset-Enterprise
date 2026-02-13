@@ -7,6 +7,9 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { auditLogger, getRequestMetadata } from "@/lib/audit";
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);

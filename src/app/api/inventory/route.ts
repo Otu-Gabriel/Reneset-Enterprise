@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Permission } from "@prisma/client";
+import { Permission, Prisma } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { auditLogger, getRequestMetadata } from "@/lib/audit";
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,65 +41,135 @@ export async function GET(request: NextRequest) {
     }
     
     // Filter by stock status
-    // Note: Prisma doesn't support comparing two fields directly in where clause
-    // So we filter out_of_stock here, and handle low_stock/in_stock after fetching
     if (stockStatus === "out_of_stock") {
       where.stock = 0;
-    } else if (stockStatus === "low_stock") {
-      // Low stock: stock > 0 AND stock <= minStock
-      where.stock = { gt: 0 };
-    } else if (stockStatus === "in_stock") {
-      // In stock: stock > minStock (we'll filter this after fetching)
-      where.stock = { gt: 0 };
     }
 
-    // Fetch products with pagination
-    let products = await prisma.product.findMany({
-      where,
-      skip: stockStatus && stockStatus !== "out_of_stock" ? 0 : skip, // Don't skip if we need to filter
-      take: stockStatus && stockStatus !== "out_of_stock" ? 10000 : limit, // Fetch more if we need to filter
-      orderBy: { createdAt: "desc" },
-      include: {
-        brand: {
-          select: {
-            id: true,
-            name: true,
+    // For low_stock and in_stock, we need to compare stock with minStock
+    // Prisma doesn't support field-to-field comparison in where clause, so we use raw SQL
+    let products: any[];
+    let total: number;
+
+    if (stockStatus === "low_stock") {
+      // Low stock: stock > 0 AND stock <= minStock
+      const conditions: Prisma.Sql[] = [Prisma.sql`p.stock > 0 AND p.stock <= p.min_stock`];
+      
+      if (search) {
+        const searchPattern = `%${search}%`;
+        conditions.push(Prisma.sql`(LOWER(p.name) LIKE LOWER(${searchPattern}) OR LOWER(p.sku) LIKE LOWER(${searchPattern}) OR LOWER(p.description) LIKE LOWER(${searchPattern}))`);
+      }
+      
+      if (category) {
+        conditions.push(Prisma.sql`p.category_id = ${category}`);
+      }
+      
+      const whereClause = Prisma.join(conditions, " AND ");
+      
+      // Count query
+      const countResult = await prisma.$queryRaw<Array<{ count: bigint }>>`
+        SELECT COUNT(*)::int as count
+        FROM products p
+        WHERE ${whereClause}
+      `;
+      total = Number(countResult[0]?.count || 0);
+
+      // Fetch query with pagination
+      const rawProducts = await prisma.$queryRaw<Array<any>>`
+        SELECT p.*, b.id as brand_id, b.name as brand_name
+        FROM products p
+        LEFT JOIN brands b ON p.brand_id = b.id
+        WHERE ${whereClause}
+        ORDER BY p.created_at DESC
+        LIMIT ${limit} OFFSET ${skip}
+      `;
+      
+      // Transform raw results to match Prisma format
+      products = rawProducts.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        sku: p.sku,
+        category: p.category,
+        categoryId: p.category_id,
+        brandId: p.brand_id,
+        price: Number(p.price),
+        cost: p.cost ? Number(p.cost) : null,
+        stock: Number(p.stock),
+        minStock: Number(p.min_stock),
+        unit: p.unit,
+        imageUrl: p.image_url,
+        createdAt: p.created_at,
+        updatedAt: p.updated_at,
+        brand: p.brand_id ? { id: p.brand_id, name: p.brand_name } : null,
+      }));
+    } else if (stockStatus === "in_stock") {
+      // In stock: stock > minStock
+      const conditions: Prisma.Sql[] = [Prisma.sql`p.stock > p.min_stock`];
+      
+      if (search) {
+        const searchPattern = `%${search}%`;
+        conditions.push(Prisma.sql`(LOWER(p.name) LIKE LOWER(${searchPattern}) OR LOWER(p.sku) LIKE LOWER(${searchPattern}) OR LOWER(p.description) LIKE LOWER(${searchPattern}))`);
+      }
+      
+      if (category) {
+        conditions.push(Prisma.sql`p.category_id = ${category}`);
+      }
+      
+      const whereClause = Prisma.join(conditions, " AND ");
+      
+      // Count query
+      const countResult = await prisma.$queryRaw<Array<{ count: bigint }>>`
+        SELECT COUNT(*)::int as count
+        FROM products p
+        WHERE ${whereClause}
+      `;
+      total = Number(countResult[0]?.count || 0);
+
+      // Fetch query with pagination
+      const rawProducts = await prisma.$queryRaw<Array<any>>`
+        SELECT p.*, b.id as brand_id, b.name as brand_name
+        FROM products p
+        LEFT JOIN brands b ON p.brand_id = b.id
+        WHERE ${whereClause}
+        ORDER BY p.created_at DESC
+        LIMIT ${limit} OFFSET ${skip}
+      `;
+      
+      // Transform raw results to match Prisma format
+      products = rawProducts.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        sku: p.sku,
+        category: p.category,
+        categoryId: p.category_id,
+        brandId: p.brand_id,
+        price: Number(p.price),
+        cost: p.cost ? Number(p.cost) : null,
+        stock: Number(p.stock),
+        minStock: Number(p.min_stock),
+        unit: p.unit,
+        imageUrl: p.image_url,
+        createdAt: p.created_at,
+        updatedAt: p.updated_at,
+        brand: p.brand_id ? { id: p.brand_id, name: p.brand_name } : null,
+      }));
+    } else {
+      // Standard Prisma query for other cases
+      products = await prisma.product.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+        include: {
+          brand: {
+            select: {
+              id: true,
+              name: true,
+            },
           },
         },
-      },
-    });
-
-    // Apply stock status filtering for low_stock and in_stock
-    if (stockStatus === "low_stock") {
-      products = products.filter((p) => p.stock > 0 && p.stock <= p.minStock);
-    } else if (stockStatus === "in_stock") {
-      products = products.filter((p) => p.stock > p.minStock);
-    }
-
-    // Apply pagination after filtering
-    if (stockStatus && stockStatus !== "out_of_stock") {
-      const startIndex = skip;
-      const endIndex = startIndex + limit;
-      products = products.slice(startIndex, endIndex);
-    }
-
-    // Get total count
-    let total: number;
-    if (stockStatus === "out_of_stock") {
-      total = await prisma.product.count({ where });
-    } else if (stockStatus === "low_stock") {
-      const allProducts = await prisma.product.findMany({
-        where: { stock: { gt: 0 } },
-        select: { stock: true, minStock: true },
       });
-      total = allProducts.filter((p) => p.stock > 0 && p.stock <= p.minStock).length;
-    } else if (stockStatus === "in_stock") {
-      const allProducts = await prisma.product.findMany({
-        where: { stock: { gt: 0 } },
-        select: { stock: true, minStock: true },
-      });
-      total = allProducts.filter((p) => p.stock > p.minStock).length;
-    } else {
       total = await prisma.product.count({ where });
     }
 
