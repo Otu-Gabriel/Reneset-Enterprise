@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   LayoutDashboard,
-  TrendingUp,
   Receipt,
   Grid3x3,
   Users,
@@ -43,6 +42,12 @@ const navigation = [
     permission: Permission.VIEW_SALES,
   },
   {
+    name: "Installments",
+    href: "/installments",
+    icon: CreditCard,
+    permission: Permission.VIEW_INSTALLMENTS,
+  },
+  {
     name: "Products",
     href: "/inventory",
     icon: Grid3x3,
@@ -78,7 +83,6 @@ const navigation = [
     icon: History,
     permission: Permission.VIEW_AUDIT_LOGS,
   },
-  { name: "Settings", href: "/settings", icon: Settings, permission: null }, // Everyone can access settings (for profile)
 ];
 
 const adminNavigation = [
@@ -94,12 +98,9 @@ const adminNavigation = [
     icon: Users,
     permission: Permission.VIEW_EMPLOYEES,
   },
-  {
-    name: "Installments",
-    href: "/installments",
-    icon: CreditCard,
-    permission: Permission.VIEW_INSTALLMENTS,
-  },
+  { name: "Settings", href: "/settings", icon: Settings, permission: null }, // Everyone can access settings (for profile)
+
+  
   
 ];
 
@@ -110,7 +111,7 @@ export function Sidebar() {
     useSidebar();
   const { settings } = useSystemSettings();
   
-  const companyName = settings?.companyName || "GabyGod Technologies";
+  const companyName = settings?.companyName || "GabyGod-Inventory";
   const logoUrl = settings?.logoUrl;
 
   // Filter navigation based on permissions
@@ -124,8 +125,10 @@ export function Sidebar() {
   // Filter admin navigation based on permissions
   const visibleAdminNav = adminNavigation.filter(
     (item) =>
-      session?.user?.permissions &&
-      hasPermission(session.user.permissions, item.permission)
+      !item.permission || // Settings is always visible
+      (item.permission &&
+        session?.user?.permissions &&
+        hasPermission(session.user.permissions, item.permission))
   );
 
   // Combine regular navigation with admin navigation
