@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Bell, User, Menu, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Search, Bell, LogOut,Menu,ChevronsLeft, ChevronsRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
@@ -63,7 +63,7 @@ export function Navbar() {
           onClick={() => signOut()}
           title="Sign out"
         >
-          <User className="h-5 w-5" />
+          <LogOut className="h-5 w-5" />
         </Button>
       </div>
     </header>

@@ -6,6 +6,7 @@ import { Permission, Role } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { auditLogger, getRequestMetadata } from "@/lib/audit";
+import { validatePassword } from "@/lib/password-policy";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -101,6 +102,18 @@ export async function POST(request: NextRequest) {
     if (!name || !email || !password || !role) {
       return NextResponse.json(
         { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // Validate password policy
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      return NextResponse.json(
+        { 
+          error: "Password does not meet requirements",
+          details: passwordValidation.errors
+        },
         { status: 400 }
       );
     }

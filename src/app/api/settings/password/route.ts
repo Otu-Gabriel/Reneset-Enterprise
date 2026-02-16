@@ -6,6 +6,7 @@ import { hasPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { auditLogger, getRequestMetadata } from "@/lib/audit";
+import { validatePassword } from "@/lib/password-policy";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -29,9 +30,14 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    if (newPassword.length < 6) {
+    // Validate password policy
+    const passwordValidation = validatePassword(newPassword);
+    if (!passwordValidation.isValid) {
       return NextResponse.json(
-        { error: "New password must be at least 6 characters long" },
+        { 
+          error: "Password does not meet requirements",
+          details: passwordValidation.errors
+        },
         { status: 400 }
       );
     }

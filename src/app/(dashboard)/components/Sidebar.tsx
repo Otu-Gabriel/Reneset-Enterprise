@@ -35,12 +35,7 @@ const navigation = [
     icon: LayoutDashboard,
     permission: Permission.VIEW_DASHBOARD,
   },
-  {
-    name: "Transactions",
-    href: "/transactions",
-    icon: TrendingUp,
-    permission: Permission.VIEW_SALES,
-  },
+  
   {
     name: "Sales",
     href: "/sales",
@@ -105,6 +100,7 @@ const adminNavigation = [
     icon: CreditCard,
     permission: Permission.VIEW_INSTALLMENTS,
   },
+  
 ];
 
 export function Sidebar() {

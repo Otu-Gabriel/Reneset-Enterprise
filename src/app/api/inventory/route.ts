@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 
     if (stockStatus === "low_stock") {
       // Low stock: stock > 0 AND stock <= minStock
-      const conditions: Prisma.Sql[] = [Prisma.sql`p.stock > 0 AND p.stock <= p.min_stock`];
+      const conditions: Prisma.Sql[] = [Prisma.sql`p.stock > 0 AND p.stock <= p."minStock"`];
       
       if (search) {
         const searchPattern = `%${search}%`;
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       }
       
       if (category) {
-        conditions.push(Prisma.sql`p.category_id = ${category}`);
+        conditions.push(Prisma.sql`p.category = ${category}`);
       }
       
       const whereClause = Prisma.join(conditions, " AND ");
@@ -68,18 +68,18 @@ export async function GET(request: NextRequest) {
       // Count query
       const countResult = await prisma.$queryRaw<Array<{ count: bigint }>>`
         SELECT COUNT(*)::int as count
-        FROM products p
+        FROM "Product" p
         WHERE ${whereClause}
       `;
       total = Number(countResult[0]?.count || 0);
 
       // Fetch query with pagination
       const rawProducts = await prisma.$queryRaw<Array<any>>`
-        SELECT p.*, b.id as brand_id, b.name as brand_name
-        FROM products p
-        LEFT JOIN brands b ON p.brand_id = b.id
+        SELECT p.*, b.id as "brandId", b.name as "brandName"
+        FROM "Product" p
+        LEFT JOIN "Brand" b ON p."brandId" = b.id
         WHERE ${whereClause}
-        ORDER BY p.created_at DESC
+        ORDER BY p."createdAt" DESC
         LIMIT ${limit} OFFSET ${skip}
       `;
       
@@ -90,21 +90,21 @@ export async function GET(request: NextRequest) {
         description: p.description,
         sku: p.sku,
         category: p.category,
-        categoryId: p.category_id,
-        brandId: p.brand_id,
+        categoryId: p.category,
+        brandId: p.brandId,
         price: Number(p.price),
         cost: p.cost ? Number(p.cost) : null,
         stock: Number(p.stock),
-        minStock: Number(p.min_stock),
+        minStock: Number(p.minStock),
         unit: p.unit,
-        imageUrl: p.image_url,
-        createdAt: p.created_at,
-        updatedAt: p.updated_at,
-        brand: p.brand_id ? { id: p.brand_id, name: p.brand_name } : null,
+        imageUrl: p.imageUrl,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+        brand: p.brandId ? { id: p.brandId, name: p.brandName } : null,
       }));
     } else if (stockStatus === "in_stock") {
       // In stock: stock > minStock
-      const conditions: Prisma.Sql[] = [Prisma.sql`p.stock > p.min_stock`];
+      const conditions: Prisma.Sql[] = [Prisma.sql`p.stock > p."minStock"`];
       
       if (search) {
         const searchPattern = `%${search}%`;
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
       }
       
       if (category) {
-        conditions.push(Prisma.sql`p.category_id = ${category}`);
+        conditions.push(Prisma.sql`p.category = ${category}`);
       }
       
       const whereClause = Prisma.join(conditions, " AND ");
@@ -120,18 +120,18 @@ export async function GET(request: NextRequest) {
       // Count query
       const countResult = await prisma.$queryRaw<Array<{ count: bigint }>>`
         SELECT COUNT(*)::int as count
-        FROM products p
+        FROM "Product" p
         WHERE ${whereClause}
       `;
       total = Number(countResult[0]?.count || 0);
 
       // Fetch query with pagination
       const rawProducts = await prisma.$queryRaw<Array<any>>`
-        SELECT p.*, b.id as brand_id, b.name as brand_name
-        FROM products p
-        LEFT JOIN brands b ON p.brand_id = b.id
+        SELECT p.*, b.id as "brandId", b.name as "brandName"
+        FROM "Product" p
+        LEFT JOIN "Brand" b ON p."brandId" = b.id
         WHERE ${whereClause}
-        ORDER BY p.created_at DESC
+        ORDER BY p."createdAt" DESC
         LIMIT ${limit} OFFSET ${skip}
       `;
       
@@ -142,17 +142,17 @@ export async function GET(request: NextRequest) {
         description: p.description,
         sku: p.sku,
         category: p.category,
-        categoryId: p.category_id,
-        brandId: p.brand_id,
+        categoryId: p.category,
+        brandId: p.brandId,
         price: Number(p.price),
         cost: p.cost ? Number(p.cost) : null,
         stock: Number(p.stock),
-        minStock: Number(p.min_stock),
+        minStock: Number(p.minStock),
         unit: p.unit,
-        imageUrl: p.image_url,
-        createdAt: p.created_at,
-        updatedAt: p.updated_at,
-        brand: p.brand_id ? { id: p.brand_id, name: p.brand_name } : null,
+        imageUrl: p.imageUrl,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+        brand: p.brandId ? { id: p.brandId, name: p.brandName } : null,
       }));
     } else {
       // Standard Prisma query for other cases
