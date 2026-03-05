@@ -34,6 +34,42 @@ interface SalesReportProps {
   endDate: string;
 }
 
+// Tooltip styles that work in light and dark mode (Recharts injects defaults that hide text in dark mode)
+const CHART_TOOLTIP_STYLE = {
+  content: {
+    backgroundColor: "hsl(var(--popover))",
+    border: "1px solid hsl(var(--border))",
+    borderRadius: "8px",
+    color: "hsl(var(--popover-foreground))",
+  } as React.CSSProperties,
+  label: { color: "hsl(var(--popover-foreground))" } as React.CSSProperties,
+  item: { color: "hsl(var(--popover-foreground))" } as React.CSSProperties,
+};
+
+// Custom Pie chart tooltip so text is always visible (Recharts default content can ignore contentStyle in dark mode)
+function PieChartTooltipContent(props: {
+  active?: boolean;
+  payload?: Array<{ name: string; value: number; payload?: { category?: string } }>;
+  formatter: (value: number) => string;
+}) {
+  const { active, payload, formatter } = props;
+  if (!active || !payload?.length) return null;
+  const item = payload[0];
+  const label = item.payload?.category ?? item.name ?? "";
+  const value = formatter(item.value);
+  return (
+    <div
+      style={{
+        ...CHART_TOOLTIP_STYLE.content,
+        padding: "8px 12px",
+      }}
+    >
+      <div style={CHART_TOOLTIP_STYLE.label}>{label}</div>
+      <div style={{ ...CHART_TOOLTIP_STYLE.item, fontWeight: 600 }}>{value}</div>
+    </div>
+  );
+}
+
 // Professional color palette with high contrast (same as dashboard)
 const COLORS = [
   "#3B82F6", // Blue
@@ -155,7 +191,9 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
                     backgroundColor: "hsl(var(--popover))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
+                    color: "hsl(var(--popover-foreground))",
                   }}
+                  labelStyle={{ color: "hsl(var(--popover-foreground))" }}
                   formatter={(value: number) => formatCurrency(value)}
                 />
                 <Line
@@ -217,12 +255,9 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--popover))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                      }}
-                      formatter={(value: number) => formatCurrency(value)}
+                      content={
+                        <PieChartTooltipContent formatter={formatCurrency} />
+                      }
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -301,7 +336,9 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
                     backgroundColor: "hsl(var(--popover))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
+                    color: "hsl(var(--popover-foreground))",
                   }}
+                  labelStyle={{ color: "hsl(var(--popover-foreground))" }}
                   formatter={(value: number) => formatCurrency(value)}
                 />
                 <Bar dataKey="revenue" fill="hsl(217, 91%, 60%)" />
@@ -335,7 +372,9 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
                     backgroundColor: "hsl(var(--popover))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
+                    color: "hsl(var(--popover-foreground))",
                   }}
+                  labelStyle={{ color: "hsl(var(--popover-foreground))" }}
                   formatter={(value: number) => formatCurrency(value)}
                 />
                 <Bar dataKey="value" fill="hsl(250, 95%, 65%)" />
