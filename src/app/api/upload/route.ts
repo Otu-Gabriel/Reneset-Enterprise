@@ -5,6 +5,9 @@ import { authOptions } from "@/lib/auth";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   try {
     const settings = await prisma.systemSettings.findUnique({
@@ -31,7 +34,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error fetching favicon:", error);
+    // Silently fallback to static favicon on error
     return new NextResponse(null, { status: 404 });
   }
 }

@@ -111,8 +111,7 @@ export function CustomersTable() {
             method: "POST",
           });
           if (extractResponse.ok) {
-            const extractData = await extractResponse.json();
-            console.log("Extracted customers:", extractData);
+            await extractResponse.json();
             // Refresh customers list
             fetchCustomers();
           }

@@ -133,6 +133,7 @@ export function Filters({ onFilterChange }: FiltersProps) {
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="installment">Installment</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="cancelled">Cancelled</SelectItem>
                 <SelectItem value="returned">Returned</SelectItem>
@@ -205,6 +206,7 @@ export function Filters({ onFilterChange }: FiltersProps) {
                       <SelectContent>
                         <SelectItem value="all">All Statuses</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="installment">Installment</SelectItem>
                         <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="cancelled">Cancelled</SelectItem>
                         <SelectItem value="returned">Returned</SelectItem>

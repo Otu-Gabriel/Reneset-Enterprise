@@ -12,6 +12,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
+import { validatePassword } from "@/lib/password-policy";
 import {
   Select,
   SelectContent,
@@ -81,8 +83,10 @@ export function AddUserModal({
       return;
     }
 
-    if (password.length < 6) {
-      alert("Password must be at least 6 characters long");
+    // Validate password policy
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      alert(`Password does not meet requirements:\n${passwordValidation.errors.join('\n')}`);
       return;
     }
 
@@ -226,24 +230,21 @@ export function AddUserModal({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="password">Password *</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                showPolicy={true}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password *</Label>
-              <Input
+              <PasswordInput
                 id="confirmPassword"
-                type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                minLength={6}
               />
             </div>
           </div>

@@ -5,6 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 
+// Force dynamic rendering - prevent static generation/prerendering
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET() {
   try {
     // Get system settings (no auth required for reading)

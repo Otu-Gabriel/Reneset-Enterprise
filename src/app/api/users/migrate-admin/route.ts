@@ -5,6 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 /**
  * Migration endpoint to update existing admin users with all permissions
  * This ensures admins have MANAGE_USERS and all other permissions

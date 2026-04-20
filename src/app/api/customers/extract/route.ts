@@ -16,8 +16,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    console.log("Starting customer extraction from sales...");
-
     // Get all sales with customer information
     const allSales = await prisma.sale.findMany({
       select: {
@@ -55,7 +53,6 @@ export async function POST(request: NextRequest) {
     }
 
     const sales = Array.from(uniqueCustomers.values());
-    console.log(`Found ${sales.length} unique customer combinations`);
 
     let created = 0;
     let skipped = 0;

@@ -6,6 +6,9 @@ import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { auditLogger, getRequestMetadata } from "@/lib/audit";
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -211,9 +214,6 @@ export async function POST(request: NextRequest) {
             },
           });
           customerIdToUse = newCustomer.id;
-          console.log(
-            `Created new customer: ${newCustomer.id} - ${newCustomer.name}`
-          );
 
           // Log audit for customer creation
           const metadata = getRequestMetadata(request);

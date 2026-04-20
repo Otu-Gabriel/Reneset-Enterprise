@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Loader2, Check, X } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { validatePassword, getPasswordPolicyText } from "@/lib/password-policy";
 
 export function ProfileSettings() {
   const { data: session, update } = useSession();
@@ -90,8 +92,13 @@ export function ProfileSettings() {
       return;
     }
 
-    if (passwordData.newPassword.length < 6) {
-      setMessage({ type: "error", text: "Password must be at least 6 characters long" });
+    // Validate password policy
+    const passwordValidation = validatePassword(passwordData.newPassword);
+    if (!passwordValidation.isValid) {
+      setMessage({ 
+        type: "error", 
+        text: `Password does not meet requirements: ${passwordValidation.errors.join(', ')}` 
+      });
       setLoading(false);
       return;
     }
@@ -239,9 +246,8 @@ export function ProfileSettings() {
             <form onSubmit={handlePasswordChange} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="currentPassword">Current Password</Label>
-                <Input
+                <PasswordInput
                   id="currentPassword"
-                  type="password"
                   value={passwordData.currentPassword}
                   onChange={(e) =>
                     setPasswordData({ ...passwordData, currentPassword: e.target.value })
@@ -251,31 +257,28 @@ export function ProfileSettings() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="newPassword">New Password</Label>
-                <Input
+                <PasswordInput
                   id="newPassword"
-                  type="password"
                   value={passwordData.newPassword}
                   onChange={(e) =>
                     setPasswordData({ ...passwordData, newPassword: e.target.value })
                   }
                   required
-                  minLength={6}
+                  showPolicy={true}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Password must be at least 6 characters long
+                  {getPasswordPolicyText()}
                 </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                <Input
+                <PasswordInput
                   id="confirmPassword"
-                  type="password"
                   value={passwordData.confirmPassword}
                   onChange={(e) =>
                     setPasswordData({ ...passwordData, confirmPassword: e.target.value })
                   }
                   required
-                  minLength={6}
                 />
               </div>
               <Button type="submit" disabled={loading}>

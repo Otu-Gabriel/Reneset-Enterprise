@@ -61,14 +61,6 @@ export function UsersTable() {
     session?.user?.permissions &&
     hasPermission(session.user.permissions, Permission.MANAGE_USERS);
 
-  // Debug: Log permissions to console
-  useEffect(() => {
-    if (session?.user?.permissions) {
-      console.log("User permissions:", session.user.permissions);
-      console.log("Can edit users:", canEdit);
-    }
-  }, [session, canEdit]);
-
   useEffect(() => {
     fetchUsers();
   }, [page, search, roleFilter]);
