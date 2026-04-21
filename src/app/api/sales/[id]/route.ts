@@ -9,6 +9,47 @@ import { auditLogger, getRequestMetadata } from "@/lib/audit";
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+function getProductVariations(product: any): Array<{ name: string; quantityInBaseUnit: number; price: number }> {
+  const raw = Array.isArray(product.variations) ? product.variations : [];
+  const normalized = raw
+    .map((v: any) => ({
+      name: String(v?.name || "").trim(),
+      quantityInBaseUnit: Number(v?.quantityInBaseUnit || 0),
+      price: Number(v?.price || 0),
+    }))
+    .filter((v: any) => v.name && v.quantityInBaseUnit > 0 && v.price >= 0);
+
+  if (normalized.length > 0) {
+    return normalized;
+  }
+
+  return [
+    {
+      name: product.baseUnit || "item",
+      quantityInBaseUnit: 1,
+      price: Number(product.price || 0),
+    },
+  ];
+}
+
+function getVariation(product: any, saleUnit: string) {
+  const variations = getProductVariations(product);
+  return (
+    variations.find((v) => v.name.toLowerCase() === String(saleUnit || "").toLowerCase()) ||
+    variations.find((v) => v.quantityInBaseUnit === 1) ||
+    variations[0]
+  );
+}
+
+function getProductUnitPrice(product: any, saleUnit: string): number {
+  return Number(getVariation(product, saleUnit)?.price || 0);
+}
+
+function getBaseQuantity(product: any, quantity: number, saleUnit: string): number {
+  const variation = getVariation(product, saleUnit);
+  return Math.max(1, Number(variation?.quantityInBaseUnit || 1)) * quantity;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -116,14 +157,19 @@ export async function PUT(
           );
         }
 
+        const saleUnit = item.saleUnit === "box" ? "box" : "item";
+        const baseQuantity = getBaseQuantity(product, item.quantity, saleUnit);
         const itemDiscount = item.discount || 0;
-        const subtotal = product.price * item.quantity - itemDiscount;
+        const unitPrice = getProductUnitPrice(product, saleUnit);
+        const subtotal = unitPrice * item.quantity - itemDiscount;
         totalAmount += subtotal;
 
         saleItems.push({
           productId: item.productId,
           quantity: item.quantity,
-          price: product.price,
+          baseQuantity,
+          saleUnit,
+          price: unitPrice,
           subtotal,
           discount: itemDiscount,
         });
@@ -137,7 +183,7 @@ export async function PUT(
             where: { id: oldItem.productId },
             data: {
               stock: {
-                increment: oldItem.quantity,
+                increment: oldItem.baseQuantity || oldItem.quantity,
               },
             },
           });
@@ -156,7 +202,7 @@ export async function PUT(
           const product = await prisma.product.findUnique({
             where: { id: newItem.productId },
           });
-          if (product && product.stock < newItem.quantity) {
+          if (product && product.stock < (newItem.baseQuantity || newItem.quantity)) {
             // If insufficient stock, restore what we already restored and return error
             // (We already restored old items, so we need to restore them again if this fails)
             if (oldStatus === "completed") {
@@ -165,7 +211,7 @@ export async function PUT(
                   where: { id: oldItem.productId },
                   data: {
                     stock: {
-                      decrement: oldItem.quantity,
+                      decrement: oldItem.baseQuantity || oldItem.quantity,
                     },
                   },
                 });
@@ -173,7 +219,7 @@ export async function PUT(
             }
             return NextResponse.json(
               {
-                error: `Insufficient stock for ${product.name}. Available: ${product.stock}, Required: ${newItem.quantity}`,
+                error: `Insufficient stock for ${product.name}. Available: ${product.stock}, Required: ${newItem.baseQuantity || newItem.quantity}`,
               },
               { status: 400 }
             );
@@ -186,7 +232,7 @@ export async function PUT(
             where: { id: newItem.productId },
             data: {
               stock: {
-                decrement: newItem.quantity,
+                decrement: newItem.baseQuantity || newItem.quantity,
               },
             },
           });
@@ -257,7 +303,7 @@ export async function PUT(
             where: { id: item.productId },
             data: {
               stock: {
-                increment: item.quantity,
+                increment: item.baseQuantity || item.quantity,
               },
             },
           });
@@ -276,10 +322,10 @@ export async function PUT(
           const product = await prisma.product.findUnique({
             where: { id: item.productId },
           });
-          if (product && product.stock < item.quantity) {
+          if (product && product.stock < (item.baseQuantity || item.quantity)) {
             return NextResponse.json(
               {
-                error: `Insufficient stock for ${product.name}. Available: ${product.stock}, Required: ${item.quantity}`,
+                error: `Insufficient stock for ${product.name}. Available: ${product.stock}, Required: ${item.baseQuantity || item.quantity}`,
               },
               { status: 400 }
             );
@@ -292,7 +338,7 @@ export async function PUT(
             where: { id: item.productId },
             data: {
               stock: {
-                decrement: item.quantity,
+                decrement: item.baseQuantity || item.quantity,
               },
             },
           });

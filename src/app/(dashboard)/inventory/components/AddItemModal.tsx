@@ -51,13 +51,15 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
     sku: "",
     categoryId: "",
     brandId: "",
-    price: "",
+    baseUnit: "item",
     cost: "",
     stock: "0",
     minStock: "0",
-    unit: "pcs",
     imageUrl: "",
   });
+  const [variations, setVariations] = useState([
+    { name: "item", quantityInBaseUnit: "1", price: "" },
+  ]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [skuManuallyEdited, setSkuManuallyEdited] = useState(false);
@@ -182,11 +184,26 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
         description: formData.description,
         sku: formData.sku,
         categoryId: formData.categoryId,
-        price: formData.price,
+        baseUnit: formData.baseUnit,
         stock: formData.stock,
         minStock: formData.minStock,
-        unit: formData.unit,
+        unit: formData.baseUnit,
       };
+      const normalizedVariations = variations
+        .map((variation) => ({
+          name: variation.name.trim(),
+          quantityInBaseUnit: Number(variation.quantityInBaseUnit),
+          price: Number(variation.price),
+        }))
+        .filter((variation) => variation.name && variation.quantityInBaseUnit > 0 && variation.price >= 0);
+
+      if (!normalizedVariations.length) {
+        alert("Please add at least one valid variation with name, conversion, and price.");
+        setLoading(false);
+        return;
+      }
+      payload.variations = normalizedVariations;
+      payload.price = normalizedVariations.find((v) => v.quantityInBaseUnit === 1)?.price ?? normalizedVariations[0].price;
 
       // Add optional fields only if they have values
       if (formData.brandId) {
@@ -215,13 +232,13 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
           sku: "",
           categoryId: "",
           brandId: "",
-          price: "",
+          baseUnit: "item",
           cost: "",
           stock: "0",
           minStock: "0",
-          unit: "pcs",
           imageUrl: "",
         });
+        setVariations([{ name: "item", quantityInBaseUnit: "1", price: "" }]);
         setImageFile(null);
         setImagePreview(null);
         setSkuManuallyEdited(false);
@@ -255,13 +272,13 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
         sku: "",
         categoryId: "",
         brandId: "",
-        price: "",
+        baseUnit: "item",
         cost: "",
         stock: "0",
         minStock: "0",
-        unit: "pcs",
         imageUrl: "",
       });
+      setVariations([{ name: "item", quantityInBaseUnit: "1", price: "" }]);
       setSkuManuallyEdited(false);
     }
   };
@@ -303,6 +320,16 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
                 placeholder="Auto-generated from name"
               />
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="baseUnit">Base Unit *</Label>
+            <Input
+              id="baseUnit"
+              value={formData.baseUnit}
+              onChange={(e) => setFormData({ ...formData, baseUnit: e.target.value })}
+              placeholder="e.g. item"
+              required
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
@@ -371,20 +398,6 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="price">Price *</Label>
-              <Input
-                id="price"
-                type="number"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) =>
-                  setFormData({ ...formData, price: e.target.value })
-                }
-                required
-                placeholder="0.00"
-              />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="cost">Cost</Label>
               <Input
                 id="cost"
@@ -424,18 +437,72 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="unit">Unit</Label>
-              <Input
-                id="unit"
-                value={formData.unit}
-                onChange={(e) =>
-                  setFormData({ ...formData, unit: e.target.value })
+          <div className="space-y-3 rounded-md border p-3">
+            <div className="flex items-center justify-between">
+              <Label>Selling Variations</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setVariations((prev) => [
+                    ...prev,
+                    { name: "", quantityInBaseUnit: "1", price: "" },
+                  ])
                 }
-                placeholder="pcs"
-              />
+              >
+                Add Variation
+              </Button>
             </div>
+            {variations.map((variation, index) => (
+              <div key={index} className="grid grid-cols-3 gap-2">
+                <Input
+                  placeholder="Name (e.g carton)"
+                  value={variation.name}
+                  onChange={(e) =>
+                    setVariations((prev) =>
+                      prev.map((v, i) => (i === index ? { ...v, name: e.target.value } : v))
+                    )
+                  }
+                />
+                <Input
+                  type="number"
+                  min="1"
+                  placeholder="Base Qty"
+                  value={variation.quantityInBaseUnit}
+                  onChange={(e) =>
+                    setVariations((prev) =>
+                      prev.map((v, i) => (i === index ? { ...v, quantityInBaseUnit: e.target.value } : v))
+                    )
+                  }
+                />
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="Price"
+                    value={variation.price}
+                    onChange={(e) =>
+                      setVariations((prev) =>
+                        prev.map((v, i) => (i === index ? { ...v, price: e.target.value } : v))
+                      )
+                    }
+                  />
+                  {variations.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setVariations((prev) => prev.filter((_, i) => i !== index))}
+                    >
+                      X
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="image">Product Image</Label>
               <Input

@@ -155,7 +155,11 @@ export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
                   }}
-                  formatter={(value: number) => formatCurrency(value)}
+                  formatter={(value: number, name: string) =>
+                    name === "Product Count"
+                      ? [Number(value).toLocaleString(), name]
+                      : [formatCurrency(value), name]
+                  }
                 />
                 <Bar dataKey="value" fill="hsl(217, 91%, 60%)" name="Stock Value" />
                 <Bar dataKey="count" fill="hsl(250, 95%, 65%)" name="Product Count" />

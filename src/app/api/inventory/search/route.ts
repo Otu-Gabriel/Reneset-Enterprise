@@ -65,7 +65,17 @@ export async function GET(request: NextRequest) {
     // Fetch products with all matches
     const allProducts = await prisma.product.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        description: true,
+        category: true,
+        price: true,
+        stock: true,
+        unit: true,
+        baseUnit: true,
+        variations: true,
         brand: {
           select: {
             id: true,

@@ -13,6 +13,8 @@ interface Product {
   price: number;
   stock: number;
   category: string;
+  baseUnit?: string;
+  variations?: Array<{ name: string; quantityInBaseUnit: number; price: number }>;
   brand?: {
     id: string;
     name: string;
@@ -41,6 +43,12 @@ export function ProductSearchInput({
   disabled = false,
 }: ProductSearchInputProps) {
   const formatCurrency = useCurrency();
+  const getDisplayPrice = (product: Product) => {
+    if (Array.isArray(product.variations) && product.variations.length > 0) {
+      return Number(product.variations[0].price || 0);
+    }
+    return product.price;
+  };
   const [searchQuery, setSearchQuery] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -308,7 +316,7 @@ export function ProductSearchInput({
                   <div className="flex flex-col items-end gap-1 text-right">
                     <div className="font-semibold text-sm flex items-center gap-1">
                       <DollarSign className="h-3 w-3" />
-                      {formatCurrency(product.price)}
+                      {formatCurrency(getDisplayPrice(product))}
                     </div>
                     <div
                       className={`text-xs flex items-center gap-1 ${
@@ -341,7 +349,7 @@ export function ProductSearchInput({
       {selectedProduct && (
         <p className="text-xs text-muted-foreground">
           ✓ Selected: {selectedProduct.name} ({selectedProduct.sku}) - Stock:{" "}
-          {selectedProduct.stock} - {formatCurrency(selectedProduct.price)}
+          {selectedProduct.stock} - {formatCurrency(getDisplayPrice(selectedProduct))}
         </p>
       )}
     </div>

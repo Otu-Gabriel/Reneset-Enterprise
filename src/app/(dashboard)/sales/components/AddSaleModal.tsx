@@ -34,12 +34,16 @@ interface Product {
   stock: number;
   sku?: string;
   category?: string;
+  unit?: string;
+  baseUnit?: string;
+  variations?: Array<{ name: string; quantityInBaseUnit: number; price: number }>;
 }
 
 interface SaleItem {
   productId: string;
   quantity: number;
   discount: number;
+  saleUnit: string;
 }
 
 interface Customer {
@@ -91,7 +95,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
     new Date().toISOString().split("T")[0],
   );
   const [items, setItems] = useState<SaleItem[]>([
-    { productId: "", quantity: 1, discount: 0 },
+    { productId: "", quantity: 1, discount: 0, saleUnit: "item" },
   ]);
 
   useEffect(() => {
@@ -101,7 +105,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
   // Reset form when modal closes
   useEffect(() => {
     if (!open) {
-      setItems([{ productId: "", quantity: 1, discount: 0 }]);
+      setItems([{ productId: "", quantity: 1, discount: 0, saleUnit: "item" }]);
       setSelectedCategory("all");
       setCustomerName("");
       setCustomerEmail("");
@@ -216,11 +220,25 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
   };
 
   const addItem = () => {
-    setItems([...items, { productId: "", quantity: 1, discount: 0 }]);
+    setItems((prev) => [
+      ...prev,
+      { productId: "", quantity: 1, discount: 0, saleUnit: "item" },
+    ]);
+  };
+
+  const cacheProductIfNeeded = async (productId: string) => {
+    if (!productId) return;
+    if (products.some((p) => p.id === productId)) return;
+    const fetchedProduct = await fetchProductDetails(productId);
+    if (fetchedProduct) {
+      setProducts((prev) =>
+        prev.some((p) => p.id === fetchedProduct.id) ? prev : [...prev, fetchedProduct],
+      );
+    }
   };
 
   const removeItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index));
+    setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
   const updateItem = (
@@ -228,10 +246,21 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
     field: keyof SaleItem,
     value: string | number,
   ) => {
-    const newItems = [...items];
-    newItems[index] = { ...newItems[index], [field]: value };
-    setItems(newItems);
+    setItems((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
+    );
   };
+
+  useEffect(() => {
+    const missingIds = items
+      .map((item) => item.productId)
+      .filter((id): id is string => Boolean(id) && !products.some((p) => p.id === id));
+
+    if (missingIds.length === 0) return;
+    missingIds.forEach((id) => {
+      cacheProductIfNeeded(id);
+    });
+  }, [items, products]);
 
   // Fetch product details when needed
   const fetchProductDetails = async (
@@ -248,12 +277,58 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
           stock: product.stock,
           sku: product.sku,
           category: product.category,
+          unit: product.unit,
+          baseUnit: product.baseUnit,
+          variations: product.variations,
         };
       }
     } catch (error) {
       console.error("Error fetching product details:", error);
     }
     return null;
+  };
+
+  const normalizeVariations = (product: Product) => {
+    const raw = Array.isArray(product.variations) ? product.variations : [];
+    const normalized = raw
+      .map((variation) => ({
+        name: String(variation.name || "").trim(),
+        quantityInBaseUnit: Number(variation.quantityInBaseUnit || 0),
+        price: Number(variation.price || 0),
+      }))
+      .filter((variation) => variation.name && variation.quantityInBaseUnit > 0);
+
+    if (normalized.length > 0) return normalized;
+    return [
+      {
+        name: product.baseUnit || product.unit || "item",
+        quantityInBaseUnit: 1,
+        price: Number(product.price || 0),
+      },
+    ];
+  };
+
+  const getVariation = (product: Product, saleUnit: string) => {
+    const variations = normalizeVariations(product);
+    return (
+      variations.find((v) => v.name.toLowerCase() === saleUnit.toLowerCase()) ||
+      variations.find((v) => v.quantityInBaseUnit === 1) ||
+      variations[0]
+    );
+  };
+
+  const getItemUnitPrice = (product: Product, saleUnit: string) => {
+    const variation = getVariation(product, saleUnit);
+    return variation ? variation.price : product.price;
+  };
+
+  const getBaseQuantity = (product: Product, item: SaleItem) => {
+    const variation = getVariation(product, item.saleUnit);
+    return item.quantity * (variation?.quantityInBaseUnit || 1);
+  };
+
+  const formatStockDisplay = (product: Product) => {
+    return `${product.stock} ${product.baseUnit || product.unit || "items"}`;
   };
 
   // Calculate totals
@@ -276,7 +351,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
         }
 
         if (product) {
-          const itemSubtotal = product.price * item.quantity;
+          const itemSubtotal = getItemUnitPrice(product, item.saleUnit) * item.quantity;
           const itemDiscount = item.discount || 0;
           subtotal += itemSubtotal;
           totalDiscount += itemDiscount;
@@ -297,7 +372,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
       if (item.productId) {
         const product = products.find((p) => p.id === item.productId);
         if (product) {
-          const itemSubtotal = product.price * item.quantity;
+          const itemSubtotal = getItemUnitPrice(product, item.saleUnit) * item.quantity;
           const itemDiscount = item.discount || 0;
           subtotal += itemSubtotal;
           totalDiscount += itemDiscount;
@@ -370,7 +445,12 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
           paymentMethod,
           notes,
           status: isInstallment ? "installment" : status,
-          items: items.filter((item) => item.productId && item.quantity > 0),
+          items: items
+            .filter((item) => item.productId && item.quantity > 0)
+            .map((item) => ({
+              ...item,
+              saleUnit: item.saleUnit,
+            })),
           ...(isInstallment && {
             installmentPlan: {
               downPayment,
@@ -685,7 +765,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
               );
               const stockWarning =
                 selectedProduct &&
-                item.quantity > selectedProduct.stock &&
+                getBaseQuantity(selectedProduct, item) > selectedProduct.stock &&
                 status === "completed";
 
               return (
@@ -694,13 +774,24 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                     {/* Product Search */}
                     <ProductSearchInput
                       value={item.productId}
-                      onChange={(productId) =>
-                        updateItem(index, "productId", productId)
-                      }
-                      onProductSelect={(product) => {
-                        // Cache the product for totals calculation
-                        if (!products.find((p) => p.id === product.id)) {
-                          setProducts([...products, product]);
+                      onChange={(productId) => {
+                        updateItem(index, "productId", productId);
+                        cacheProductIfNeeded(productId);
+                      }}
+                      onProductSelect={async (product) => {
+                        setProducts((prev) => {
+                          const existingIndex = prev.findIndex((p) => p.id === product.id);
+                          if (existingIndex === -1) return [...prev, product];
+                          const next = [...prev];
+                          next[existingIndex] = { ...next[existingIndex], ...product };
+                          return next;
+                        });
+                        await cacheProductIfNeeded(product.id);
+                        const firstVariation =
+                          normalizeVariations(product).find((v) => v.quantityInBaseUnit === 1) ||
+                          normalizeVariations(product)[0];
+                        if (firstVariation?.name) {
+                          updateItem(index, "saleUnit", firstVariation.name);
                         }
                       }}
                       category={
@@ -716,6 +807,28 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
 
                   {/* Quantity and Discount */}
                   <div className="flex gap-2 items-end">
+                    {selectedProduct && normalizeVariations(selectedProduct).length > 0 && (
+                      <div className="w-40 space-y-2">
+                        <Label>Sell As</Label>
+                        <Select
+                          value={item.saleUnit}
+                          onValueChange={(value) =>
+                            updateItem(index, "saleUnit", value)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {normalizeVariations(selectedProduct).map((variation) => (
+                              <SelectItem key={variation.name} value={variation.name}>
+                                {variation.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                     <div className="w-32 space-y-2">
                       <Label>Quantity</Label>
                       <Input
@@ -751,12 +864,15 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                     {selectedProduct && (
                       <div className="flex-1 text-sm text-muted-foreground pt-2">
                         <div>
-                          Price: {formatCurrency(selectedProduct.price)} ×{" "}
+                          Price: {formatCurrency(getItemUnitPrice(selectedProduct, item.saleUnit))} ×{" "}
                           {item.quantity} ={" "}
                           {formatCurrency(
-                            selectedProduct.price * item.quantity -
+                            getItemUnitPrice(selectedProduct, item.saleUnit) * item.quantity -
                               (item.discount || 0),
                           )}
+                        </div>
+                        <div>
+                          Stock: {formatStockDisplay(selectedProduct)}
                         </div>
                       </div>
                     )}
@@ -776,8 +892,8 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                   {/* Stock Warnings */}
                   {stockWarning && (
                     <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
-                      ⚠️ Insufficient stock! Available: {selectedProduct?.stock}
-                      , Requested: {item.quantity}
+                      ⚠️ Insufficient stock! Available: {formatStockDisplay(selectedProduct!)}
+                      , Requested: {getBaseQuantity(selectedProduct!, item)} item(s)
                     </div>
                   )}
                   {selectedProduct &&

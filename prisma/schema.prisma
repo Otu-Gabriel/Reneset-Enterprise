@@ -85,6 +85,8 @@ model Product {
   brand       Brand?    @relation(fields: [brandId], references: [id], onDelete: SetNull)
   price       Float
   cost        Float?
+  baseUnit    String    @default("item")
+  variations  Json?
   imageUrl    String?
   stock       Int       @default(0)
   minStock    Int       @default(0)
@@ -156,6 +158,8 @@ model SaleItem {
   productId   String
   product     Product  @relation(fields: [productId], references: [id])
   quantity    Int
+  baseQuantity Int     @default(0)
+  saleUnit    String   @default("item")
   price       Float
   discount    Float    @default(0)
   subtotal    Float

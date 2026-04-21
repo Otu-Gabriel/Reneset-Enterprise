@@ -39,6 +39,8 @@ interface Product {
   category: string;
   price: number;
   cost: number | null;
+  baseUnit?: string;
+  variations?: Array<{ name: string; quantityInBaseUnit: number; price: number }>;
   stock: number;
   minStock: number;
   unit: string;
@@ -72,13 +74,15 @@ export function EditItemModal({
     sku: "",
     categoryId: "",
     brandId: "",
-    price: "",
+    baseUnit: "item",
     cost: "",
     stock: "0",
     minStock: "0",
-    unit: "pcs",
     imageUrl: "",
   });
+  const [variations, setVariations] = useState([
+    { name: "item", quantityInBaseUnit: "1", price: "" },
+  ]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [skuManuallyEdited, setSkuManuallyEdited] = useState(false);
@@ -99,13 +103,21 @@ export function EditItemModal({
         sku: product.sku,
         categoryId: category?.id || "",
         brandId: product.brand?.id || "",
-        price: product.price.toString(),
+        baseUnit: product.baseUnit || product.unit || "item",
         cost: product.cost?.toString() || "",
         stock: product.stock.toString(),
         minStock: product.minStock.toString(),
-        unit: product.unit,
         imageUrl: product.imageUrl || "",
       });
+      if (Array.isArray(product.variations) && product.variations.length > 0) {
+        setVariations(
+          product.variations.map((variation) => ({
+            name: variation.name,
+            quantityInBaseUnit: String(variation.quantityInBaseUnit),
+            price: String(variation.price),
+          })),
+        );
+      }
       if (product.imageUrl) {
         setImagePreview(product.imageUrl);
       }
@@ -213,11 +225,27 @@ export function EditItemModal({
         description: formData.description,
         sku: formData.sku,
         categoryId: formData.categoryId,
-        price: formData.price,
+        baseUnit: formData.baseUnit,
         stock: formData.stock,
         minStock: formData.minStock,
-        unit: formData.unit,
+        unit: formData.baseUnit,
       };
+      const normalizedVariations = variations
+        .map((variation) => ({
+          name: variation.name.trim(),
+          quantityInBaseUnit: Number(variation.quantityInBaseUnit),
+          price: Number(variation.price),
+        }))
+        .filter((variation) => variation.name && variation.quantityInBaseUnit > 0 && variation.price >= 0);
+
+      if (!normalizedVariations.length) {
+        alert("Please add at least one valid variation with name, conversion, and price.");
+        setLoading(false);
+        return;
+      }
+
+      payload.variations = normalizedVariations;
+      payload.price = normalizedVariations.find((v) => v.quantityInBaseUnit === 1)?.price ?? normalizedVariations[0].price;
 
       if (formData.brandId) {
         payload.brandId = formData.brandId;
@@ -294,6 +322,15 @@ export function EditItemModal({
             </div>
           </div>
           <div className="space-y-2">
+            <Label htmlFor="baseUnit">Base Unit *</Label>
+            <Input
+              id="baseUnit"
+              value={formData.baseUnit}
+              onChange={(e) => setFormData({ ...formData, baseUnit: e.target.value })}
+              required
+            />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Input
               id="description"
@@ -365,19 +402,6 @@ export function EditItemModal({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="price">Price *</Label>
-              <Input
-                id="price"
-                type="number"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) =>
-                  setFormData({ ...formData, price: e.target.value })
-                }
-                required
-              />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="cost">Cost</Label>
               <Input
                 id="cost"
@@ -415,17 +439,72 @@ export function EditItemModal({
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="unit">Unit</Label>
-              <Input
-                id="unit"
-                value={formData.unit}
-                onChange={(e) =>
-                  setFormData({ ...formData, unit: e.target.value })
+          <div className="space-y-3 rounded-md border p-3">
+            <div className="flex items-center justify-between">
+              <Label>Selling Variations</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setVariations((prev) => [
+                    ...prev,
+                    { name: "", quantityInBaseUnit: "1", price: "" },
+                  ])
                 }
-              />
+              >
+                Add Variation
+              </Button>
             </div>
+            {variations.map((variation, index) => (
+              <div key={index} className="grid grid-cols-3 gap-2">
+                <Input
+                  placeholder="Variation name"
+                  value={variation.name}
+                  onChange={(e) =>
+                    setVariations((prev) =>
+                      prev.map((v, i) => (i === index ? { ...v, name: e.target.value } : v)),
+                    )
+                  }
+                />
+                <Input
+                  type="number"
+                  min="1"
+                  placeholder="Base Qty"
+                  value={variation.quantityInBaseUnit}
+                  onChange={(e) =>
+                    setVariations((prev) =>
+                      prev.map((v, i) => (i === index ? { ...v, quantityInBaseUnit: e.target.value } : v)),
+                    )
+                  }
+                />
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="Price"
+                    value={variation.price}
+                    onChange={(e) =>
+                      setVariations((prev) =>
+                        prev.map((v, i) => (i === index ? { ...v, price: e.target.value } : v)),
+                      )
+                    }
+                  />
+                  {variations.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setVariations((prev) => prev.filter((_, i) => i !== index))}
+                    >
+                      X
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="image">Product Image</Label>
               <Input

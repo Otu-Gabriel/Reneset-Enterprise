@@ -9,6 +9,47 @@ import { auditLogger, getRequestMetadata } from "@/lib/audit";
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+function getProductVariations(product: any): Array<{ name: string; quantityInBaseUnit: number; price: number }> {
+  const raw = Array.isArray(product.variations) ? product.variations : [];
+  const normalized = raw
+    .map((v: any) => ({
+      name: String(v?.name || "").trim(),
+      quantityInBaseUnit: Number(v?.quantityInBaseUnit || 0),
+      price: Number(v?.price || 0),
+    }))
+    .filter((v: any) => v.name && v.quantityInBaseUnit > 0 && v.price >= 0);
+
+  if (normalized.length > 0) {
+    return normalized;
+  }
+
+  return [
+    {
+      name: product.baseUnit || "item",
+      quantityInBaseUnit: 1,
+      price: Number(product.price || 0),
+    },
+  ];
+}
+
+function getVariation(product: any, saleUnit: string) {
+  const variations = getProductVariations(product);
+  return (
+    variations.find((v) => v.name.toLowerCase() === String(saleUnit || "").toLowerCase()) ||
+    variations.find((v) => v.quantityInBaseUnit === 1) ||
+    variations[0]
+  );
+}
+
+function getProductUnitPrice(product: any, saleUnit: string): number {
+  return Number(getVariation(product, saleUnit)?.price || 0);
+}
+
+function getBaseQuantity(product: any, quantity: number, saleUnit: string): number {
+  const variation = getVariation(product, saleUnit);
+  return Math.max(1, Number(variation?.quantityInBaseUnit || 1)) * quantity;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -264,7 +305,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      if (product.stock < item.quantity) {
+      const saleUnit = item.saleUnit === "box" ? "box" : "item";
+      const baseQuantity = getBaseQuantity(product, item.quantity, saleUnit);
+      if (product.stock < baseQuantity) {
         return NextResponse.json(
           { error: `Insufficient stock for ${product.name}` },
           { status: 400 }
@@ -272,13 +315,16 @@ export async function POST(request: NextRequest) {
       }
 
       const itemDiscount = item.discount || 0;
-      const subtotal = product.price * item.quantity - itemDiscount;
+      const unitPrice = getProductUnitPrice(product, saleUnit);
+      const subtotal = unitPrice * item.quantity - itemDiscount;
       totalAmount += subtotal;
 
       saleItems.push({
         productId: item.productId,
         quantity: item.quantity,
-        price: product.price,
+        baseQuantity,
+        saleUnit,
+        price: unitPrice,
         subtotal,
         discount: itemDiscount,
       });
@@ -471,9 +517,7 @@ export async function POST(request: NextRequest) {
               where: { id: item.productId },
               data: {
                 stock: {
-                  decrement: items.find(
-                    (i: any) => i.productId === item.productId
-                  ).quantity,
+                  decrement: item.baseQuantity || item.quantity,
                 },
               },
             });
@@ -485,9 +529,7 @@ export async function POST(request: NextRequest) {
               where: { id: item.productId },
               data: {
                 stock: {
-                  decrement: items.find(
-                    (i: any) => i.productId === item.productId
-                  ).quantity,
+                  decrement: item.baseQuantity || item.quantity,
                 },
               },
             });

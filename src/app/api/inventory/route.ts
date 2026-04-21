@@ -94,6 +94,8 @@ export async function GET(request: NextRequest) {
         brandId: p.brandId,
         price: Number(p.price),
         cost: p.cost ? Number(p.cost) : null,
+        baseUnit: p.baseUnit || "item",
+        variations: p.variations || [],
         stock: Number(p.stock),
         minStock: Number(p.minStock),
         unit: p.unit,
@@ -146,6 +148,8 @@ export async function GET(request: NextRequest) {
         brandId: p.brandId,
         price: Number(p.price),
         cost: p.cost ? Number(p.cost) : null,
+        baseUnit: p.baseUnit || "item",
+        variations: p.variations || [],
         stock: Number(p.stock),
         minStock: Number(p.minStock),
         unit: p.unit,
@@ -211,13 +215,15 @@ export async function POST(request: NextRequest) {
       brandId,
       price,
       cost,
+      baseUnit,
+      variations,
       stock,
       minStock,
       unit,
       imageUrl,
     } = body;
 
-    if (!name || !sku || !categoryId || price === undefined) {
+    if (!name || !sku || !categoryId || !baseUnit || !Array.isArray(variations) || variations.length === 0) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -278,6 +284,8 @@ export async function POST(request: NextRequest) {
         brandId: brandId || null,
         price: parseFloat(price),
         cost: cost ? parseFloat(cost) : null,
+        baseUnit: String(baseUnit),
+        variations,
         imageUrl: imageUrl || null,
         stock: parseInt(stock || "0"),
         minStock: parseInt(minStock || "0"),

@@ -57,6 +57,8 @@ interface Product {
   stock: number;
   minStock: number;
   unit: string;
+  baseUnit?: string;
+  variations?: Array<{ name: string; quantityInBaseUnit: number; price: number }>;
   imageUrl: string | null;
   brand: {
     id: string;
@@ -65,6 +67,38 @@ interface Product {
 }
 
 export function InventoryTable() {
+  const getBaseVariationPrice = (product: Product) => {
+    if (!Array.isArray(product.variations) || product.variations.length === 0) {
+      return product.price;
+    }
+    const base = product.variations.find((v) => Number(v.quantityInBaseUnit) === 1);
+    return Number((base || product.variations[0]).price || product.price);
+  };
+
+  const formatStockDisplay = (product: Product) => {
+    if (!Array.isArray(product.variations) || product.variations.length === 0) {
+      return `${product.stock} ${product.baseUnit || product.unit}`;
+    }
+    const sorted = [...product.variations].sort(
+      (a, b) => Number(b.quantityInBaseUnit) - Number(a.quantityInBaseUnit),
+    );
+    let remaining = product.stock;
+    const parts: string[] = [];
+    sorted.forEach((variation) => {
+      const size = Number(variation.quantityInBaseUnit);
+      if (size <= 0) return;
+      const qty = Math.floor(remaining / size);
+      if (qty > 0) {
+        parts.push(`${qty} ${variation.name}`);
+        remaining -= qty * size;
+      }
+    });
+    if (!parts.length) {
+      return `${product.stock} ${product.baseUnit || "item"}`;
+    }
+    return `${parts.join(" + ")} (${product.stock} ${product.baseUnit || "base"})`;
+  };
+
   const formatCurrency = useCurrency();
   const { data: session } = useSession();
   const [products, setProducts] = useState<Product[]>([]);
@@ -482,9 +516,9 @@ export function InventoryTable() {
                           <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
-                      <TableCell>{formatCurrency(product.price)}</TableCell>
+                      <TableCell>{formatCurrency(getBaseVariationPrice(product))}</TableCell>
                       <TableCell>
-                        {product.stock} {product.unit}
+                        {formatStockDisplay(product)}
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
                         <span

@@ -30,6 +30,8 @@ interface Sale {
       sku: string;
     };
     quantity: number;
+    saleUnit?: string;
+    baseQuantity?: number;
     price: number;
     discount: number;
     subtotal: number;
@@ -156,6 +158,7 @@ export function SaleDetailsModal({
               <tr>
                 <th>Product</th>
                 <th>Qty</th>
+                <th>Base Qty</th>
                 <th>Price</th>
                 <th>Discount</th>
                 <th>Subtotal</th>
@@ -167,7 +170,8 @@ export function SaleDetailsModal({
                   (item) => `
                 <tr>
                   <td>${item.product.name} (${item.product.sku})</td>
-                  <td>${item.quantity}</td>
+                  <td>${item.quantity} ${item.saleUnit || "item"}</td>
+                  <td>${item.baseQuantity || item.quantity} item(s)</td>
                   <td>${formatCurrency(item.price)}</td>
                   <td>${formatCurrency(item.discount || 0)}</td>
                   <td>${formatCurrency(item.subtotal)}</td>
@@ -262,6 +266,7 @@ export function SaleDetailsModal({
                     <th className="text-left p-3">Product</th>
                     <th className="text-left p-3">SKU</th>
                     <th className="text-right p-3">Quantity</th>
+                    <th className="text-right p-3">Base Qty</th>
                     <th className="text-right p-3">Price</th>
                     <th className="text-right p-3">Discount</th>
                     <th className="text-right p-3">Subtotal</th>
@@ -272,7 +277,12 @@ export function SaleDetailsModal({
                     <tr key={index} className="border-b">
                       <td className="p-3">{item.product.name}</td>
                       <td className="p-3 text-muted-foreground">{item.product.sku}</td>
-                      <td className="p-3 text-right">{item.quantity}</td>
+                      <td className="p-3 text-right">
+                        {item.quantity} {item.saleUnit || "item"}
+                      </td>
+                      <td className="p-3 text-right">
+                        {item.baseQuantity || item.quantity} item(s)
+                      </td>
                       <td className="p-3 text-right">{formatCurrency(item.price)}</td>
                       <td className="p-3 text-right text-red-600">
                         {formatCurrency(item.discount || 0)}
@@ -285,7 +295,7 @@ export function SaleDetailsModal({
                 </tbody>
                 <tfoot>
                   <tr className="bg-muted">
-                    <td colSpan={5} className="p-3 text-right font-semibold">
+                    <td colSpan={6} className="p-3 text-right font-semibold">
                       Total:
                     </td>
                     <td className="p-3 text-right font-bold text-lg">
