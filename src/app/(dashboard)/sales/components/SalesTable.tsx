@@ -13,7 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
-import { Edit, Trash2, Eye } from "lucide-react";
+import { Edit, Trash2, Eye, Plus } from "lucide-react";
+import { AddSaleModal } from "./AddSaleModal";
 import { useSession } from "next-auth/react";
 import { Permission, Role } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
@@ -63,10 +64,21 @@ interface SalesTableProps {
     productId: string;
   };
   onSaleChanged?: () => void; // Callback when sale is created, updated, or deleted
+  /** Show “Add Sale” next to the table title (refreshes list + stats via onSaleCreated). */
+  canCreate?: boolean;
+  onSaleCreated?: () => void;
 }
 
 export const SalesTable = forwardRef<SalesTableRef, SalesTableProps>(
-  ({ filters = { search: "", status: "", productId: "" }, onSaleChanged }, ref) => {
+  (
+    {
+      filters = { search: "", status: "", productId: "" },
+      onSaleChanged,
+      canCreate = false,
+      onSaleCreated,
+    },
+    ref
+  ) => {
     const formatCurrency = useCurrency();
     const { data: session } = useSession();
     const [sales, setSales] = useState<Sale[]>([]);
@@ -176,9 +188,21 @@ export const SalesTable = forwardRef<SalesTableRef, SalesTableProps>(
     }
 
     return (
-      <Card className="bg-card">
-        <CardHeader>
-          <CardTitle>Sales Transactions</CardTitle>
+      <Card className="bg-card border-border/80 shadow-sm">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0">
+          <CardTitle className="text-foreground">Sales Transactions</CardTitle>
+          {canCreate && (
+            <AddSaleModal
+              onSaleCreated={() => {
+                onSaleCreated?.();
+              }}
+            >
+              <Button size="sm" className="shrink-0">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Sale
+              </Button>
+            </AddSaleModal>
+          )}
         </CardHeader>
         <CardContent>
           <Table>

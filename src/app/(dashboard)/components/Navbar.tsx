@@ -11,7 +11,7 @@ export function Navbar() {
   const { isCollapsed, toggleSidebar, toggleMobile } = useSidebar();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-sidebar-border bg-sidebar px-4 sm:px-6 text-sidebar-foreground">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-white/12 bg-sidebar px-4 sm:px-6 text-sidebar-foreground">
       <div className="flex flex-1 items-center gap-2 sm:gap-4">
         {/* Mobile menu button */}
         <Button
@@ -42,11 +42,11 @@ export function Navbar() {
 
         {/* Search bar */}
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sidebar-muted" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search"
-            className="pl-9 w-full border-white/20 bg-white/10 text-sidebar-foreground placeholder:text-sidebar-muted focus-visible:ring-primary"
+            className="pl-9 w-full border-border/60 bg-background text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:ring-primary dark:border-border dark:bg-card dark:text-card-foreground dark:placeholder:text-muted-foreground"
           />
         </div>
       </div>

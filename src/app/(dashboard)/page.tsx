@@ -1,6 +1,8 @@
 import { StatsCards } from "./components/StatsCards";
 import { SalesOverview, SalesByCategory } from "./components/Chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ListOrdered } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -260,7 +262,9 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">Dashboard - Today</h1>
+        <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
+          Dashboard - Today
+        </h1>
         <p className="text-sm sm:text-base text-muted-foreground">
           Overview of today's sales and performance
         </p>
@@ -273,9 +277,19 @@ export default async function DashboardPage() {
         <SalesByCategory data={categorySales} />
       </div>
 
-      <Card className="bg-card">
-        <CardHeader>
-          <CardTitle>Today's Transactions</CardTitle>
+      <Card className="bg-card border-border/80 shadow-sm">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0 pb-2">
+          <CardTitle className="text-base font-semibold text-foreground">
+            Today&apos;s Transactions
+          </CardTitle>
+          <div
+            className={cn(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+              "bg-primary/15 text-primary dark:bg-primary/25 dark:text-primary"
+            )}
+          >
+            <ListOrdered className="h-4 w-4" aria-hidden />
+          </div>
         </CardHeader>
         <CardContent>
           {recentTransactions.length === 0 ? (

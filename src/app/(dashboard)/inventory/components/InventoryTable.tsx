@@ -45,6 +45,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 interface Product {
   id: string;
@@ -71,6 +72,95 @@ interface Product {
   } | null;
 }
 
+type StockBreakdown =
+  | { kind: "simple"; label: string }
+  | {
+      kind: "variations";
+      parts: { qty: number; name: string }[];
+      totalBase: number;
+      baseUnit: string;
+    };
+
+const STOCK_PART_CHIP = [
+  "border-primary/30 bg-primary/12 text-primary dark:bg-primary/18",
+  "border-sky-500/30 bg-sky-500/12 text-sky-800 dark:text-sky-300 dark:bg-sky-500/15",
+  "border-emerald-500/30 bg-emerald-500/12 text-emerald-800 dark:text-emerald-300 dark:bg-emerald-500/15",
+  "border-amber-500/35 bg-amber-500/12 text-amber-900 dark:text-amber-300 dark:bg-amber-500/15",
+  "border-violet-500/30 bg-violet-500/12 text-violet-800 dark:text-violet-300 dark:bg-violet-500/15",
+] as const;
+
+function getStockBreakdown(product: Product): StockBreakdown {
+  if (!Array.isArray(product.variations) || product.variations.length === 0) {
+    return {
+      kind: "simple",
+      label: `${product.stock} ${product.baseUnit || product.unit}`,
+    };
+  }
+  const sorted = [...product.variations].sort(
+    (a, b) => Number(b.quantityInBaseUnit) - Number(a.quantityInBaseUnit),
+  );
+  let remaining = product.stock;
+  const parts: { qty: number; name: string }[] = [];
+  sorted.forEach((variation) => {
+    const size = Number(variation.quantityInBaseUnit);
+    if (size <= 0) return;
+    const qty = Math.floor(remaining / size);
+    if (qty > 0) {
+      parts.push({ qty, name: variation.name });
+      remaining -= qty * size;
+    }
+  });
+  if (!parts.length) {
+    return {
+      kind: "simple",
+      label: `${product.stock} ${product.baseUnit || "item"}`,
+    };
+  }
+  return {
+    kind: "variations",
+    parts,
+    totalBase: product.stock,
+    baseUnit: product.baseUnit || "base",
+  };
+}
+
+function StockDisplayCell({ product }: { product: Product }) {
+  const b = getStockBreakdown(product);
+  if (b.kind === "simple") {
+    return (
+      <span className="text-sm tabular-nums text-foreground">{b.label}</span>
+    );
+  }
+  return (
+    <div className="min-w-[9rem] max-w-[17rem]">
+      <div className="flex flex-wrap items-center gap-1">
+        {b.parts.map((p, i) => (
+          <span
+            key={`${p.name}-${i}`}
+            className={cn(
+              "inline-flex max-w-full items-center rounded-md border px-1.5 py-0.5 text-[11px] font-semibold leading-tight tabular-nums",
+              STOCK_PART_CHIP[i % STOCK_PART_CHIP.length],
+            )}
+          >
+            <span className="truncate">
+              {p.qty} {p.name}
+            </span>
+          </span>
+        ))}
+      </div>
+      <div className="mt-1.5 border-t border-border/70 pt-1.5 text-[11px] leading-snug text-muted-foreground">
+        <span className="font-semibold tabular-nums text-foreground/90">
+          {b.totalBase}
+        </span>{" "}
+        <span className="text-muted-foreground">{b.baseUnit}</span>
+        <span className="ml-1 text-[10px] uppercase tracking-wide text-primary/90">
+          total
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function InventoryTable() {
   const getBaseVariationPrice = (product: Product) => {
     if (!Array.isArray(product.variations) || product.variations.length === 0) {
@@ -78,30 +168,6 @@ export function InventoryTable() {
     }
     const base = product.variations.find((v) => Number(v.quantityInBaseUnit) === 1);
     return Number((base || product.variations[0]).price || product.price);
-  };
-
-  const formatStockDisplay = (product: Product) => {
-    if (!Array.isArray(product.variations) || product.variations.length === 0) {
-      return `${product.stock} ${product.baseUnit || product.unit}`;
-    }
-    const sorted = [...product.variations].sort(
-      (a, b) => Number(b.quantityInBaseUnit) - Number(a.quantityInBaseUnit),
-    );
-    let remaining = product.stock;
-    const parts: string[] = [];
-    sorted.forEach((variation) => {
-      const size = Number(variation.quantityInBaseUnit);
-      if (size <= 0) return;
-      const qty = Math.floor(remaining / size);
-      if (qty > 0) {
-        parts.push(`${qty} ${variation.name}`);
-        remaining -= qty * size;
-      }
-    });
-    if (!parts.length) {
-      return `${product.stock} ${product.baseUnit || "item"}`;
-    }
-    return `${parts.join(" + ")} (${product.stock} ${product.baseUnit || "base"})`;
   };
 
   const formatCurrency = useCurrency();
@@ -332,60 +398,18 @@ export function InventoryTable() {
 
   return (
     <>
-      <Card className="bg-card">
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <CardTitle className="text-xl sm:text-2xl">Products</CardTitle>
-            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2">
-              <div className="relative w-full sm:w-auto">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search..."
-                  className="pl-9 w-full sm:w-64"
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                  }}
-                />
-              </div>
-              <Select
-                value={category}
-                onValueChange={(value) => {
-                  setCategory(value);
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={stockStatus}
-                onValueChange={(value) => {
-                  setStockStatus(value);
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Stock Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Stock Status</SelectItem>
-                  <SelectItem value="in_stock">In Stock</SelectItem>
-                  <SelectItem value="low_stock">Low Stock</SelectItem>
-                  <SelectItem value="out_of_stock">Out of Stock</SelectItem>
-                </SelectContent>
-              </Select>
+      <Card className="bg-card border-border/80 shadow-sm">
+        <CardHeader className="space-y-4 pb-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 space-y-1">
+              <CardTitle className="text-xl font-semibold text-foreground sm:text-2xl">
+                Products
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Search, filter, and manage inventory &amp; stock levels
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 lg:shrink-0 lg:justify-end">
               <Button
                 variant="brandOutline"
                 onClick={handleExport}
@@ -517,6 +541,60 @@ export function InventoryTable() {
               )}
             </div>
           </div>
+
+          <div className="flex flex-col gap-3 border-t border-border/60 pt-4 sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="relative min-w-0 flex-1 sm:min-w-[220px] sm:max-w-md">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search name, SKU, category…"
+                className="h-10 pl-9"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+              />
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-nowrap sm:items-center sm:gap-2">
+              <Select
+                value={category}
+                onValueChange={(value) => {
+                  setCategory(value);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="h-10 w-full sm:w-[11rem]">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={stockStatus}
+                onValueChange={(value) => {
+                  setStockStatus(value);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="h-10 w-full sm:w-[11rem]">
+                  <SelectValue placeholder="Stock Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Stock Status</SelectItem>
+                  <SelectItem value="in_stock">In Stock</SelectItem>
+                  <SelectItem value="low_stock">Low Stock</SelectItem>
+                  <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
           <div className="overflow-x-auto">
@@ -525,13 +603,15 @@ export function InventoryTable() {
                 <TableRow>
                   <TableHead className="hidden sm:table-cell">Image</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead className="hidden md:table-cell">SKU</TableHead>
+                  <TableHead className="hidden w-[1%] whitespace-nowrap md:table-cell">
+                    SKU
+                  </TableHead>
                   <TableHead className="hidden lg:table-cell">
                     Category
                   </TableHead>
                   <TableHead className="hidden lg:table-cell">Brand</TableHead>
                   <TableHead>Price</TableHead>
-                  <TableHead>Stock</TableHead>
+                  <TableHead className="min-w-[10rem]">Stock</TableHead>
                   <TableHead className="hidden sm:table-cell">Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -571,8 +651,10 @@ export function InventoryTable() {
                       <TableCell className="font-medium">
                         {product.name}
                       </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {product.sku}
+                      <TableCell className="hidden md:table-cell align-top">
+                        <span className="font-mono text-[11px] leading-snug text-muted-foreground">
+                          {product.sku}
+                        </span>
                       </TableCell>
                       <TableCell className="hidden lg:table-cell">
                         {product.category}
@@ -587,8 +669,8 @@ export function InventoryTable() {
                         )}
                       </TableCell>
                       <TableCell>{formatCurrency(getBaseVariationPrice(product))}</TableCell>
-                      <TableCell>
-                        {formatStockDisplay(product)}
+                      <TableCell className="align-top">
+                        <StockDisplayCell product={product} />
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
                         <span

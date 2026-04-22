@@ -58,7 +58,13 @@ export function SalesPageClient({ canCreate }: SalesPageClientProps) {
       </div>
       <SalesStatisticsCards ref={statisticsCardsRef} />
       <Filters onFilterChange={handleFilterChange} />
-      <SalesTable ref={salesTableRef} filters={filters} onSaleChanged={handleSaleChanged} />
+      <SalesTable
+        ref={salesTableRef}
+        filters={filters}
+        onSaleChanged={handleSaleChanged}
+        canCreate={canCreate}
+        onSaleCreated={handleSaleCreated}
+      />
     </div>
   );
 }

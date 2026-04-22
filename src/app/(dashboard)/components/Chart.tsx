@@ -13,7 +13,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { Clock, PieChart as PieChartIcon } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
+import { cn } from "@/lib/utils";
 
 interface SalesOverviewProps {
   data: Array<{
@@ -24,11 +26,21 @@ interface SalesOverviewProps {
 
 export function SalesOverview({ data }: SalesOverviewProps) {
   const formatCurrency = useCurrency();
-  
+
   return (
-    <Card className="bg-card">
-      <CardHeader>
-        <CardTitle>Today's Sales by Hour</CardTitle>
+    <Card className="bg-card border-border/80 shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-base font-semibold text-foreground">
+          Today&apos;s Sales by Hour
+        </CardTitle>
+        <div
+          className={cn(
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+            "bg-amber-500/15 text-amber-700 dark:bg-amber-500/25 dark:text-amber-300"
+          )}
+        >
+          <Clock className="h-4 w-4" aria-hidden />
+        </div>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
@@ -51,6 +63,7 @@ export function SalesOverview({ data }: SalesOverviewProps) {
                 backgroundColor: "hsl(var(--popover))",
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "8px",
+                color: "hsl(var(--popover-foreground))",
               }}
               formatter={(value: number) => formatCurrency(value)}
             />
@@ -134,12 +147,22 @@ export function SalesByCategory({ data }: CategorySalesProps) {
   
   if (data.length === 0) {
     return (
-      <Card className="bg-card">
-        <CardHeader>
-          <CardTitle>Today's Sales by Category</CardTitle>
+      <Card className="bg-card border-border/80 shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-base font-semibold text-foreground">
+            Today&apos;s Sales by Category
+          </CardTitle>
+          <div
+            className={cn(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+              "bg-violet-500/15 text-violet-700 dark:bg-violet-500/25 dark:text-violet-300"
+            )}
+          >
+            <PieChartIcon className="h-4 w-4" aria-hidden />
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+          <div className="flex h-[300px] items-center justify-center text-muted-foreground">
             No sales data for today
           </div>
         </CardContent>
@@ -148,9 +171,19 @@ export function SalesByCategory({ data }: CategorySalesProps) {
   }
 
   return (
-    <Card className="bg-card">
-      <CardHeader>
-        <CardTitle>Today's Sales by Category</CardTitle>
+    <Card className="bg-card border-border/80 shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-base font-semibold text-foreground">
+          Today&apos;s Sales by Category
+        </CardTitle>
+        <div
+          className={cn(
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+            "bg-violet-500/15 text-violet-700 dark:bg-violet-500/25 dark:text-violet-300"
+          )}
+        >
+          <PieChartIcon className="h-4 w-4" aria-hidden />
+        </div>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col lg:flex-row items-center justify-center gap-6">
@@ -186,20 +219,25 @@ export function SalesByCategory({ data }: CategorySalesProps) {
           </ResponsiveContainer>
 
           {/* Custom Legend */}
-          <div className="space-y-3 min-w-[200px]">
-            <h4 className="text-sm font-semibold mb-2">Categories</h4>
+          <div className="min-w-[200px] space-y-3">
+            <h4 className="mb-2 text-sm font-semibold text-foreground">
+              Categories
+            </h4>
             {data.map((entry, index) => (
               <div key={entry.category} className="flex items-center gap-3">
                 <div
-                  className="w-4 h-4 rounded-full flex-shrink-0"
+                  className="h-4 w-4 shrink-0 rounded-full shadow-sm ring-1 ring-black/5 dark:ring-white/10"
                   style={{ backgroundColor: COLORS[index % COLORS.length] }}
                 />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium text-foreground">
                     {entry.category}
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {formatCurrency(entry.value)} ({entry.percentage}%)
+                  <div className="text-xs font-medium text-primary">
+                    {formatCurrency(entry.value)}{" "}
+                    <span className="font-normal text-muted-foreground">
+                      ({entry.percentage}%)
+                    </span>
                   </div>
                 </div>
               </div>

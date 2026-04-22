@@ -147,7 +147,7 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed lg:sticky top-0 left-0 z-50 flex h-screen flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 ease-in-out",
+          "fixed lg:sticky top-0 left-0 z-50 flex h-screen flex-col bg-sidebar text-sidebar-foreground border-r border-white/[0.18] transition-all duration-300 ease-in-out",
           isCollapsed ? "w-16 lg:w-16" : "w-64 lg:w-64",
           isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
@@ -155,7 +155,7 @@ export function Sidebar() {
         {/* Header */}
         <div
           className={cn(
-            "flex h-16 items-center border-b border-sidebar-border transition-all duration-300",
+            "flex h-16 items-center border-b border-white/10 transition-all duration-300",
             isCollapsed ? "justify-center px-0" : "justify-between px-6"
           )}
         >
@@ -166,18 +166,18 @@ export function Sidebar() {
             )}
           >
             {logoUrl ? (
-              <div className="h-6 w-6 flex-shrink-0 relative">
+              <div className="h-8 w-8 flex-shrink-0 relative">
                 <Image
                   src={logoUrl}
                   alt={companyName}
                   fill
-                  className="object-contain"
+                  className="object-contain rounded-lg"
                 />
               </div>
             ) : (
               <Grid3x3 className="h-6 w-6 text-primary flex-shrink-0" />
             )}
-            <span className="text-lg font-semibold text-sidebar-foreground whitespace-nowrap">
+            <span className="text-lg font-semibold text-primary whitespace-nowrap">
               {companyName}
             </span>
           </div>
@@ -209,7 +209,7 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4 min-h-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {allNavigation.map((item) => {
             const isActive =
               pathname === item.href || pathname.startsWith(item.href + "/");
@@ -224,7 +224,7 @@ export function Sidebar() {
                   }
                 }}
                 className={cn(
-                  "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
                     : "text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground"
@@ -252,6 +252,52 @@ export function Sidebar() {
             );
           })}
         </nav>
+
+        {/* Footer — branded panel (readable hierarchy, subtle depth; no heavy wave fill) */}
+        <div
+          className={cn(
+            "shrink-0 border-t border-white/10 bg-sidebar",
+            isCollapsed ? "py-2.5" : "p-3 pb-4"
+          )}
+        >
+          {isCollapsed ? (
+            <div
+              className="flex justify-center"
+              aria-hidden
+            >
+              <div className="h-9 w-1 rounded-full bg-gradient-to-b from-primary via-primary/75 to-primary/25 shadow-[0_0_14px_rgba(249,115,22,0.35)]" />
+            </div>
+          ) : (
+            <div className="relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+              <div
+                className="pointer-events-none absolute -right-8 -top-10 h-24 w-24 rounded-full bg-primary/25 blur-2xl"
+                aria-hidden
+              />
+              <div
+                className="pointer-events-none absolute -bottom-6 -left-6 h-20 w-20 rounded-full bg-primary/15 blur-xl"
+                aria-hidden
+              />
+              <div className="relative flex gap-3">
+                <div
+                  className="mt-0.5 h-10 w-1 shrink-0 rounded-full bg-gradient-to-b from-primary to-primary/55"
+                  aria-hidden
+                />
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
+                    Operations hub
+                  </p>
+                  <p className="text-xs leading-relaxed text-sidebar-muted">
+                    Inventory, sales, and reporting in one place.
+                  </p>
+                  <p className="truncate pt-0.5 text-[10px] text-sidebar-muted/70">
+                    © {new Date().getFullYear()}{" "}
+                    <span className="text-sidebar-muted/90">GabyGod Technologies</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </aside>
     </>
   );
