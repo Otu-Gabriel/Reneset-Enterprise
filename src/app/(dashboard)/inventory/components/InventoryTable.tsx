@@ -387,7 +387,7 @@ export function InventoryTable() {
                 </SelectContent>
               </Select>
               <Button
-                variant="outline"
+                variant="brandOutline"
                 onClick={handleExport}
                 disabled={exporting}
                 className="w-full sm:w-auto"

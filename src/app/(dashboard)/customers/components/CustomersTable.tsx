@@ -312,7 +312,7 @@ export function CustomersTable() {
                 {extracting ? "Extracting..." : "Extract from Sales"}
               </Button>
               <Button
-                variant="outline"
+                variant="brandOutline"
                 onClick={handleExport}
                 disabled={exporting}
                 className="w-full sm:w-auto"

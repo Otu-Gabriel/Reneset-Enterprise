@@ -32,11 +32,11 @@ interface InventoryReportProps {
 }
 
 const COLORS = [
-  "hsl(217, 91%, 60%)",
-  "hsl(217, 70%, 50%)",
-  "hsl(217, 50%, 40%)",
-  "hsl(250, 95%, 65%)",
-  "hsl(250, 85%, 55%)",
+  "hsl(25, 95%, 53%)",
+  "hsl(199, 55%, 38%)",
+  "hsl(25, 80%, 44%)",
+  "hsl(199, 40%, 48%)",
+  "hsl(142, 65%, 42%)",
 ];
 
 export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
@@ -161,8 +161,8 @@ export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
                       : [formatCurrency(value), name]
                   }
                 />
-                <Bar dataKey="value" fill="hsl(217, 91%, 60%)" name="Stock Value" />
-                <Bar dataKey="count" fill="hsl(250, 95%, 65%)" name="Product Count" />
+                <Bar dataKey="value" fill="hsl(25, 95%, 53%)" name="Stock Value" />
+                <Bar dataKey="count" fill="hsl(199, 55%, 38%)" name="Product Count" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -195,7 +195,7 @@ export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
                     borderRadius: "8px",
                   }}
                 />
-                <Bar dataKey="quantity" fill="hsl(250, 95%, 65%)" name="Quantity Sold" />
+                <Bar dataKey="quantity" fill="hsl(25, 95%, 53%)" name="Quantity Sold" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

@@ -219,7 +219,7 @@ export const SalesTable = forwardRef<SalesTableRef, SalesTableProps>(
                       <div className="flex flex-col">
                         <span>{formatCurrency(sale.totalAmount)}</span>
                         {isAdmin && (
-                          <span className="text-xs text-muted-foreground mt-1">
+                          <span className="text-xs text-primary font-medium mt-1">
                             Profit: {formatCurrency(calculateProfit(sale))}
                           </span>
                         )}
@@ -263,7 +263,7 @@ export const SalesTable = forwardRef<SalesTableRef, SalesTableProps>(
                             onClick={() => handleDelete(sale.id)}
                             title="Delete Sale"
                           >
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                            <Trash2 className="h-4 w-4 text-primary" />
                           </Button>
                         )}
                       </div>

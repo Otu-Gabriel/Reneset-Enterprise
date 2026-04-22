@@ -159,7 +159,7 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
                 <Line
                   type="monotone"
                   dataKey="revenue"
-                  stroke="hsl(250, 95%, 65%)"
+                  stroke="hsl(25, 95%, 53%)"
                   strokeWidth={2}
                   name="Revenue"
                 />

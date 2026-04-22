@@ -69,7 +69,7 @@ export function ReportsPageClient() {
           <Button
             onClick={handleExport}
             disabled={loading}
-            variant="outline"
+            variant="brandOutline"
           >
           {loading ? (
             <>

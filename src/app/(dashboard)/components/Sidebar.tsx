@@ -147,7 +147,7 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed lg:sticky top-0 left-0 z-50 flex h-screen flex-col bg-secondary border-r border-border transition-all duration-300 ease-in-out",
+          "fixed lg:sticky top-0 left-0 z-50 flex h-screen flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 ease-in-out",
           isCollapsed ? "w-16 lg:w-16" : "w-64 lg:w-64",
           isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
@@ -155,7 +155,7 @@ export function Sidebar() {
         {/* Header */}
         <div
           className={cn(
-            "flex h-16 items-center border-b border-border transition-all duration-300",
+            "flex h-16 items-center border-b border-sidebar-border transition-all duration-300",
             isCollapsed ? "justify-center px-0" : "justify-between px-6"
           )}
         >
@@ -177,7 +177,7 @@ export function Sidebar() {
             ) : (
               <Grid3x3 className="h-6 w-6 text-primary flex-shrink-0" />
             )}
-            <span className="text-lg font-semibold text-foreground whitespace-nowrap">
+            <span className="text-lg font-semibold text-sidebar-foreground whitespace-nowrap">
               {companyName}
             </span>
           </div>
@@ -186,7 +186,7 @@ export function Sidebar() {
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden"
+              className="lg:hidden text-sidebar-foreground hover:bg-white/10 hover:text-sidebar-foreground"
               onClick={closeMobile}
             >
               <X className="h-5 w-5" />
@@ -195,7 +195,7 @@ export function Sidebar() {
             <Button
               variant="ghost"
               size="icon"
-              className="hidden lg:flex"
+              className="hidden lg:flex text-sidebar-foreground hover:bg-white/10 hover:text-sidebar-foreground"
               onClick={toggleSidebar}
               title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
@@ -226,8 +226,8 @@ export function Sidebar() {
                 className={cn(
                   "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+                    : "text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground"
                 )}
                 title={isCollapsed ? item.name : undefined}
               >
@@ -244,7 +244,7 @@ export function Sidebar() {
                 </span>
                 {/* Tooltip for collapsed state */}
                 {isCollapsed && (
-                  <div className="absolute left-full ml-2 px-2 py-1 text-sm text-white bg-gray-900 rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 pointer-events-none">
+                  <div className="absolute left-full ml-2 px-2 py-1 text-sm rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 pointer-events-none bg-popover text-popover-foreground border border-border shadow-md">
                     {item.name}
                   </div>
                 )}

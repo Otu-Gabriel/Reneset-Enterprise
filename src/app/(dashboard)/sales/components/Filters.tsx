@@ -164,7 +164,7 @@ export function Filters({ onFilterChange }: FiltersProps) {
             )}
             <Dialog open={exportOpen} onOpenChange={setExportOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant="brandOutline">
                   <Download className="mr-2 h-4 w-4" />
                   Export
                 </Button>

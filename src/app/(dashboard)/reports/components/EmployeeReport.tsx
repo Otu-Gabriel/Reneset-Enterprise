@@ -34,11 +34,11 @@ interface EmployeeReportProps {
 }
 
 const COLORS = [
-  "hsl(217, 91%, 60%)",
-  "hsl(217, 70%, 50%)",
-  "hsl(217, 50%, 40%)",
-  "hsl(250, 95%, 65%)",
-  "hsl(250, 85%, 55%)",
+  "hsl(25, 95%, 53%)",
+  "hsl(199, 55%, 38%)",
+  "hsl(25, 80%, 44%)",
+  "hsl(199, 40%, 48%)",
+  "hsl(142, 65%, 42%)",
 ];
 
 export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
@@ -250,7 +250,7 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
                       borderRadius: "8px",
                     }}
                   />
-                  <Bar dataKey="count" fill="hsl(217, 91%, 60%)" />
+                  <Bar dataKey="count" fill="hsl(25, 95%, 53%)" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -276,7 +276,7 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
                     labelLine={false}
                     label={({ position, count }) => `${position}: ${count}`}
                     outerRadius={100}
-                    fill="#8884d8"
+                    fill="hsl(25, 95%, 53%)"
                     dataKey="count"
                   >
                     {data.positionBreakdown.map((entry: any, index: number) => (

@@ -57,10 +57,10 @@ export function SalesOverview({ data }: SalesOverviewProps) {
             <Line
               type="monotone"
               dataKey="revenue"
-              stroke="hsl(250, 95%, 65%)"
+              stroke="hsl(25, 95%, 53%)"
               strokeWidth={2}
               name="Revenue"
-              dot={{ fill: "hsl(250, 95%, 65%)", r: 4 }}
+              dot={{ fill: "hsl(25, 95%, 53%)", r: 4 }}
               activeDot={{ r: 6 }}
             />
           </LineChart>
@@ -115,18 +115,18 @@ function PieChartTooltipContent(props: {
 }
 
 
-// Professional color palette with high contrast
+/* Brand-forward palette: orange + navy-teal + supporting accents */
 const COLORS = [
-  "#3B82F6", // Blue
-  "#10B981", // Green
-  "#F59E0B", // Amber
-  "#EF4444", // Red
-  "#8B5CF6", // Purple
-  "#EC4899", // Pink
-  "#06B6D4", // Cyan
-  "#F97316", // Orange
-  "#84CC16", // Lime
-  "#6366F1", // Indigo
+  "hsl(25, 95%, 53%)",
+  "hsl(199, 55%, 38%)",
+  "hsl(25, 80%, 44%)",
+  "hsl(199, 40%, 48%)",
+  "hsl(142, 65%, 42%)",
+  "hsl(45, 90%, 48%)",
+  "hsl(25, 70%, 62%)",
+  "hsl(199, 35%, 55%)",
+  "hsl(168, 55%, 40%)",
+  "hsl(32, 85%, 55%)",
 ];
 
 export function SalesByCategory({ data }: CategorySalesProps) {
@@ -166,7 +166,7 @@ export function SalesByCategory({ data }: CategorySalesProps) {
                 }
                 outerRadius={100}
                 innerRadius={40}
-                fill="#8884d8"
+                fill="hsl(25, 95%, 53%)"
                 dataKey="value"
                 paddingAngle={2}
               >
