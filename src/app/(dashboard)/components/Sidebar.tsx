@@ -147,7 +147,7 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed lg:sticky top-0 left-0 z-50 flex h-screen flex-col bg-sidebar text-sidebar-foreground border-r border-white/[0.18] transition-all duration-300 ease-in-out",
+          "fixed lg:sticky top-0 left-0 z-50 flex h-screen flex-col overflow-x-hidden bg-sidebar text-sidebar-foreground border-r border-white/[0.18] transition-all duration-300 ease-in-out",
           isCollapsed ? "w-16 lg:w-16" : "w-64 lg:w-64",
           isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
@@ -155,14 +155,14 @@ export function Sidebar() {
         {/* Header */}
         <div
           className={cn(
-            "flex h-16 items-center border-b border-white/10 transition-all duration-300",
-            isCollapsed ? "justify-center px-0" : "justify-between px-6"
+            "flex h-16 min-w-0 items-center border-b border-white/10 transition-all duration-300",
+            isCollapsed ? "justify-center px-0" : "justify-between px-4 sm:px-6"
           )}
         >
           <div
             className={cn(
-              "flex items-center gap-2 transition-all duration-300",
-              isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+              "flex min-w-0 items-center gap-2 transition-all duration-300",
+              isCollapsed ? "w-0 opacity-0" : "w-auto min-w-0 flex-1 opacity-100"
             )}
           >
             {logoUrl ? (
@@ -177,20 +177,22 @@ export function Sidebar() {
             ) : (
               <Grid3x3 className="h-6 w-6 text-primary flex-shrink-0" />
             )}
-            <span className="text-lg font-semibold text-primary whitespace-nowrap">
+            <span className="truncate text-lg font-semibold text-primary">
               {companyName}
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            {/* Mobile close button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden text-sidebar-foreground hover:bg-white/10 hover:text-sidebar-foreground"
-              onClick={closeMobile}
-            >
-              <X className="h-5 w-5" />
-            </Button>
+          <div className="flex min-w-0 shrink-0 items-center gap-2">
+            {isMobileOpen && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden text-sidebar-foreground hover:bg-white/10 hover:text-sidebar-foreground"
+                onClick={closeMobile}
+                aria-label="Close menu"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            )}
             {/* Desktop collapse button */}
             <Button
               variant="ghost"
