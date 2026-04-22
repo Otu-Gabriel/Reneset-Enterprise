@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { auditLogger, getRequestMetadata } from "@/lib/audit";
+import { normalizeVariationsForStorage } from "@/lib/product-variations";
+import { Prisma } from "@prisma/client";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -151,6 +153,21 @@ export async function PUT(
       where: { id: params.id },
     });
 
+    let variationsPayload: Prisma.InputJsonValue | undefined;
+    let derivedPrice: number | undefined;
+    if (variations !== undefined) {
+      const normalized = normalizeVariationsForStorage(variations);
+      if (normalized.length === 0) {
+        return NextResponse.json(
+          { error: "At least one valid variation is required" },
+          { status: 400 }
+        );
+      }
+      variationsPayload = normalized as unknown as Prisma.InputJsonValue;
+      derivedPrice =
+        normalized.find((v) => v.quantityInBaseUnit === 1)?.price ?? normalized[0].price;
+    }
+
     const product = await prisma.product.update({
       where: { id: params.id },
       data: {
@@ -160,9 +177,10 @@ export async function PUT(
         ...(categoryName && { category: categoryName }),
         ...(brandId !== undefined && { brandId: brandId || null }),
         ...(price !== undefined && { price: parseFloat(price) }),
+        ...(derivedPrice !== undefined && price === undefined && { price: derivedPrice }),
         ...(cost !== undefined && { cost: cost ? parseFloat(cost) : null }),
         ...(baseUnit !== undefined && { baseUnit: String(baseUnit) }),
-        ...(variations !== undefined && { variations }),
+        ...(variationsPayload !== undefined && { variations: variationsPayload }),
         ...(imageUrl !== undefined && { imageUrl: imageUrl || null }),
         ...(stock !== undefined && { stock: parseInt(stock) }),
         ...(minStock !== undefined && { minStock: parseInt(minStock) }),

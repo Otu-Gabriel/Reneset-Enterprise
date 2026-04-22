@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { saleItemLineCogs } from "@/lib/product-variations";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -236,9 +237,10 @@ export async function GET(request: NextRequest) {
           const monthKey = `${sale.saleDate.getFullYear()}-${String(sale.saleDate.getMonth() + 1).padStart(2, "0")}`;
           const existing = monthlyMap.get(monthKey) || { revenue: 0, cost: 0, profit: 0 };
           const saleRevenue = sale.totalAmount;
-          const saleCost = sale.items.reduce((sum, item) => {
-            return sum + (item.product.cost || 0) * item.quantity;
-          }, 0);
+          const saleCost = sale.items.reduce(
+            (sum, item) => sum + saleItemLineCogs(item),
+            0
+          );
           monthlyMap.set(monthKey, {
             revenue: existing.revenue + saleRevenue,
             cost: existing.cost + saleCost,

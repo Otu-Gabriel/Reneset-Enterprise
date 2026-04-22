@@ -5,50 +5,15 @@ import { prisma } from "@/lib/prisma";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { auditLogger, getRequestMetadata } from "@/lib/audit";
+import {
+  computeLineCOGS,
+  getBaseQuantity,
+  getProductUnitPrice,
+  normalizeSaleUnit,
+} from "@/lib/product-variations";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-function getProductVariations(product: any): Array<{ name: string; quantityInBaseUnit: number; price: number }> {
-  const raw = Array.isArray(product.variations) ? product.variations : [];
-  const normalized = raw
-    .map((v: any) => ({
-      name: String(v?.name || "").trim(),
-      quantityInBaseUnit: Number(v?.quantityInBaseUnit || 0),
-      price: Number(v?.price || 0),
-    }))
-    .filter((v: any) => v.name && v.quantityInBaseUnit > 0 && v.price >= 0);
-
-  if (normalized.length > 0) {
-    return normalized;
-  }
-
-  return [
-    {
-      name: product.baseUnit || "item",
-      quantityInBaseUnit: 1,
-      price: Number(product.price || 0),
-    },
-  ];
-}
-
-function getVariation(product: any, saleUnit: string) {
-  const variations = getProductVariations(product);
-  return (
-    variations.find((v) => v.name.toLowerCase() === String(saleUnit || "").toLowerCase()) ||
-    variations.find((v) => v.quantityInBaseUnit === 1) ||
-    variations[0]
-  );
-}
-
-function getProductUnitPrice(product: any, saleUnit: string): number {
-  return Number(getVariation(product, saleUnit)?.price || 0);
-}
-
-function getBaseQuantity(product: any, quantity: number, saleUnit: string): number {
-  const variation = getVariation(product, saleUnit);
-  return Math.max(1, Number(variation?.quantityInBaseUnit || 1)) * quantity;
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -305,7 +270,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const saleUnit = item.saleUnit === "box" ? "box" : "item";
+      const saleUnit = normalizeSaleUnit(item.saleUnit);
       const baseQuantity = getBaseQuantity(product, item.quantity, saleUnit);
       if (product.stock < baseQuantity) {
         return NextResponse.json(
@@ -319,6 +284,8 @@ export async function POST(request: NextRequest) {
       const subtotal = unitPrice * item.quantity - itemDiscount;
       totalAmount += subtotal;
 
+      const { unitCost, lineCOGS } = computeLineCOGS(product, item.quantity, saleUnit);
+
       saleItems.push({
         productId: item.productId,
         quantity: item.quantity,
@@ -327,6 +294,8 @@ export async function POST(request: NextRequest) {
         price: unitPrice,
         subtotal,
         discount: itemDiscount,
+        unitCost,
+        lineCOGS,
       });
     }
 

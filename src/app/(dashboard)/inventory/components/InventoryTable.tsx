@@ -58,7 +58,12 @@ interface Product {
   minStock: number;
   unit: string;
   baseUnit?: string;
-  variations?: Array<{ name: string; quantityInBaseUnit: number; price: number }>;
+  variations?: Array<{
+    name: string;
+    quantityInBaseUnit: number;
+    price: number;
+    cost?: number | null;
+  }>;
   imageUrl: string | null;
   brand: {
     id: string;
@@ -225,6 +230,30 @@ export function InventoryTable() {
     setAddStockOpen(true);
   };
 
+  const handleDownloadImportTemplate = async () => {
+    try {
+      const response = await fetch("/api/inventory/import/template", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || "Download failed");
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "inventory-import-template.csv";
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to download template");
+    }
+  };
+
   const handleImport = async () => {
     if (!importFile) {
       alert("Please select a file");
@@ -241,6 +270,7 @@ export function InventoryTable() {
       const response = await fetch("/api/inventory/import", {
         method: "POST",
         body: formData,
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -373,23 +403,61 @@ export function InventoryTable() {
                       Import
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>Import Products from Excel</DialogTitle>
-                      <DialogDescription>
-                        Upload an Excel file with columns: Name, SKU, Category,
-                        Price, Description (optional), Brand (optional), Cost
-                        (optional), Stock (optional), Min Stock (optional), Unit
-                        (optional), Image URL (optional)
+                      <DialogTitle>Bulk import products</DialogTitle>
+                      <DialogDescription asChild>
+                        <div className="space-y-2 text-sm text-muted-foreground">
+                          <p>
+                            Use <strong>CSV</strong> or <strong>Excel</strong>{" "}
+                            (.csv, .xlsx, .xls). Rows with the same{" "}
+                            <strong>ProductSKU</strong> define one product and
+                            its variations.
+                          </p>
+                          <ul className="list-disc list-inside space-y-1 text-left">
+                            <li>
+                              <strong>Required (first row of each SKU):</strong>{" "}
+                              ProductName, Category, and at least one variation
+                              row (or legacy <strong>Price</strong> on a single
+                              row).
+                            </li>
+                            <li>
+                              <strong>Per variation:</strong> VariationName,
+                              QuantityInBaseUnit, VariationPrice; optional
+                              VariationCost.
+                            </li>
+                            <li>
+                              <strong>Optional:</strong> BaseUnit, Brand,
+                              Description, Stock, MinStock, FallbackCost
+                              (product fallback when a variation has no cost),
+                              ImageURL.
+                            </li>
+                            <li>
+                              <strong>Legacy:</strong> one row per SKU with
+                              columns Price (and optional Cost / VariationCost)
+                              instead of variation columns — same as before,
+                              now stored as a single base-unit variation.
+                            </li>
+                          </ul>
+                        </div>
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="w-full sm:w-auto"
+                        onClick={handleDownloadImportTemplate}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Download template (CSV)
+                      </Button>
                       <div className="space-y-2">
-                        <Label htmlFor="file">Excel File</Label>
+                        <Label htmlFor="file">CSV or Excel file</Label>
                         <Input
                           id="file"
                           type="file"
-                          accept=".xlsx,.xls"
+                          accept=".csv,.xlsx,.xls"
                           onChange={(e) =>
                             setImportFile(e.target.files?.[0] || null)
                           }
@@ -424,8 +492,9 @@ export function InventoryTable() {
                         </div>
                       )}
                     </div>
-                    <DialogFooter>
+                    <DialogFooter className="flex-col sm:flex-row gap-2 sm:justify-end">
                       <Button
+                        type="button"
                         variant="outline"
                         onClick={() => {
                           setImportOpen(false);
@@ -436,6 +505,7 @@ export function InventoryTable() {
                         Close
                       </Button>
                       <Button
+                        type="button"
                         onClick={handleImport}
                         disabled={importing || !importFile}
                       >

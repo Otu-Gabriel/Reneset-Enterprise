@@ -19,6 +19,7 @@ import { Permission, Role } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { SaleDetailsModal } from "./SaleDetailsModal";
 import { EditSaleModal } from "./EditSaleModal";
+import { saleItemLineCogs } from "@/lib/product-variations";
 
 interface Sale {
   id: string;
@@ -43,6 +44,7 @@ interface Sale {
     price: number;
     discount: number;
     subtotal: number;
+    lineCOGS?: number | null;
   }>;
   user?: {
     name: string;
@@ -163,11 +165,10 @@ export const SalesTable = forwardRef<SalesTableRef, SalesTableProps>(
     };
 
     const calculateProfit = (sale: Sale): number => {
-      return sale.items.reduce((totalProfit, item) => {
-        const cost = item.product.cost || 0;
-        const itemProfit = (item.price - cost) * item.quantity - item.discount;
-        return totalProfit + itemProfit;
-      }, 0);
+      return sale.items.reduce(
+        (total, item) => total + item.subtotal - saleItemLineCogs(item),
+        0
+      );
     };
 
     if (loading) {

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Permission, Prisma } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { auditLogger, getRequestMetadata } from "@/lib/audit";
+import { normalizeVariationsForStorage } from "@/lib/product-variations";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -223,7 +224,9 @@ export async function POST(request: NextRequest) {
       imageUrl,
     } = body;
 
-    if (!name || !sku || !categoryId || !baseUnit || !Array.isArray(variations) || variations.length === 0) {
+    const normalizedVariations = normalizeVariationsForStorage(variations);
+
+    if (!name || !sku || !categoryId || !baseUnit || normalizedVariations.length === 0) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -275,6 +278,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const primaryPrice =
+      normalizedVariations.find((v) => v.quantityInBaseUnit === 1)?.price ??
+      normalizedVariations[0].price;
+
     const product = await prisma.product.create({
       data: {
         name,
@@ -282,10 +289,10 @@ export async function POST(request: NextRequest) {
         sku,
         category: category.name,
         brandId: brandId || null,
-        price: parseFloat(price),
+        price: parseFloat(String(price ?? primaryPrice)),
         cost: cost ? parseFloat(cost) : null,
         baseUnit: String(baseUnit),
-        variations,
+        variations: normalizedVariations as unknown as Prisma.InputJsonValue,
         imageUrl: imageUrl || null,
         stock: parseInt(stock || "0"),
         minStock: parseInt(minStock || "0"),

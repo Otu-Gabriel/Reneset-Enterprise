@@ -40,7 +40,12 @@ interface Product {
   price: number;
   cost: number | null;
   baseUnit?: string;
-  variations?: Array<{ name: string; quantityInBaseUnit: number; price: number }>;
+  variations?: Array<{
+    name: string;
+    quantityInBaseUnit: number;
+    price: number;
+    cost?: number | null;
+  }>;
   stock: number;
   minStock: number;
   unit: string;
@@ -81,7 +86,7 @@ export function EditItemModal({
     imageUrl: "",
   });
   const [variations, setVariations] = useState([
-    { name: "item", quantityInBaseUnit: "1", price: "" },
+    { name: "item", quantityInBaseUnit: "1", price: "", cost: "" },
   ]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -115,6 +120,10 @@ export function EditItemModal({
             name: variation.name,
             quantityInBaseUnit: String(variation.quantityInBaseUnit),
             price: String(variation.price),
+            cost:
+              variation.cost != null && variation.cost !== undefined
+                ? String(variation.cost)
+                : "",
           })),
         );
       }
@@ -231,11 +240,20 @@ export function EditItemModal({
         unit: formData.baseUnit,
       };
       const normalizedVariations = variations
-        .map((variation) => ({
-          name: variation.name.trim(),
-          quantityInBaseUnit: Number(variation.quantityInBaseUnit),
-          price: Number(variation.price),
-        }))
+        .map((variation) => {
+          const costStr = String(variation.cost ?? "").trim();
+          let cost: number | null = null;
+          if (costStr !== "") {
+            const c = Number(costStr);
+            if (!Number.isNaN(c) && c >= 0) cost = c;
+          }
+          return {
+            name: variation.name.trim(),
+            quantityInBaseUnit: Number(variation.quantityInBaseUnit),
+            price: Number(variation.price),
+            cost,
+          };
+        })
         .filter((variation) => variation.name && variation.quantityInBaseUnit > 0 && variation.price >= 0);
 
       if (!normalizedVariations.length) {
@@ -402,7 +420,7 @@ export function EditItemModal({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="cost">Cost</Label>
+              <Label htmlFor="cost">Fallback product cost</Label>
               <Input
                 id="cost"
                 type="number"
@@ -411,8 +429,11 @@ export function EditItemModal({
                 onChange={(e) =>
                   setFormData({ ...formData, cost: e.target.value })
                 }
-                placeholder="0.00 (optional)"
+                placeholder="Used when a variation has no cost"
               />
+              <p className="text-xs text-muted-foreground">
+                Prefer setting cost on each variation for accurate margins.
+              </p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -441,7 +462,7 @@ export function EditItemModal({
           </div>
           <div className="space-y-3 rounded-md border p-3">
             <div className="flex items-center justify-between">
-              <Label>Selling Variations</Label>
+              <Label>Variations (price & cost per sale unit)</Label>
               <Button
                 type="button"
                 variant="outline"
@@ -449,7 +470,7 @@ export function EditItemModal({
                 onClick={() =>
                   setVariations((prev) => [
                     ...prev,
-                    { name: "", quantityInBaseUnit: "1", price: "" },
+                    { name: "", quantityInBaseUnit: "1", price: "", cost: "" },
                   ])
                 }
               >
@@ -457,8 +478,12 @@ export function EditItemModal({
               </Button>
             </div>
             {variations.map((variation, index) => (
-              <div key={index} className="grid grid-cols-3 gap-2">
+              <div
+                key={index}
+                className="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-end"
+              >
                 <Input
+                  className="sm:col-span-3"
                   placeholder="Variation name"
                   value={variation.name}
                   onChange={(e) =>
@@ -468,9 +493,10 @@ export function EditItemModal({
                   }
                 />
                 <Input
+                  className="sm:col-span-2"
                   type="number"
                   min="1"
-                  placeholder="Base Qty"
+                  placeholder="Base units"
                   value={variation.quantityInBaseUnit}
                   onChange={(e) =>
                     setVariations((prev) =>
@@ -478,18 +504,31 @@ export function EditItemModal({
                     )
                   }
                 />
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="Price"
-                    value={variation.price}
-                    onChange={(e) =>
-                      setVariations((prev) =>
-                        prev.map((v, i) => (i === index ? { ...v, price: e.target.value } : v)),
-                      )
-                    }
-                  />
+                <Input
+                  className="sm:col-span-2"
+                  type="number"
+                  step="0.01"
+                  placeholder="Price"
+                  value={variation.price}
+                  onChange={(e) =>
+                    setVariations((prev) =>
+                      prev.map((v, i) => (i === index ? { ...v, price: e.target.value } : v)),
+                    )
+                  }
+                />
+                <Input
+                  className="sm:col-span-2"
+                  type="number"
+                  step="0.01"
+                  placeholder="Cost"
+                  value={variation.cost}
+                  onChange={(e) =>
+                    setVariations((prev) =>
+                      prev.map((v, i) => (i === index ? { ...v, cost: e.target.value } : v)),
+                    )
+                  }
+                />
+                <div className="flex gap-2 sm:col-span-3">
                   {variations.length > 1 && (
                     <Button
                       type="button"
@@ -497,7 +536,7 @@ export function EditItemModal({
                       size="sm"
                       onClick={() => setVariations((prev) => prev.filter((_, i) => i !== index))}
                     >
-                      X
+                      Remove
                     </Button>
                   )}
                 </div>

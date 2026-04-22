@@ -47,6 +47,8 @@ export interface SaleItem {
   quantity: number;
   price: number;
   subtotal: number;
+  unitCost?: number | null;
+  lineCOGS?: number | null;
   product?: Product;
 }
 

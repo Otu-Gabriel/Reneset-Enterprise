@@ -36,7 +36,12 @@ interface Product {
   category?: string;
   unit?: string;
   baseUnit?: string;
-  variations?: Array<{ name: string; quantityInBaseUnit: number; price: number }>;
+  variations?: Array<{
+    name: string;
+    quantityInBaseUnit: number;
+    price: number;
+    cost?: number | null;
+  }>;
 }
 
 interface SaleItem {

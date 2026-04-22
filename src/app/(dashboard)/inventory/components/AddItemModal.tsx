@@ -58,7 +58,7 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
     imageUrl: "",
   });
   const [variations, setVariations] = useState([
-    { name: "item", quantityInBaseUnit: "1", price: "" },
+    { name: "item", quantityInBaseUnit: "1", price: "", cost: "" },
   ]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -190,11 +190,20 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
         unit: formData.baseUnit,
       };
       const normalizedVariations = variations
-        .map((variation) => ({
-          name: variation.name.trim(),
-          quantityInBaseUnit: Number(variation.quantityInBaseUnit),
-          price: Number(variation.price),
-        }))
+        .map((variation) => {
+          const costStr = String(variation.cost ?? "").trim();
+          let cost: number | null = null;
+          if (costStr !== "") {
+            const c = Number(costStr);
+            if (!Number.isNaN(c) && c >= 0) cost = c;
+          }
+          return {
+            name: variation.name.trim(),
+            quantityInBaseUnit: Number(variation.quantityInBaseUnit),
+            price: Number(variation.price),
+            cost,
+          };
+        })
         .filter((variation) => variation.name && variation.quantityInBaseUnit > 0 && variation.price >= 0);
 
       if (!normalizedVariations.length) {
@@ -238,7 +247,7 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
           minStock: "0",
           imageUrl: "",
         });
-        setVariations([{ name: "item", quantityInBaseUnit: "1", price: "" }]);
+        setVariations([{ name: "item", quantityInBaseUnit: "1", price: "", cost: "" }]);
         setImageFile(null);
         setImagePreview(null);
         setSkuManuallyEdited(false);
@@ -278,7 +287,7 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
         minStock: "0",
         imageUrl: "",
       });
-      setVariations([{ name: "item", quantityInBaseUnit: "1", price: "" }]);
+      setVariations([{ name: "item", quantityInBaseUnit: "1", price: "", cost: "" }]);
       setSkuManuallyEdited(false);
     }
   };
@@ -398,7 +407,7 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="cost">Cost</Label>
+              <Label htmlFor="cost">Fallback product cost</Label>
               <Input
                 id="cost"
                 type="number"
@@ -407,8 +416,11 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
                 onChange={(e) =>
                   setFormData({ ...formData, cost: e.target.value })
                 }
-                placeholder="0.00 (optional)"
+                placeholder="Used when a variation has no cost"
               />
+              <p className="text-xs text-muted-foreground">
+                Set cost on each variation below for accurate profit; this fills gaps.
+              </p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -439,7 +451,7 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
           </div>
           <div className="space-y-3 rounded-md border p-3">
             <div className="flex items-center justify-between">
-              <Label>Selling Variations</Label>
+              <Label>Variations (price & cost per sale unit)</Label>
               <Button
                 type="button"
                 variant="outline"
@@ -447,7 +459,7 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
                 onClick={() =>
                   setVariations((prev) => [
                     ...prev,
-                    { name: "", quantityInBaseUnit: "1", price: "" },
+                    { name: "", quantityInBaseUnit: "1", price: "", cost: "" },
                   ])
                 }
               >
@@ -455,9 +467,13 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
               </Button>
             </div>
             {variations.map((variation, index) => (
-              <div key={index} className="grid grid-cols-3 gap-2">
+              <div
+                key={index}
+                className="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-end"
+              >
                 <Input
-                  placeholder="Name (e.g carton)"
+                  className="sm:col-span-3"
+                  placeholder="Name (e.g. carton)"
                   value={variation.name}
                   onChange={(e) =>
                     setVariations((prev) =>
@@ -466,9 +482,10 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
                   }
                 />
                 <Input
+                  className="sm:col-span-2"
                   type="number"
                   min="1"
-                  placeholder="Base Qty"
+                  placeholder="Base units"
                   value={variation.quantityInBaseUnit}
                   onChange={(e) =>
                     setVariations((prev) =>
@@ -476,18 +493,31 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
                     )
                   }
                 />
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="Price"
-                    value={variation.price}
-                    onChange={(e) =>
-                      setVariations((prev) =>
-                        prev.map((v, i) => (i === index ? { ...v, price: e.target.value } : v))
-                      )
-                    }
-                  />
+                <Input
+                  className="sm:col-span-2"
+                  type="number"
+                  step="0.01"
+                  placeholder="Price"
+                  value={variation.price}
+                  onChange={(e) =>
+                    setVariations((prev) =>
+                      prev.map((v, i) => (i === index ? { ...v, price: e.target.value } : v))
+                    )
+                  }
+                />
+                <Input
+                  className="sm:col-span-2"
+                  type="number"
+                  step="0.01"
+                  placeholder="Cost"
+                  value={variation.cost}
+                  onChange={(e) =>
+                    setVariations((prev) =>
+                      prev.map((v, i) => (i === index ? { ...v, cost: e.target.value } : v))
+                    )
+                  }
+                />
+                <div className="flex gap-2 sm:col-span-3">
                   {variations.length > 1 && (
                     <Button
                       type="button"
@@ -495,7 +525,7 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
                       size="sm"
                       onClick={() => setVariations((prev) => prev.filter((_, i) => i !== index))}
                     >
-                      X
+                      Remove
                     </Button>
                   )}
                 </div>

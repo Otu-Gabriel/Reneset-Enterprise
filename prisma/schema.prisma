@@ -163,6 +163,10 @@ model SaleItem {
   price       Float
   discount    Float    @default(0)
   subtotal    Float
+  /// Cost per sale unit at time of sale (variation cost or product fallback)
+  unitCost    Float?
+  /// unitCost × quantity — snapshot for P&L; null = legacy rows before migration
+  lineCOGS    Float?
   createdAt   DateTime @default(now())
 
   @@index([saleId])

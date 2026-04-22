@@ -14,7 +14,12 @@ interface Product {
   stock: number;
   category: string;
   baseUnit?: string;
-  variations?: Array<{ name: string; quantityInBaseUnit: number; price: number }>;
+  variations?: Array<{
+    name: string;
+    quantityInBaseUnit: number;
+    price: number;
+    cost?: number | null;
+  }>;
   brand?: {
     id: string;
     name: string;

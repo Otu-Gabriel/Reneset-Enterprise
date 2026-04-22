@@ -17,6 +17,13 @@ interface Product {
   category: string;
   price: number;
   cost: number | null;
+  baseUnit?: string;
+  variations?: Array<{
+    name: string;
+    quantityInBaseUnit: number;
+    price: number;
+    cost?: number | null;
+  }>;
   stock: number;
   minStock: number;
   unit: string;
@@ -130,6 +137,37 @@ export function ProductDetailsModal({
               </span>
             </div>
           </div>
+
+          {Array.isArray(product.variations) && product.variations.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-2">
+                Variations (per sale unit)
+              </p>
+              <div className="rounded-md border divide-y">
+                {product.variations.map((v, i) => (
+                  <div
+                    key={`${v.name}-${i}`}
+                    className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm"
+                  >
+                    <span className="font-medium">
+                      {v.name}{" "}
+                      <span className="font-normal text-muted-foreground">
+                        ({v.quantityInBaseUnit} {product.baseUnit || product.unit})
+                      </span>
+                    </span>
+                    <span>{formatCurrency(v.price)}</span>
+                    <span className="text-muted-foreground">
+                      {v.cost != null && v.cost !== undefined
+                        ? `Cost ${formatCurrency(v.cost)}`
+                        : product.cost != null
+                          ? `Fallback ${formatCurrency(product.cost)}`
+                          : "—"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Description */}
           {product.description && (
