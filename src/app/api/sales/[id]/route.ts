@@ -17,9 +17,10 @@ export const runtime = 'nodejs';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -30,7 +31,7 @@ export async function GET(
     }
 
     const sale = await prisma.sale.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         items: {
           include: {
@@ -62,9 +63,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -76,7 +78,7 @@ export async function PUT(
 
     // Get existing sale with items
     const existingSale = await prisma.sale.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         items: {
           include: {
@@ -161,7 +163,7 @@ export async function PUT(
 
       // Delete old items and create new ones
       await prisma.saleItem.deleteMany({
-        where: { saleId: params.id },
+        where: { saleId: id },
       });
 
       // Now handle stock based on new status and new items
@@ -216,7 +218,7 @@ export async function PUT(
 
       // Update sale with new items
       const sale = await prisma.sale.update({
-        where: { id: params.id },
+        where: { id: id },
         data: {
           customerName: customerName || existingSale.customerName,
           customerEmail: customerEmail ?? existingSale.customerEmail,
@@ -316,7 +318,7 @@ export async function PUT(
 
       // Update sale without changing items
       const sale = await prisma.sale.update({
-        where: { id: params.id },
+        where: { id: id },
         data: {
           customerName: customerName || existingSale.customerName,
           customerEmail: customerEmail ?? existingSale.customerEmail,
@@ -365,9 +367,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -379,7 +382,7 @@ export async function DELETE(
 
     // Get sale data before deletion for audit
     const sale = await prisma.sale.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!sale) {
@@ -387,7 +390,7 @@ export async function DELETE(
     }
 
     await prisma.sale.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     // Log audit

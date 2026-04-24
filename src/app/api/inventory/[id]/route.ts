@@ -13,9 +13,10 @@ export const runtime = 'nodejs';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -26,7 +27,7 @@ export async function GET(
     }
 
     const product = await prisma.product.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         brand: {
           select: {
@@ -53,9 +54,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -88,7 +90,7 @@ export async function PUT(
         where: { sku },
       });
 
-      if (existingProduct && existingProduct.id !== params.id) {
+      if (existingProduct && existingProduct.id !== id) {
         return NextResponse.json(
           { error: "SKU already exists" },
           { status: 400 }
@@ -129,7 +131,7 @@ export async function PUT(
       let targetCategoryId = categoryId;
       if (!targetCategoryId) {
         const currentProduct = await prisma.product.findUnique({
-          where: { id: params.id },
+          where: { id: id },
         });
         if (currentProduct) {
           // Find category by name
@@ -150,7 +152,7 @@ export async function PUT(
 
     // Get old product data for audit
     const oldProduct = await prisma.product.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     let variationsPayload: Prisma.InputJsonValue | undefined;
@@ -169,7 +171,7 @@ export async function PUT(
     }
 
     const product = await prisma.product.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...(name && { name }),
         ...(description !== undefined && { description }),
@@ -224,9 +226,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -238,7 +241,7 @@ export async function DELETE(
 
     // Get product data before deletion for audit
     const product = await prisma.product.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!product) {
@@ -246,7 +249,7 @@ export async function DELETE(
     }
 
     await prisma.product.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     // Log audit

@@ -10,9 +10,10 @@ export const runtime = 'nodejs';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -24,7 +25,7 @@ export async function GET(
 
     // Get all payments for this installment plan
     const payments = await prisma.installmentPayment.findMany({
-      where: { installmentPlanId: params.id },
+      where: { installmentPlanId: id },
       orderBy: { paymentDate: "desc" },
     });
 

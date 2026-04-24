@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/ui/password-input";
-import { Loader2, Check, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { validatePassword, getPasswordPolicyText } from "@/lib/password-policy";
+import { toast } from "sonner";
 
 export function ProfileSettings() {
   const { data: session, update } = useSession();
@@ -23,7 +24,6 @@ export function ProfileSettings() {
     newPassword: "",
     confirmPassword: "",
   });
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [activeSection, setActiveSection] = useState<"profile" | "password">("profile");
 
   useEffect(() => {
@@ -51,7 +51,6 @@ export function ProfileSettings() {
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage(null);
 
     try {
       const response = await fetch("/api/settings/profile", {
@@ -65,17 +64,22 @@ export function ProfileSettings() {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage({ type: "success", text: "Profile updated successfully" });
+        toast.success("Profile updated", {
+          description: "Your name and email have been saved.",
+        });
         // Update session if email changed
         if (data.email && data.email !== session?.user?.email) {
           await update();
         }
-        setTimeout(() => setMessage(null), 3000);
       } else {
-        setMessage({ type: "error", text: data.error || "Failed to update profile" });
+        toast.error("Couldn’t update profile", {
+          description: data.error || "Check your details and try again.",
+        });
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Failed to update profile" });
+      toast.error("Couldn’t update profile", {
+        description: "An unexpected error occurred. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -84,10 +88,11 @@ export function ProfileSettings() {
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage(null);
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setMessage({ type: "error", text: "New passwords do not match" });
+      toast.error("Passwords don’t match", {
+        description: "Re-enter the new password in both fields.",
+      });
       setLoading(false);
       return;
     }
@@ -95,9 +100,8 @@ export function ProfileSettings() {
     // Validate password policy
     const passwordValidation = validatePassword(passwordData.newPassword);
     if (!passwordValidation.isValid) {
-      setMessage({ 
-        type: "error", 
-        text: `Password does not meet requirements: ${passwordValidation.errors.join(', ')}` 
+      toast.error("Password too weak", {
+        description: passwordValidation.errors.join(". "),
       });
       setLoading(false);
       return;
@@ -118,18 +122,23 @@ export function ProfileSettings() {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage({ type: "success", text: "Password changed successfully" });
+        toast.success("Password updated", {
+          description: "Use your new password the next time you sign in.",
+        });
         setPasswordData({
           currentPassword: "",
           newPassword: "",
           confirmPassword: "",
         });
-        setTimeout(() => setMessage(null), 3000);
       } else {
-        setMessage({ type: "error", text: data.error || "Failed to change password" });
+        toast.error("Couldn’t change password", {
+          description: data.error || "Check your current password and try again.",
+        });
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Failed to change password" });
+      toast.error("Couldn’t change password", {
+        description: "An unexpected error occurred. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -145,24 +154,6 @@ export function ProfileSettings() {
 
   return (
     <div className="space-y-6">
-      {/* Message Alert */}
-      {message && (
-        <Card className={message.type === "success" ? "bg-green-500/10 border-green-500" : "bg-red-500/10 border-red-500"}>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2">
-              {message.type === "success" ? (
-                <Check className="h-4 w-4 text-green-600" />
-              ) : (
-                <X className="h-4 w-4 text-red-600" />
-              )}
-              <p className={message.type === "success" ? "text-green-600" : "text-red-600"}>
-                {message.text}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Section Tabs */}
       <div className="flex gap-2 border-b">
         <button

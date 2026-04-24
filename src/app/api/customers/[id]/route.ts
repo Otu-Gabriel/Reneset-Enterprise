@@ -11,9 +11,10 @@ export const runtime = 'nodejs';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -24,7 +25,7 @@ export async function GET(
     }
 
     const customer = await prisma.customer.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         sales: {
           include: {
@@ -111,9 +112,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -140,7 +142,7 @@ export async function PUT(
 
     // Check if customer exists
     const existingCustomer = await prisma.customer.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!existingCustomer) {
@@ -154,7 +156,7 @@ export async function PUT(
     if (email || phone) {
       const conflict = await prisma.customer.findFirst({
         where: {
-          id: { not: params.id },
+          id: { not: id },
           OR: [
             ...(email ? [{ email }] : []),
             ...(phone ? [{ phone }] : []),
@@ -171,7 +173,7 @@ export async function PUT(
     }
 
     const customer = await prisma.customer.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...(name && { name }),
         ...(email !== undefined && { email: email || null }),
@@ -212,9 +214,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -225,7 +228,7 @@ export async function DELETE(
     }
 
     const customer = await prisma.customer.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!customer) {
@@ -237,7 +240,7 @@ export async function DELETE(
 
     // Check if customer has sales
     const salesCount = await prisma.sale.count({
-      where: { customerId: params.id },
+      where: { customerId: id },
     });
 
     if (salesCount > 0) {
@@ -250,7 +253,7 @@ export async function DELETE(
     }
 
     await prisma.customer.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     // Log audit

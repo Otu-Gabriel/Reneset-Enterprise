@@ -19,10 +19,24 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, Loader2, Upload, X, Image as ImageIcon } from "lucide-react";
+import { Loader2, X, Image as ImageIcon } from "lucide-react";
 import { useSystemSettings } from "@/hooks/useSystemSettings";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
+const UI_FONT_SCALE_OPTIONS: { value: string; label: string }[] = [
+  { value: "75", label: "75% — Minimum" },
+  { value: "80", label: "80% — Very compact" },
+  { value: "85", label: "85% — Compact" },
+  { value: "90", label: "90% — Slightly smaller (default)" },
+  { value: "95", label: "95% — Balanced" },
+  { value: "100", label: "100% — Browser default" },
+  { value: "105", label: "105% — Slightly larger" },
+  { value: "110", label: "110% — Large" },
+  { value: "115", label: "115% — Very large" },
+  { value: "120", label: "120% — Largest" },
+];
 
 export function SystemPreferences() {
   const router = useRouter();
@@ -42,6 +56,7 @@ export function SystemPreferences() {
     timeFormat: "12h",
     currency: "USD",
     language: "en",
+    uiFontScale: 90,
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -49,10 +64,6 @@ export function SystemPreferences() {
   const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
 
   // Update local state when settings are loaded
   useEffect(() => {
@@ -67,6 +78,7 @@ export function SystemPreferences() {
         timeFormat: settings.timeFormat,
         currency: settings.currency,
         language: settings.language,
+        uiFontScale: settings.uiFontScale,
       });
       setLogoPreview(settings.logoUrl || null);
       setFaviconPreview(settings.faviconUrl || null);
@@ -78,17 +90,15 @@ export function SystemPreferences() {
     if (file) {
       // Validate file type
       if (!file.type.startsWith("image/")) {
-        setMessage({
-          type: "error",
-          text: "Please select an image file",
+        toast.error("Invalid file", {
+          description: "Please select an image file (PNG, JPG, or similar).",
         });
         return;
       }
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        setMessage({
-          type: "error",
-          text: "Logo file size must be less than 5MB",
+        toast.error("File too large", {
+          description: "Logo must be 5MB or less.",
         });
         return;
       }
@@ -106,17 +116,15 @@ export function SystemPreferences() {
     if (file) {
       // Validate file type
       if (!file.type.startsWith("image/")) {
-        setMessage({
-          type: "error",
-          text: "Please select an image file",
+        toast.error("Invalid file", {
+          description: "Please select an image file for the favicon.",
         });
         return;
       }
       // Validate file size (max 1MB for favicon)
       if (file.size > 1 * 1024 * 1024) {
-        setMessage({
-          type: "error",
-          text: "Favicon file size must be less than 1MB",
+        toast.error("File too large", {
+          description: "Favicon must be 1MB or less.",
         });
         return;
       }
@@ -150,9 +158,8 @@ export function SystemPreferences() {
       }
     } catch (error) {
       console.error("Error uploading logo:", error);
-      setMessage({
-        type: "error",
-        text: "Failed to upload logo. Please try again.",
+      toast.error("Upload failed", {
+        description: "We couldn’t upload the logo. Check your connection and try again.",
       });
       return null;
     } finally {
@@ -181,9 +188,8 @@ export function SystemPreferences() {
       }
     } catch (error) {
       console.error("Error uploading favicon:", error);
-      setMessage({
-        type: "error",
-        text: "Failed to upload favicon. Please try again.",
+      toast.error("Upload failed", {
+        description: "We couldn’t upload the favicon. Check your connection and try again.",
       });
       return null;
     } finally {
@@ -193,7 +199,6 @@ export function SystemPreferences() {
 
   const handleSave = async () => {
     setSaving(true);
-    setMessage(null);
 
     try {
       // Upload logo if new file selected
@@ -227,21 +232,23 @@ export function SystemPreferences() {
       });
 
       if (result.success) {
-        setMessage({ type: "success", text: "Settings saved successfully" });
-        setTimeout(() => setMessage(null), 3000);
+        toast.success("Settings saved", {
+          description: "Your system preferences have been updated.",
+        });
         // Clear file selections
         setLogoFile(null);
         setFaviconFile(null);
         // Refresh the page to show updated settings
         router.refresh();
       } else {
-        setMessage({
-          type: "error",
-          text: result.error || "Failed to save settings",
+        toast.error("Couldn’t save settings", {
+          description: result.error || "Something went wrong. Try again.",
         });
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Failed to save settings" });
+      toast.error("Couldn’t save settings", {
+        description: "An unexpected error occurred. Try again in a moment.",
+      });
     } finally {
       setSaving(false);
     }
@@ -269,32 +276,6 @@ export function SystemPreferences() {
 
   return (
     <div className="space-y-6">
-      {/* Message Alert */}
-      {message && (
-        <Card
-          className={
-            message.type === "success"
-              ? "bg-green-500/10 border-green-500"
-              : "bg-red-500/10 border-red-500"
-          }
-        >
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2">
-              {message.type === "success" ? (
-                <Check className="h-4 w-4 text-green-600" />
-              ) : null}
-              <p
-                className={
-                  message.type === "success" ? "text-green-600" : "text-red-600"
-                }
-              >
-                {message.text}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Company Branding */}
       <Card className="bg-card">
         <CardHeader>
@@ -556,6 +537,53 @@ export function SystemPreferences() {
                 <SelectItem value="ja">日本語</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* UI density — root rem scale (all users) */}
+      <Card className="bg-card">
+        <CardHeader>
+          <CardTitle>Interface & density</CardTitle>
+          <CardDescription>
+            Adjust app-wide text size. This scales the whole interface proportionally
+            for everyone. Changes apply after you save and the page reloads.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="uiFontScale">Text / UI size</Label>
+            <Select
+              value={String(preferences.uiFontScale)}
+              onValueChange={(value) =>
+                setPreferences({
+                  ...preferences,
+                  uiFontScale: parseInt(value, 10),
+                })
+              }
+            >
+              <SelectTrigger id="uiFontScale" className="w-full max-w-md">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {!UI_FONT_SCALE_OPTIONS.some(
+                  (o) => o.value === String(preferences.uiFontScale)
+                ) ? (
+                  <SelectItem value={String(preferences.uiFontScale)}>
+                    {preferences.uiFontScale}% (current)
+                  </SelectItem>
+                ) : null}
+                {UI_FONT_SCALE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground max-w-md">
+              Uses the browser’s base size (usually 16px) as 100%. Lower values
+              make tables and forms more compact; higher values improve readability.
+            </p>
           </div>
         </CardContent>
       </Card>

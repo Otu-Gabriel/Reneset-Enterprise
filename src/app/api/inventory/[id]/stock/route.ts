@@ -11,9 +11,10 @@ export const runtime = 'nodejs';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -35,7 +36,7 @@ export async function PATCH(
 
     // Get current product
     const currentProduct = await prisma.product.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         brand: {
           select: {
@@ -58,7 +59,7 @@ export async function PATCH(
 
     // Update product stock
     const updatedProduct = await prisma.product.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         stock: newStock,
       },

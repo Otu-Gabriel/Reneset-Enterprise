@@ -26,13 +26,20 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { uiFontScale } = await getSystemSettings();
+  const fontPercent = Math.min(120, Math.max(75, uiFontScale));
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      style={{ fontSize: `${fontPercent}%` }}
+    >
       <body className={inter.className}>
         <Providers>{children}</Providers>
       </body>

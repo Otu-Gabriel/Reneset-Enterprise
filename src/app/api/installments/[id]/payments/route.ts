@@ -11,9 +11,10 @@ export const runtime = 'nodejs';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -24,7 +25,7 @@ export async function GET(
     }
 
     const payments = await prisma.installmentPayment.findMany({
-      where: { installmentPlanId: params.id },
+      where: { installmentPlanId: id },
       orderBy: { installmentNumber: "asc" },
     });
 
@@ -40,9 +41,10 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -71,7 +73,7 @@ export async function POST(
 
     // Get the installment plan
     const plan = await prisma.installmentPlan.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         payments: {
           orderBy: { installmentNumber: "asc" },
@@ -90,7 +92,7 @@ export async function POST(
     const paymentsToUpdate = await prisma.installmentPayment.findMany({
       where: {
         id: { in: paymentIds },
-        installmentPlanId: params.id,
+        installmentPlanId: id,
       },
       orderBy: { installmentNumber: "asc" },
     });
@@ -155,7 +157,7 @@ export async function POST(
 
     // Recalculate total paid correctly
     const allPayments = await prisma.installmentPayment.findMany({
-      where: { installmentPlanId: params.id },
+      where: { installmentPlanId: id },
     });
     const actualTotalPaid = allPayments.reduce((sum, p) => sum + p.paidAmount, 0);
 
@@ -174,7 +176,7 @@ export async function POST(
     }
 
     await prisma.installmentPlan.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { status: planStatus },
     });
 
@@ -182,7 +184,7 @@ export async function POST(
     const now = new Date();
     await prisma.installmentPayment.updateMany({
       where: {
-        installmentPlanId: params.id,
+        installmentPlanId: id,
         status: "pending",
         dueDate: { lt: now },
       },
@@ -200,7 +202,7 @@ export async function POST(
         await auditLogger.paymentRecorded(
           session.user.id,
           payment.id,
-          params.id,
+          id,
           paymentAmount,
           metadata
         );

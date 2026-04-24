@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
+import { clearSettingsCache } from "@/lib/settings";
 
 // Force dynamic rendering - prevent static generation/prerendering
 export const dynamic = 'force-dynamic';
@@ -69,6 +70,7 @@ export async function PUT(request: NextRequest) {
       dateFormat,
       timeFormat,
       language,
+      uiFontScale,
     } = body;
 
     // Validate inputs
@@ -104,6 +106,43 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Invalid language" }, { status: 400 });
     }
 
+    if (uiFontScale !== undefined) {
+      const n = Number(uiFontScale);
+      if (
+        !Number.isInteger(n) ||
+        n < 75 ||
+        n > 120
+      ) {
+        return NextResponse.json(
+          { error: "UI font scale must be an integer between 75 and 120 (percent)" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Session must map to a real user (stale cookies after DB reset would otherwise break the FK)
+    const sessionUserId = session.user.id;
+    if (!sessionUserId) {
+      return NextResponse.json(
+        { error: "Invalid session" },
+        { status: 401 }
+      );
+    }
+    const editor = await prisma.user.findUnique({
+      where: { id: sessionUserId },
+      select: { id: true },
+    });
+    if (!editor) {
+      return NextResponse.json(
+        {
+          error:
+            "Your account was not found in the database. Sign out and sign in again.",
+        },
+        { status: 401 }
+      );
+    }
+    const updatedById = editor.id;
+
     // Update or create settings
     const settings = await prisma.systemSettings.upsert({
       where: { id: "system" },
@@ -117,7 +156,8 @@ export async function PUT(request: NextRequest) {
         ...(dateFormat && { dateFormat }),
         ...(timeFormat && { timeFormat }),
         ...(language && { language }),
-        updatedById: session.user.id,
+        ...(uiFontScale !== undefined && { uiFontScale: Number(uiFontScale) }),
+        updatedById,
       },
       create: {
         id: "system",
@@ -130,9 +170,12 @@ export async function PUT(request: NextRequest) {
         dateFormat: dateFormat || "MM/DD/YYYY",
         timeFormat: timeFormat || "12h",
         language: language || "en",
-        updatedById: session.user.id,
+        uiFontScale: uiFontScale !== undefined ? Number(uiFontScale) : 90,
+        updatedById,
       },
     });
+
+    clearSettingsCache();
 
     return NextResponse.json(settings, {
       headers: {

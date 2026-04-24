@@ -12,6 +12,24 @@ interface SystemSettings {
   dateFormat: string;
   timeFormat: string;
   language: string;
+  /** Root font size as % of browser default; scales all `rem` typography */
+  uiFontScale: number;
+}
+
+function normalizeSystemSettings(data: Record<string, unknown>): SystemSettings {
+  const scale = data.uiFontScale;
+  return {
+    companyName: (data.companyName as string) || "GabyGod Technologies",
+    logoUrl: (data.logoUrl as string | null) ?? null,
+    faviconUrl: (data.faviconUrl as string | null) ?? null,
+    businessAddress: (data.businessAddress as string | null) ?? null,
+    businessPhone: (data.businessPhone as string | null) ?? null,
+    currency: (data.currency as string) || "USD",
+    dateFormat: (data.dateFormat as string) || "MM/DD/YYYY",
+    timeFormat: (data.timeFormat as string) || "12h",
+    language: (data.language as string) || "en",
+    uiFontScale: typeof scale === "number" && Number.isFinite(scale) ? scale : 90,
+  };
 }
 
 export function useSystemSettings() {
@@ -27,7 +45,7 @@ export function useSystemSettings() {
       const response = await fetch("/api/settings/system");
       if (response.ok) {
         const data = await response.json();
-        setSettings(data);
+        setSettings(normalizeSystemSettings(data));
       }
     } catch (error) {
       console.error("Error fetching settings:", error);
@@ -48,7 +66,7 @@ export function useSystemSettings() {
 
       if (response.ok) {
         const data = await response.json();
-        setSettings(data);
+        setSettings(normalizeSystemSettings(data));
         return { success: true };
       } else {
         const error = await response.json();

@@ -320,6 +320,8 @@ model SystemSettings {
   dateFormat      String   @default("MM/DD/YYYY")
   timeFormat      String   @default("12h")
   language        String   @default("en")
+  /// App-wide root font size as % of browser default (1rem). e.g. 90 ≈ 14.4px at 16px default.
+  uiFontScale     Int      @default(90)
   updatedAt       DateTime @updatedAt
   updatedById     String?
   updatedBy       User?    @relation("SettingsUpdatedBy", fields: [updatedById], references: [id])

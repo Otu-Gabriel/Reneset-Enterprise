@@ -11,9 +11,10 @@ export const runtime = 'nodejs';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -24,7 +25,7 @@ export async function GET(
     }
 
     const employee = await prisma.employee.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!employee) {
@@ -46,9 +47,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -76,7 +78,7 @@ export async function PUT(
         where: { email },
       });
 
-      if (existingEmployee && existingEmployee.id !== params.id) {
+      if (existingEmployee && existingEmployee.id !== id) {
         return NextResponse.json(
           { error: "Email already exists" },
           { status: 400 }
@@ -86,11 +88,11 @@ export async function PUT(
 
     // Get old employee data for audit
     const oldEmployee = await prisma.employee.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     const employee = await prisma.employee.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...(name && { name }),
         ...(email && { email }),
@@ -134,9 +136,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -148,7 +151,7 @@ export async function DELETE(
 
     // Get employee data before deletion for audit
     const employee = await prisma.employee.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!employee) {
@@ -156,7 +159,7 @@ export async function DELETE(
     }
 
     await prisma.employee.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     // Log audit

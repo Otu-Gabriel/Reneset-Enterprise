@@ -11,6 +11,7 @@ let cachedSettings: {
   dateFormat: string;
   timeFormat: string;
   language: string;
+  uiFontScale: number;
 } | null = null;
 let cacheTimestamp = 0;
 const CACHE_DURATION = 60000; // 1 minute cache
@@ -52,6 +53,7 @@ export async function getSystemSettings() {
       dateFormat: settings.dateFormat,
       timeFormat: settings.timeFormat,
       language: settings.language,
+      uiFontScale: settings.uiFontScale,
     };
     cacheTimestamp = now;
 
@@ -69,6 +71,7 @@ export async function getSystemSettings() {
       dateFormat: "MM/DD/YYYY",
       timeFormat: "12h",
       language: "en",
+      uiFontScale: 90,
     };
   }
 }

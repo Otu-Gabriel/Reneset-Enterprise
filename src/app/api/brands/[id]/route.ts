@@ -11,9 +11,10 @@ export const runtime = 'nodejs';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -24,7 +25,7 @@ export async function GET(
     }
 
     const brand = await prisma.brand.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         category: {
           select: {
@@ -51,9 +52,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -83,7 +85,7 @@ export async function PUT(
     // Check if name is being changed and if it already exists in the category
     if (name) {
       const currentBrand = await prisma.brand.findUnique({
-        where: { id: params.id },
+        where: { id: id },
       });
 
       const targetCategoryId = categoryId || currentBrand?.categoryId;
@@ -98,7 +100,7 @@ export async function PUT(
           },
         });
 
-        if (existingBrand && existingBrand.id !== params.id) {
+        if (existingBrand && existingBrand.id !== id) {
           return NextResponse.json(
             { error: "Brand already exists in this category" },
             { status: 400 }
@@ -109,11 +111,11 @@ export async function PUT(
 
     // Get old brand data for audit
     const oldBrand = await prisma.brand.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     const brand = await prisma.brand.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...(name && { name }),
         ...(description !== undefined && { description }),
@@ -162,9 +164,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -176,7 +179,7 @@ export async function DELETE(
 
     // Get brand data before deletion for audit
     const brand = await prisma.brand.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!brand) {
@@ -184,7 +187,7 @@ export async function DELETE(
     }
 
     await prisma.brand.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     // Log audit

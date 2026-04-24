@@ -10,9 +10,10 @@ export const runtime = 'nodejs';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -23,7 +24,7 @@ export async function GET(
     }
 
     const plan = await prisma.installmentPlan.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         sale: {
           include: {
@@ -86,9 +87,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -102,7 +104,7 @@ export async function PUT(
     const { status, notes } = body;
 
     const updatedPlan = await prisma.installmentPlan.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...(status && { status }),
         ...(notes !== undefined && { notes }),

@@ -11,9 +11,10 @@ export const runtime = 'nodejs';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -24,7 +25,7 @@ export async function GET(
     }
 
     const category = await prisma.category.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         _count: {
           select: { brands: true },
@@ -51,9 +52,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -72,7 +74,7 @@ export async function PUT(
         where: { name },
       });
 
-      if (existingCategory && existingCategory.id !== params.id) {
+      if (existingCategory && existingCategory.id !== id) {
         return NextResponse.json(
           { error: "Category name already exists" },
           { status: 400 }
@@ -82,11 +84,11 @@ export async function PUT(
 
     // Get old category data for audit
     const oldCategory = await prisma.category.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     const category = await prisma.category.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...(name && { name }),
         ...(description !== undefined && { description }),
@@ -129,9 +131,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (
@@ -143,7 +146,7 @@ export async function DELETE(
 
     // Check if category has brands
     const category = await prisma.category.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         _count: {
           select: { brands: true },
@@ -169,7 +172,7 @@ export async function DELETE(
     }
 
     await prisma.category.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     // Log audit
