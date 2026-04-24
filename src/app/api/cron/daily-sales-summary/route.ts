@@ -5,9 +5,11 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 /**
- * Call from a scheduler (e.g. every 5 minutes) with header:
- *   Authorization: Bearer <CRON_SECRET>
- * Same value as process.env.CRON_SECRET
+ * Hobby-friendly: schedule in vercel.json should run **once per day** (UTC).
+ * Pick minute/hour so this runs **after** your Settings “daily summary” local time,
+ * converted to UTC (e.g. 17:00 Africa/Accra → 17:00 UTC → `0 17 * * *`).
+ *
+ * Auth: Authorization: Bearer <CRON_SECRET> (same as process.env.CRON_SECRET)
  */
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;

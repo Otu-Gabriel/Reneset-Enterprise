@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { isMidnightEndWindowTime } from "@/lib/daily-summary-time";
 import { sendSmtpEmail, isSmtpConfigured } from "@/lib/email/smtp";
 
-const WINDOW_MINUTES = 12;
+/** If `lastDailySummarySentOn` is missing, never backfill more than this many days. */
+const MAX_CATCH_UP_DAYS = 14;
 
 function parseHm(s: string): { h: number; m: number } {
   const m = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(s?.trim() || "");
@@ -22,18 +23,21 @@ function isValidIanaTimeZone(tz: string): boolean {
 }
 
 /**
- * In `timeZone`, today from 00:00 through the scheduled send time (HH:MM) on the same
- * calendar day. Example: 6:00pm send in Accra → sales with saleDate from
- * that day 00:00 through that day 18:00 in Accra (as UTC instants for Prisma).
+ * In `timeZone`, on `reportYmd` (ISO date): from 00:00 through scheduled HH:MM that day.
+ * Example: 6:00pm send in Accra → sales from that day 00:00–18:00 Accra (UTC instants).
  */
-function getTodayWindowThroughScheduleUtc(
+function getDayWindowThroughScheduleUtc(
   timeZone: string,
-  scheduleHm: string
+  scheduleHm: string,
+  reportYmd: string
 ): { start: Date; end: Date; dateYmd: string; endTimeLabel: string; zone: string } {
   const zone = isValidIanaTimeZone(timeZone) ? timeZone : "UTC";
   const { h, m } = parseHm(scheduleHm);
-  const nowZ = DateTime.now().setZone(zone);
-  const dayStart = nowZ.startOf("day");
+  const dayStart = DateTime.fromISO(reportYmd, { zone }).startOf("day");
+  if (!dayStart.isValid) {
+    const fallback = DateTime.now().setZone(zone).startOf("day");
+    return getDayWindowThroughScheduleUtc(timeZone, scheduleHm, fallback.toISODate()!);
+  }
   const windowEnd = dayStart.set({ hour: h, minute: m, second: 0, millisecond: 0 });
   const endTimeLabel = windowEnd.toFormat("h:mm a");
   return {
@@ -43,11 +47,6 @@ function getTodayWindowThroughScheduleUtc(
     endTimeLabel,
     zone,
   };
-}
-
-function todayYmdInZone(timeZone: string): string {
-  const zone = isValidIanaTimeZone(timeZone) ? timeZone : "UTC";
-  return DateTime.now().setZone(zone).toISODate()!;
 }
 
 function formatMoney(amount: number, currency: string): string {
@@ -66,12 +65,14 @@ export type TodayWindowStats = Awaited<ReturnType<typeof computeTodayWindowSales
 
 export async function computeTodayWindowSalesStats(
   timeZone: string,
-  scheduleHm: string
+  scheduleHm: string,
+  reportYmd?: string
 ) {
-  const { start, end, dateYmd, endTimeLabel, zone } = getTodayWindowThroughScheduleUtc(
-    timeZone,
-    scheduleHm
-  );
+  const zone = isValidIanaTimeZone(timeZone) ? timeZone : "UTC";
+  const ymd =
+    reportYmd ?? DateTime.now().setZone(zone).toISODate()!;
+  const { start, end, dateYmd, endTimeLabel, zone: z } =
+    getDayWindowThroughScheduleUtc(timeZone, scheduleHm, ymd);
   const [agg, topProducts] = await Promise.all([
     prisma.sale.aggregate({
       where: {
@@ -103,7 +104,7 @@ export async function computeTodayWindowSalesStats(
   return {
     dateYmd,
     endTimeLabel,
-    timeZone: zone,
+    timeZone: z,
     count: agg._count.id,
     total: agg._sum.totalAmount ?? 0,
     topLines: topProducts.map((r) => ({
@@ -159,30 +160,47 @@ function escapeHtml(s: string) {
 }
 
 /**
- * If current local time in zone is within WINDOW_MINUTES of the configured daily time
- * and we have not already sent for "today" in that zone, return true.
+ * Earliest local calendar day (after lastSentYmd) whose reporting window has ended
+ * and that is still due. For daily cron: one send per run, oldest pending first.
  */
-export function isWithinSendWindow(
+export function findPendingReportYmd(
   timeZone: string,
   dailyTimeHm: string,
   lastSentYmd: string | null
-): { ok: boolean; reason: string } {
+): { reportYmd: string } | { reason: string } {
   const zone = isValidIanaTimeZone(timeZone) ? timeZone : "UTC";
   const { h, m } = parseHm(dailyTimeHm);
-  const now = DateTime.now().setZone(zone);
-  const target = now.set({ hour: h, minute: m, second: 0, millisecond: 0 });
-  const todayYmd = now.toISODate()!;
+  const nowZ = DateTime.now().setZone(zone);
+  const todayStart = nowZ.startOf("day");
 
-  if (lastSentYmd === todayYmd) {
-    return { ok: false, reason: "already_sent_today" };
+  if (!lastSentYmd) {
+    let d = todayStart;
+    for (let i = 0; i < MAX_CATCH_UP_DAYS; i++) {
+      const close = d.set({ hour: h, minute: m, second: 0, millisecond: 0 });
+      if (nowZ >= close) {
+        return { reportYmd: d.toISODate()! };
+      }
+      d = d.minus({ days: 1 });
+    }
+    return { reason: "nothing_pending" };
   }
 
-  const diffMin = Math.abs(now.diff(target, "minutes").minutes);
-  if (Number.isNaN(diffMin) || diffMin > WINDOW_MINUTES) {
-    return { ok: false, reason: "outside_time_window" };
+  let d = DateTime.fromISO(lastSentYmd, { zone }).plus({ days: 1 }).startOf("day");
+  const minDay = todayStart.minus({ days: MAX_CATCH_UP_DAYS });
+  if (d < minDay) {
+    d = minDay;
   }
 
-  return { ok: true, reason: "ready" };
+  while (d <= todayStart) {
+    const ymd = d.toISODate()!;
+    const close = d.set({ hour: h, minute: m, second: 0, millisecond: 0 });
+    if (nowZ >= close) {
+      return { reportYmd: ymd };
+    }
+    d = d.plus({ days: 1 });
+  }
+
+  return { reason: "nothing_pending" };
 }
 
 export type SendResult =
@@ -191,7 +209,8 @@ export type SendResult =
   | { sent: false; error: string };
 
 /**
- * Run from cron: respects schedule + one send per local day. Ignores window if forceTest.
+ * Run from daily cron (Hobby: once/day UTC). Sends one pending report if the local
+ * reporting window for that calendar day has closed. Ignores schedule guards if forceTest.
  */
 export async function runDailySalesSummaryJob(options: { forceTest?: boolean } = {}): Promise<SendResult> {
   if (!isSmtpConfigured()) {
@@ -216,18 +235,16 @@ export async function runDailySalesSummaryJob(options: { forceTest?: boolean } =
     return { sent: false, reason: "invalid_send_time" };
   }
 
+  let reportYmd: string | undefined;
   if (!options.forceTest) {
-    const w = isWithinSendWindow(
-      tz,
-      timeStr,
-      row.lastDailySummarySentOn
-    );
-    if (!w.ok) {
-      return { sent: false, reason: w.reason };
+    const pending = findPendingReportYmd(tz, timeStr, row.lastDailySummarySentOn);
+    if ("reason" in pending) {
+      return { sent: false, reason: pending.reason };
     }
+    reportYmd = pending.reportYmd;
   }
 
-  const stats = await computeTodayWindowSalesStats(tz, timeStr);
+  const stats = await computeTodayWindowSalesStats(tz, timeStr, reportYmd);
   const company = row.companyName || "Inventory";
   const currency = row.currency || "USD";
 
@@ -247,11 +264,10 @@ Total: ${formatMoney(stats.total, currency)}
       html: buildEmailHtml(company, currency, stats),
     });
 
-    const todayYmd = todayYmdInZone(tz);
     if (!options.forceTest) {
       await prisma.systemSettings.update({
         where: { id: "system" },
-        data: { lastDailySummarySentOn: todayYmd },
+        data: { lastDailySummarySentOn: stats.dateYmd },
       });
     }
 
