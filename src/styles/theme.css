@@ -4,8 +4,8 @@
 
 /**
  * GabyGod Techs / GabyGod-Inventory brand
- * Light: cream page, white cards, peach-tinted muted surfaces, orange CTAs, navy shell
- * Dark: charcoal page, elevated navy cards, same orange + navy sidebar/header
+ * Light: cream page, white cards, peach-tinted muted shell (sidebar + header)
+ * Dark: charcoal page, elevated navy cards, same orange + navy sidebar / header
  */
 
 @layer base {
@@ -31,13 +31,13 @@
     --ring: 25 95% 53%;
     --radius: 0.625rem;
 
-    /* Navy shell (sidebar + top bar) — matches mockup ~#0f2e3d / #0B1E28 */
-    --sidebar: 199 61% 20%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-muted: 199 25% 72%;
+    /* Shell (sidebar + top bar) — same tint as --secondary, cream 93% L */
+    --sidebar: 32 42% 93%;
+    --sidebar-foreground: 196 55% 16%;
+    --sidebar-muted: 196 22% 38%;
     --sidebar-accent: 25 95% 53%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 199 42% 22%;
+    --sidebar-border: 28 32% 88%;
     --sidebar-ring: 25 95% 53%;
   }
 

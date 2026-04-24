@@ -147,7 +147,7 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed lg:sticky top-0 left-0 z-50 flex h-screen flex-col overflow-x-hidden bg-sidebar text-sidebar-foreground border-r border-white/[0.18] transition-all duration-300 ease-in-out",
+          "fixed lg:sticky top-0 left-0 z-50 flex h-screen flex-col overflow-x-hidden bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 ease-in-out",
           isCollapsed ? "w-16 lg:w-16" : "w-64 lg:w-64",
           isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
@@ -155,7 +155,7 @@ export function Sidebar() {
         {/* Header */}
         <div
           className={cn(
-            "flex h-16 min-w-0 items-center border-b border-white/10 transition-all duration-300",
+            "flex h-16 min-w-0 items-center border-b border-sidebar-border transition-all duration-300",
             isCollapsed ? "justify-center px-0" : "justify-between px-4 sm:px-6"
           )}
         >
@@ -186,7 +186,7 @@ export function Sidebar() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="lg:hidden text-sidebar-foreground hover:bg-white/10 hover:text-sidebar-foreground"
+                className="lg:hidden text-sidebar-foreground hover:bg-foreground/5 hover:text-sidebar-foreground"
                 onClick={closeMobile}
                 aria-label="Close menu"
               >
@@ -197,7 +197,7 @@ export function Sidebar() {
             <Button
               variant="ghost"
               size="icon"
-              className="hidden lg:flex text-sidebar-foreground hover:bg-white/10 hover:text-sidebar-foreground"
+              className="hidden lg:flex text-sidebar-foreground hover:bg-foreground/5 hover:text-sidebar-foreground"
               onClick={toggleSidebar}
               title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
@@ -229,7 +229,7 @@ export function Sidebar() {
                   "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
-                    : "text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground"
+                    : "text-sidebar-muted hover:bg-foreground/5 hover:text-sidebar-foreground"
                 )}
                 title={isCollapsed ? item.name : undefined}
               >
@@ -258,7 +258,7 @@ export function Sidebar() {
         {/* Footer — branded panel (readable hierarchy, subtle depth; no heavy wave fill) */}
         <div
           className={cn(
-            "shrink-0 border-t border-white/10 bg-sidebar",
+            "shrink-0 border-t border-sidebar-border bg-sidebar",
             isCollapsed ? "py-2.5" : "p-3 pb-4"
           )}
         >
@@ -270,7 +270,7 @@ export function Sidebar() {
               <div className="h-9 w-1 rounded-full bg-gradient-to-b from-primary via-primary/75 to-primary/25 shadow-[0_0_14px_rgba(249,115,22,0.35)]" />
             </div>
           ) : (
-            <div className="relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+            <div className="relative overflow-hidden rounded-xl border border-border/80 bg-card/50 px-3 py-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
               <div
                 className="pointer-events-none absolute -right-8 -top-10 h-24 w-24 rounded-full bg-primary/25 blur-2xl"
                 aria-hidden
