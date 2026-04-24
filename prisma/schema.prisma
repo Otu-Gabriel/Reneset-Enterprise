@@ -322,6 +322,15 @@ model SystemSettings {
   language        String   @default("en")
   /// App-wide root font size as % of browser default (1rem). e.g. 90 ≈ 14.4px at 16px default.
   uiFontScale     Int      @default(90)
+  /// Daily email report: recipient (Gmail or any SMTP address)
+  dailySummaryEnabled    Boolean  @default(false)
+  dailySummaryEmail      String?
+  /// 24h "HH:MM" in dailySummaryTimezone
+  dailySummaryTime       String   @default("09:00")
+  /// IANA time zone, e.g. "Africa/Accra", "America/New_York"
+  dailySummaryTimezone   String   @default("UTC")
+  /// YYYY-MM-DD in dailySummaryTimezone — last time the daily job successfully sent
+  lastDailySummarySentOn String?
   updatedAt       DateTime @updatedAt
   updatedById     String?
   updatedBy       User?    @relation("SettingsUpdatedBy", fields: [updatedById], references: [id])

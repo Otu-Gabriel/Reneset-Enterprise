@@ -14,6 +14,10 @@ interface SystemSettings {
   language: string;
   /** Root font size as % of browser default; scales all `rem` typography */
   uiFontScale: number;
+  dailySummaryEnabled: boolean;
+  dailySummaryEmail: string | null;
+  dailySummaryTime: string;
+  dailySummaryTimezone: string;
 }
 
 function normalizeSystemSettings(data: Record<string, unknown>): SystemSettings {
@@ -29,6 +33,11 @@ function normalizeSystemSettings(data: Record<string, unknown>): SystemSettings 
     timeFormat: (data.timeFormat as string) || "12h",
     language: (data.language as string) || "en",
     uiFontScale: typeof scale === "number" && Number.isFinite(scale) ? scale : 90,
+    dailySummaryEnabled: Boolean(data.dailySummaryEnabled),
+    dailySummaryEmail:
+      (data.dailySummaryEmail as string | null | undefined) ?? null,
+    dailySummaryTime: (data.dailySummaryTime as string) || "09:00",
+    dailySummaryTimezone: (data.dailySummaryTimezone as string) || "UTC",
   };
 }
 

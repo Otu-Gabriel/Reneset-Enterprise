@@ -19,11 +19,13 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, X, Image as ImageIcon } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, X, Image as ImageIcon, Mail } from "lucide-react";
 import { useSystemSettings } from "@/hooks/useSystemSettings";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { isMidnightEndWindowTime } from "@/lib/daily-summary-time";
 
 const UI_FONT_SCALE_OPTIONS: { value: string; label: string }[] = [
   { value: "75", label: "75% — Minimum" },
@@ -36,6 +38,25 @@ const UI_FONT_SCALE_OPTIONS: { value: string; label: string }[] = [
   { value: "110", label: "110% — Large" },
   { value: "115", label: "115% — Very large" },
   { value: "120", label: "120% — Largest" },
+];
+
+const DAILY_SUMMARY_TIMEZONES: { value: string; label: string }[] = [
+  { value: "UTC", label: "UTC" },
+  { value: "Africa/Accra", label: "Ghana (Accra)" },
+  { value: "Africa/Lagos", label: "Nigeria (Lagos)" },
+  { value: "Africa/Cairo", label: "Egypt (Cairo)" },
+  { value: "Africa/Nairobi", label: "Kenya (Nairobi)" },
+  { value: "Africa/Johannesburg", label: "South Africa" },
+  { value: "Europe/London", label: "UK (London)" },
+  { value: "Europe/Paris", label: "Central Europe (Paris)" },
+  { value: "America/New_York", label: "US Eastern" },
+  { value: "America/Chicago", label: "US Central" },
+  { value: "America/Los_Angeles", label: "US Pacific" },
+  { value: "America/Sao_Paulo", label: "Brazil (São Paulo)" },
+  { value: "Asia/Dubai", label: "UAE (Dubai)" },
+  { value: "Asia/Singapore", label: "Singapore" },
+  { value: "Asia/Tokyo", label: "Japan" },
+  { value: "Australia/Sydney", label: "Australia (Sydney)" },
 ];
 
 export function SystemPreferences() {
@@ -57,7 +78,12 @@ export function SystemPreferences() {
     currency: "USD",
     language: "en",
     uiFontScale: 90,
+    dailySummaryEnabled: false,
+    dailySummaryEmail: null as string | null,
+    dailySummaryTime: "09:00",
+    dailySummaryTimezone: "UTC",
   });
+  const [sendingTest, setSendingTest] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
@@ -79,6 +105,10 @@ export function SystemPreferences() {
         currency: settings.currency,
         language: settings.language,
         uiFontScale: settings.uiFontScale,
+        dailySummaryEnabled: settings.dailySummaryEnabled,
+        dailySummaryEmail: settings.dailySummaryEmail,
+        dailySummaryTime: settings.dailySummaryTime,
+        dailySummaryTimezone: settings.dailySummaryTimezone,
       });
       setLogoPreview(settings.logoUrl || null);
       setFaviconPreview(settings.faviconUrl || null);
@@ -198,6 +228,14 @@ export function SystemPreferences() {
   };
 
   const handleSave = async () => {
+    if (isMidnightEndWindowTime(preferences.dailySummaryTime)) {
+      toast.error("Invalid send time", {
+        description:
+          "00:00 is not allowed—the summary would cover an empty period. Use 00:01 or a later time.",
+      });
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -264,6 +302,44 @@ export function SystemPreferences() {
     setFaviconFile(null);
     setFaviconPreview(null);
     setPreferences({ ...preferences, faviconUrl: null });
+  };
+
+  const sendTestSummaryEmail = async () => {
+    if (isMidnightEndWindowTime(preferences.dailySummaryTime)) {
+      toast.error("Invalid send time", {
+        description:
+          "00:00 is not allowed. Change local send time to 00:01 or later, then save and try the test again.",
+      });
+      return;
+    }
+    if (!preferences.dailySummaryEmail?.trim()) {
+      toast.error("Add a recipient email", {
+        description: "Enter the address in the field below, then save, or fill it in and try the test after saving.",
+      });
+      return;
+    }
+    setSendingTest(true);
+    try {
+      const r = await fetch("/api/settings/system/daily-summary/test", {
+        method: "POST",
+      });
+      const data = await r.json().catch(() => ({}));
+      if (r.ok) {
+        toast.success("Test email sent", {
+          description: "Check the inbox (and spam) for the address on file after your last save.",
+        });
+      } else {
+        toast.error("Test email failed", {
+          description: typeof data.error === "string" ? data.error : "Check SMTP in .env and try again.",
+        });
+      }
+    } catch {
+      toast.error("Test email failed", {
+        description: "Network error. Try again.",
+      });
+    } finally {
+      setSendingTest(false);
+    }
   };
 
   if (settingsLoading) {
@@ -588,19 +664,129 @@ export function SystemPreferences() {
         </CardContent>
       </Card>
 
-      {/* Notification Preferences */}
+      {/* Daily sales email (SMTP from server .env) */}
       <Card className="bg-card">
         <CardHeader>
-          <CardTitle>Notification Preferences</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="h-5 w-5 text-primary" aria-hidden />
+            Daily sales summary (email)
+          </CardTitle>
           <CardDescription>
-            Manage how you receive notifications (Coming soon)
+           When enabled, at the time you set each day (in the time zone you select), the system
+            emails sales from that same calendar day:{" "}
+            <strong>from midnight (00:00) through your send time</strong> (e.g. 6:00pm →
+            12:00am–6:00pm that day in Accra).
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Email notifications, SMS alerts, and push notifications will be
-            available in a future update.
-          </p>
+        <CardContent className="space-y-5">
+          <div className="flex items-start gap-3 rounded-lg border border-border/80 bg-muted/30 p-4">
+            <Checkbox
+              id="dailySummaryEnabled"
+              checked={preferences.dailySummaryEnabled}
+              onCheckedChange={(v) =>
+                setPreferences({
+                  ...preferences,
+                  dailySummaryEnabled: v === true,
+                })
+              }
+            />
+            <div className="space-y-1">
+              <Label htmlFor="dailySummaryEnabled" className="text-base font-medium leading-none cursor-pointer">
+                Send a daily sales summary by email
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                When ticked, you get one email per day at your send time. The report is always for the{" "}
+                <strong>current day</strong> up to that send time, in your selected time zone.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 max-w-3xl">
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="dailySummaryEmail">Recipient email</Label>
+              <Input
+                id="dailySummaryEmail"
+                type="email"
+                autoComplete="email"
+                placeholder="admin@company.com"
+                value={preferences.dailySummaryEmail || ""}
+                onChange={(e) =>
+                  setPreferences({
+                    ...preferences,
+                    dailySummaryEmail: e.target.value || null,
+                  })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dailySummaryTime">Local send time (24h)</Label>
+              <Input
+                id="dailySummaryTime"
+                type="time"
+                value={preferences.dailySummaryTime}
+                onChange={(e) =>
+                  setPreferences({
+                    ...preferences,
+                    dailySummaryTime: e.target.value || "09:00",
+                  })
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                Do not use 00:00—the period would be empty (midnight to the same moment).
+                Use 00:01 or later.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dailySummaryTimezone">Time zone</Label>
+              <Select
+                value={preferences.dailySummaryTimezone}
+                onValueChange={(value) =>
+                  setPreferences({ ...preferences, dailySummaryTimezone: value })
+                }
+              >
+                <SelectTrigger id="dailySummaryTimezone" className="w-full">
+                  <SelectValue placeholder="Select zone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {!DAILY_SUMMARY_TIMEZONES.some(
+                    (z) => z.value === preferences.dailySummaryTimezone
+                  ) ? (
+                    <SelectItem value={preferences.dailySummaryTimezone}>
+                      {preferences.dailySummaryTimezone} (current)
+                    </SelectItem>
+                  ) : null}
+                  {DAILY_SUMMARY_TIMEZONES.map((z) => (
+                    <SelectItem key={z.value} value={z.value}>
+                      {z.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={sendingTest}
+              onClick={sendTestSummaryEmail}
+            >
+              {sendingTest ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending test…
+                </>
+              ) : (
+                "Send test email"
+              )}
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              Uses the last saved email and stats (save preferences first, then test).
+            </span>
+          </div>
         </CardContent>
       </Card>
 

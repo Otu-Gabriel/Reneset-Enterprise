@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { clearSettingsCache } from "@/lib/settings";
+import { isMidnightEndWindowTime } from "@/lib/daily-summary-time";
+import { DateTime } from "luxon";
 
 // Force dynamic rendering - prevent static generation/prerendering
 export const dynamic = 'force-dynamic';
@@ -71,6 +73,10 @@ export async function PUT(request: NextRequest) {
       timeFormat,
       language,
       uiFontScale,
+      dailySummaryEnabled,
+      dailySummaryEmail,
+      dailySummaryTime,
+      dailySummaryTimezone,
     } = body;
 
     // Validate inputs
@@ -120,6 +126,47 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    const hmRe = /^([01]?\d|2[0-3]):[0-5]\d$/;
+    if (dailySummaryTime !== undefined && dailySummaryTime !== null) {
+      const t = String(dailySummaryTime).trim();
+      if (!hmRe.test(t)) {
+        return NextResponse.json(
+          { error: "Daily summary time must be 24-hour HH:MM (e.g. 09:00)." },
+          { status: 400 }
+        );
+      }
+      if (isMidnightEndWindowTime(t)) {
+        return NextResponse.json(
+          {
+            error:
+              "Daily send time cannot be 00:00. The report is from that day's midnight through your send time, so 00:00 would be an empty window. Choose 00:01 or later.",
+          },
+          { status: 400 }
+        );
+      }
+    }
+    if (dailySummaryTimezone !== undefined && dailySummaryTimezone !== null) {
+      const z = String(dailySummaryTimezone).trim();
+      if (z && !DateTime.now().setZone(z).isValid) {
+        return NextResponse.json(
+          { error: "Invalid time zone. Use a valid IANA name (e.g. Africa/Accra)." },
+          { status: 400 }
+        );
+      }
+    }
+    if (dailySummaryEnabled === true) {
+      const e = String(dailySummaryEmail ?? "").trim();
+      if (!e || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
+        return NextResponse.json(
+          {
+            error:
+              "A valid email address is required when daily sales summary is turned on.",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Session must map to a real user (stale cookies after DB reset would otherwise break the FK)
     const sessionUserId = session.user.id;
     if (!sessionUserId) {
@@ -157,6 +204,22 @@ export async function PUT(request: NextRequest) {
         ...(timeFormat && { timeFormat }),
         ...(language && { language }),
         ...(uiFontScale !== undefined && { uiFontScale: Number(uiFontScale) }),
+        ...(dailySummaryEnabled !== undefined && {
+          dailySummaryEnabled: Boolean(dailySummaryEnabled),
+        }),
+        ...(dailySummaryEmail !== undefined && {
+          dailySummaryEmail: dailySummaryEmail
+            ? String(dailySummaryEmail).trim() || null
+            : null,
+        }),
+        ...(dailySummaryTime !== undefined &&
+          dailySummaryTime !== null && {
+            dailySummaryTime: String(dailySummaryTime).trim(),
+          }),
+        ...(dailySummaryTimezone !== undefined &&
+          dailySummaryTimezone !== null && {
+            dailySummaryTimezone: String(dailySummaryTimezone).trim() || "UTC",
+          }),
         updatedById,
       },
       create: {
@@ -171,6 +234,16 @@ export async function PUT(request: NextRequest) {
         timeFormat: timeFormat || "12h",
         language: language || "en",
         uiFontScale: uiFontScale !== undefined ? Number(uiFontScale) : 90,
+        dailySummaryEnabled: Boolean(dailySummaryEnabled),
+        dailySummaryEmail: dailySummaryEmail
+          ? String(dailySummaryEmail).trim() || null
+          : null,
+        dailySummaryTime: dailySummaryTime
+          ? String(dailySummaryTime).trim()
+          : "09:00",
+        dailySummaryTimezone: dailySummaryTimezone
+          ? String(dailySummaryTimezone).trim()
+          : "UTC",
         updatedById,
       },
     });
