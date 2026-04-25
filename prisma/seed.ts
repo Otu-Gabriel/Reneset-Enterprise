@@ -31,89 +31,89 @@ async function main() {
   console.log("Created admin user:", admin.email);
 
   // Create sample categories
-  const categories = ["Electronics", "Fashion", "Home & Garden"];
+  // const categories = ["Electronics", "Fashion", "Home & Garden"];
 
   // Create sample products
-  const products = [
-    {
-      name: "Laptop",
-      description: "High-performance laptop",
-      sku: "LAP-001",
-      category: "Electronics",
-      price: 999.99,
-      cost: 600.0,
-      stock: 50,
-      minStock: 10,
-      unit: "pcs",
-    },
-    {
-      name: "T-Shirt",
-      description: "Cotton t-shirt",
-      sku: "TSH-001",
-      category: "Fashion",
-      price: 29.99,
-      cost: 15.0,
-      stock: 100,
-      minStock: 20,
-      unit: "pcs",
-    },
-    {
-      name: "Garden Tool Set",
-      description: "Complete garden tool set",
-      sku: "GAR-001",
-      category: "Home & Garden",
-      price: 79.99,
-      cost: 40.0,
-      stock: 30,
-      minStock: 5,
-      unit: "pcs",
-    },
-  ];
+  // const products = [
+  //   {
+  //     name: "Laptop",
+  //     description: "High-performance laptop",
+  //     sku: "LAP-001",
+  //     category: "Electronics",
+  //     price: 999.99,
+  //     cost: 600.0,
+  //     stock: 50,
+  //     minStock: 10,
+  //     unit: "pcs",
+  //   },
+  //   {
+  //     name: "T-Shirt",
+  //     description: "Cotton t-shirt",
+  //     sku: "TSH-001",
+  //     category: "Fashion",
+  //     price: 29.99,
+  //     cost: 15.0,
+  //     stock: 100,
+  //     minStock: 20,
+  //     unit: "pcs",
+  //   },
+  //   {
+  //     name: "Garden Tool Set",
+  //     description: "Complete garden tool set",
+  //     sku: "GAR-001",
+  //     category: "Home & Garden",
+  //     price: 79.99,
+  //     cost: 40.0,
+  //     stock: 30,
+  //     minStock: 5,
+  //     unit: "pcs",
+  //   },
+  // ];
 
-  for (const product of products) {
-    await prisma.product.upsert({
-      where: { sku: product.sku },
-      update: {},
-      create: product,
-    });
-  }
+  // for (const product of products) {
+  //   await prisma.product.upsert({
+  //     where: { sku: product.sku },
+  //     update: {},
+  //     create: product,
+  //   });
+  // }
 
-  console.log("Created sample products");
+  // console.log("Created sample products");
 
   // Create sample employees
-  const employees = [
-    {
-      name: "John Doe",
-      email: "john@example.com",
-      phone: "+1234567890",
-      position: "Sales Manager",
-      department: "Sales",
-      salary: 50000,
-      status: "active",
-    },
-    {
-      name: "Jane Smith",
-      email: "jane@example.com",
-      phone: "+1234567891",
-      position: "Inventory Specialist",
-      department: "Operations",
-      salary: 45000,
-      status: "active",
-    },
-  ];
+  // const employees = [
+  //   {
+  //     name: "John Doe",
+  //     email: "john@example.com",
+  //     phone: "+1234567890",
+  //     position: "Sales Manager",
+  //     department: "Sales",
+  //     salary: 50000,
+  //     status: "active",
+  //   },
+  //   {
+  //     name: "Jane Smith",
+  //     email: "jane@example.com",
+  //     phone: "+1234567891",
+  //     position: "Inventory Specialist",
+  //     department: "Operations",
+  //     salary: 45000,
+  //     status: "active",
+  //   },
+  // ];
 
-  for (const employee of employees) {
-    await prisma.employee.upsert({
-      where: { email: employee.email },
-      update: {},
-      create: {
-        ...employee,
-        createdById: admin.id,
-      },
-    });
-  }
+  // for (const employee of employees) {
+  //   await prisma.employee.upsert({
+  //     where: { email: employee.email },
+  //     update: {},
+  //     create: {
+  //       ...employee,
+  //       createdById: admin.id,
+  //     },
+  //   });
+  // }
 
-  console.log("Created sample employees");
+  // console.log("Created sample employees");
   console.log("Seeding completed!");
 }
 
