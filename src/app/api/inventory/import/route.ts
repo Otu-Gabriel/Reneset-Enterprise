@@ -353,12 +353,19 @@ export async function POST(request: NextRequest) {
 
         let brandId: string | null = null;
         if (brandName) {
-          const brand = await prisma.brand.findFirst({
+          const inCategory = await prisma.brand.findFirst({
             where: {
               name: brandName,
               categoryId: category.id,
             },
           });
+          const standalone = await prisma.brand.findFirst({
+            where: {
+              name: brandName,
+              categoryId: null,
+            },
+          });
+          const brand = inCategory || standalone;
 
           if (!brand) {
             const newBrand = await prisma.brand.create({

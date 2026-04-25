@@ -66,60 +66,64 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, description, categoryId } = body;
+    const { name, description, categoryId: categoryIdFromBody } = body;
 
-    // Check if category is being changed and if it exists
-    if (categoryId) {
-      const category = await prisma.category.findUnique({
-        where: { id: categoryId },
-      });
-
-      if (!category) {
-        return NextResponse.json(
-          { error: "Category not found" },
-          { status: 400 }
-        );
-      }
+    const currentBrand = await prisma.brand.findUnique({
+      where: { id: id },
+    });
+    if (!currentBrand) {
+      return NextResponse.json({ error: "Brand not found" }, { status: 404 });
     }
 
-    // Check if name is being changed and if it already exists in the category
-    if (name) {
-      const currentBrand = await prisma.brand.findUnique({
-        where: { id: id },
-      });
+    const nextName =
+      name && String(name).trim() ? String(name).trim() : currentBrand.name;
 
-      const targetCategoryId = categoryId || currentBrand?.categoryId;
-
-      if (targetCategoryId) {
-        const existingBrand = await prisma.brand.findUnique({
-          where: {
-            name_categoryId: {
-              name,
-              categoryId: targetCategoryId,
-            },
-          },
+    let nextCategoryId: string | null = currentBrand.categoryId;
+    if (Object.prototype.hasOwnProperty.call(body, "categoryId")) {
+      if (categoryIdFromBody && String(categoryIdFromBody).trim()) {
+        nextCategoryId = String(categoryIdFromBody).trim();
+        const category = await prisma.category.findUnique({
+          where: { id: nextCategoryId },
         });
-
-        if (existingBrand && existingBrand.id !== id) {
+        if (!category) {
           return NextResponse.json(
-            { error: "Brand already exists in this category" },
+            { error: "Category not found" },
             { status: 400 }
           );
         }
+      } else {
+        nextCategoryId = null;
       }
     }
 
-    // Get old brand data for audit
-    const oldBrand = await prisma.brand.findUnique({
-      where: { id: id },
+    const dupe = await prisma.brand.findFirst({
+      where: {
+        name: nextName,
+        categoryId: nextCategoryId,
+        NOT: { id },
+      },
     });
+    if (dupe) {
+      return NextResponse.json(
+        {
+          error: nextCategoryId
+            ? "A brand with this name already exists for that category"
+            : "A standalone brand with this name already exists",
+        },
+        { status: 400 }
+      );
+    }
+
+    const oldBrand = currentBrand;
 
     const brand = await prisma.brand.update({
       where: { id: id },
       data: {
-        ...(name && { name }),
+        ...(name && String(name).trim() ? { name: String(name).trim() } : {}),
         ...(description !== undefined && { description }),
-        ...(categoryId && { categoryId }),
+        ...(Object.prototype.hasOwnProperty.call(body, "categoryId")
+          ? { categoryId: nextCategoryId }
+          : {}),
       },
       include: {
         category: {
@@ -139,10 +143,14 @@ export async function PUT(
     };
     const changes: Record<string, any> = {};
     if (oldBrand) {
-      if (name && name !== oldBrand.name)
-        changes.name = { from: oldBrand.name, to: name };
-      if (categoryId && categoryId !== oldBrand.categoryId)
-        changes.categoryId = { from: oldBrand.categoryId, to: categoryId };
+      if (name && String(name).trim() !== oldBrand.name)
+        changes.name = { from: oldBrand.name, to: String(name).trim() };
+      if (
+        Object.prototype.hasOwnProperty.call(body, "categoryId") &&
+        nextCategoryId !== oldBrand.categoryId
+      ) {
+        changes.categoryId = { from: oldBrand.categoryId, to: nextCategoryId };
+      }
     }
     await auditLogger.brandUpdated(
       session.user.id,

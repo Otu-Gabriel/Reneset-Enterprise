@@ -45,8 +45,8 @@ interface Brand {
   id: string;
   name: string;
   description: string | null;
-  categoryId: string;
-  category: Category;
+  categoryId: string | null;
+  category: Category | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -93,8 +93,9 @@ export function BrandsTable({
         limit: "10",
       });
       if (search) params.append("search", search);
-      if (categoryFilter && categoryFilter !== "all")
+      if (categoryFilter && categoryFilter !== "all") {
         params.append("categoryId", categoryFilter);
+      }
 
       const response = await fetch(`/api/brands?${params}`);
       const data = await response.json();
@@ -296,7 +297,8 @@ export function BrandsTable({
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="standalone">Global only (no category)</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
@@ -333,9 +335,13 @@ export function BrandsTable({
                   <TableRow key={brand.id}>
                     <TableCell className="font-medium">{brand.name}</TableCell>
                     <TableCell>
-                      <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                        {brand.category.name}
-                      </span>
+                      {brand.category ? (
+                        <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                          {brand.category.name}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {brand.description || "-"}

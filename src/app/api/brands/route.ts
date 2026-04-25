@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Permission } from "@prisma/client";
+import { Permission, Prisma } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { auditLogger, getRequestMetadata } from "@/lib/audit";
 
@@ -27,16 +27,28 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || "";
     const categoryId = searchParams.get("categoryId") || "";
 
-    const where: any = {};
+    const forCategoryId = searchParams.get("forCategoryId") || "";
+    const conditions: Prisma.BrandWhereInput[] = [];
+
     if (search) {
-      where.OR = [
-        { name: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
-      ];
+      conditions.push({
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { description: { contains: search, mode: "insensitive" } },
+        ],
+      });
     }
-    if (categoryId) {
-      where.categoryId = categoryId;
+    if (forCategoryId) {
+      conditions.push({
+        OR: [{ categoryId: forCategoryId }, { categoryId: null }],
+      });
+    } else if (categoryId === "standalone") {
+      conditions.push({ categoryId: null });
+    } else if (categoryId) {
+      conditions.push({ categoryId });
     }
+
+    const where = conditions.length ? { AND: conditions } : {};
 
     const [brands, total] = await Promise.all([
       prisma.brand.findMany({
@@ -88,47 +100,52 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, description, categoryId } = body;
 
-    if (!name || !categoryId) {
+    if (!name || !String(name).trim()) {
       return NextResponse.json(
-        { error: "Brand name and category are required" },
+        { error: "Brand name is required" },
         { status: 400 }
       );
     }
 
-    // Check if category exists
-    const category = await prisma.category.findUnique({
-      where: { id: categoryId },
-    });
+    const trimmed = String(name).trim();
+    const parsedCategoryId =
+      categoryId && String(categoryId).trim() ? String(categoryId).trim() : null;
 
-    if (!category) {
-      return NextResponse.json(
-        { error: "Category not found" },
-        { status: 400 }
-      );
+    if (parsedCategoryId) {
+      const category = await prisma.category.findUnique({
+        where: { id: parsedCategoryId },
+      });
+      if (!category) {
+        return NextResponse.json(
+          { error: "Category not found" },
+          { status: 400 }
+        );
+      }
     }
 
-    // Check if brand already exists in this category
-    const existingBrand = await prisma.brand.findUnique({
+    const existingBrand = await prisma.brand.findFirst({
       where: {
-        name_categoryId: {
-          name,
-          categoryId,
-        },
+        name: trimmed,
+        categoryId: parsedCategoryId,
       },
     });
 
     if (existingBrand) {
       return NextResponse.json(
-        { error: "Brand already exists in this category" },
+        {
+          error: parsedCategoryId
+            ? "A brand with this name already exists for that category"
+            : "A standalone brand with this name already exists",
+        },
         { status: 400 }
       );
     }
 
     const brand = await prisma.brand.create({
       data: {
-        name,
+        name: trimmed,
         description: description || null,
-        categoryId,
+        categoryId: parsedCategoryId,
       },
       include: {
         category: {

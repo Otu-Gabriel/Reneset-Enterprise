@@ -142,9 +142,13 @@ export async function PUT(
         }
       }
 
-      if (targetCategoryId && brand.categoryId !== targetCategoryId) {
+      if (
+        targetCategoryId &&
+        brand.categoryId &&
+        brand.categoryId !== targetCategoryId
+      ) {
         return NextResponse.json(
-          { error: "Brand does not belong to selected category" },
+          { error: "This brand is tied to a different category" },
           { status: 400 }
         );
       }

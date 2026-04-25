@@ -28,7 +28,7 @@ interface Category {
 interface Brand {
   id: string;
   name: string;
-  categoryId: string;
+  categoryId: string | null;
 }
 
 interface Product {
@@ -93,10 +93,11 @@ export function EditItemModal({
   const [skuManuallyEdited, setSkuManuallyEdited] = useState(false);
 
   useEffect(() => {
-    if (product && open) {
+    if (open) {
       fetchCategories();
+      fetchAllBrands();
     }
-  }, [product, open]);
+  }, [open]);
 
   // Set form data after categories are loaded
   useEffect(() => {
@@ -130,25 +131,8 @@ export function EditItemModal({
       if (product.imageUrl) {
         setImagePreview(product.imageUrl);
       }
-      if (category) {
-        fetchBrands(category.id);
-      }
     }
   }, [product, open, categories]);
-
-  useEffect(() => {
-    if (open) {
-      fetchCategories();
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (formData.categoryId) {
-      fetchBrands(formData.categoryId);
-    } else {
-      setBrands([]);
-    }
-  }, [formData.categoryId]);
 
   const fetchCategories = async () => {
     try {
@@ -160,9 +144,9 @@ export function EditItemModal({
     }
   };
 
-  const fetchBrands = async (categoryId: string) => {
+  const fetchAllBrands = async () => {
     try {
-      const response = await fetch(`/api/brands?categoryId=${categoryId}&limit=1000`);
+      const response = await fetch("/api/brands?limit=5000");
       const data = await response.json();
       setBrands(data.brands || []);
     } catch (error) {
@@ -265,9 +249,7 @@ export function EditItemModal({
       payload.variations = normalizedVariations;
       payload.price = normalizedVariations.find((v) => v.quantityInBaseUnit === 1)?.price ?? normalizedVariations[0].price;
 
-      if (formData.brandId) {
-        payload.brandId = formData.brandId;
-      }
+      payload.brandId = formData.brandId || null;
       if (formData.cost) {
         payload.cost = formData.cost;
       }
@@ -364,11 +346,7 @@ export function EditItemModal({
               <Select
                 value={formData.categoryId}
                 onValueChange={(value) => {
-                  setFormData({
-                    ...formData,
-                    categoryId: value,
-                    brandId: "",
-                  });
+                  setFormData({ ...formData, categoryId: value });
                 }}
                 required
               >
@@ -387,25 +365,22 @@ export function EditItemModal({
             <div className="space-y-2">
               <Label htmlFor="brandId">Brand</Label>
               <Select
-                value={formData.brandId}
+                value={formData.brandId || "none"}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, brandId: value })
+                  setFormData({
+                    ...formData,
+                    brandId: value === "none" ? "" : value,
+                  })
                 }
-                disabled={!formData.categoryId}
               >
                 <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      formData.categoryId
-                        ? "Select a brand"
-                        : "Select category first"
-                    }
-                  />
+                  <SelectValue placeholder="No brand" />
                 </SelectTrigger>
                 <SelectContent>
-                  {brands.length === 0 && formData.categoryId ? (
-                    <SelectItem value="none" disabled>
-                      No brands available
+                  <SelectItem value="none">No brand</SelectItem>
+                  {brands.length === 0 ? (
+                    <SelectItem value="empty-list" disabled>
+                      No brands in catalog yet
                     </SelectItem>
                   ) : (
                     brands.map((brand) => (

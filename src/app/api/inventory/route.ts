@@ -258,9 +258,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      if (brand.categoryId !== categoryId) {
+      if (brand.categoryId && brand.categoryId !== categoryId) {
         return NextResponse.json(
-          { error: "Brand does not belong to selected category" },
+          { error: "This brand is tied to a different category" },
           { status: 400 }
         );
       }

@@ -38,7 +38,8 @@ export function AddBrandModal({ children, onSuccess }: AddBrandModalProps) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    categoryId: "",
+    /** "none" = standalone (no category) */
+    categoryId: "none",
   });
 
   useEffect(() => {
@@ -67,7 +68,12 @@ export function AddBrandModal({ children, onSuccess }: AddBrandModalProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+          categoryId:
+            formData.categoryId === "none" ? null : formData.categoryId,
+        }),
       });
 
       if (response.ok) {
@@ -75,7 +81,7 @@ export function AddBrandModal({ children, onSuccess }: AddBrandModalProps) {
         setFormData({
           name: "",
           description: "",
-          categoryId: "",
+          categoryId: "none",
         });
         // Call the onSuccess callback to refresh the table
         if (onSuccess) {
@@ -100,23 +106,23 @@ export function AddBrandModal({ children, onSuccess }: AddBrandModalProps) {
         <DialogHeader>
           <DialogTitle>Add New Brand</DialogTitle>
           <DialogDescription>
-            Create a new brand and assign it to a category
+            Add a global brand, or link it to a category if you use both.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="categoryId">Category *</Label>
+            <Label htmlFor="categoryId">Category (optional)</Label>
             <Select
               value={formData.categoryId}
               onValueChange={(value) =>
                 setFormData({ ...formData, categoryId: value })
               }
-              required
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
+                <SelectValue placeholder="No category" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">None — global brand</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
@@ -156,7 +162,7 @@ export function AddBrandModal({ children, onSuccess }: AddBrandModalProps) {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !formData.categoryId}>
+            <Button type="submit" disabled={loading || !formData.name.trim()}>
               {loading ? "Creating..." : "Create Brand"}
             </Button>
           </DialogFooter>

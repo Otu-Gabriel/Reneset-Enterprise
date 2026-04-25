@@ -29,8 +29,8 @@ interface Brand {
   id: string;
   name: string;
   description: string | null;
-  categoryId: string;
-  category: Category;
+  categoryId: string | null;
+  category: Category | null;
 }
 
 interface EditBrandModalProps {
@@ -52,7 +52,8 @@ export function EditBrandModal({
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    categoryId: "",
+    /** "none" or category id */
+    categoryId: "none" as string,
   });
 
   useEffect(() => {
@@ -60,7 +61,7 @@ export function EditBrandModal({
       setFormData({
         name: brand.name,
         description: brand.description || "",
-        categoryId: brand.categoryId,
+        categoryId: brand.categoryId ?? "none",
       });
     }
   }, [brand]);
@@ -75,7 +76,12 @@ export function EditBrandModal({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+          categoryId:
+            formData.categoryId === "none" ? null : formData.categoryId,
+        }),
       });
 
       if (response.ok) {
@@ -102,18 +108,18 @@ export function EditBrandModal({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="categoryId">Category *</Label>
+            <Label htmlFor="categoryId">Category (optional)</Label>
             <Select
               value={formData.categoryId}
               onValueChange={(value) =>
                 setFormData({ ...formData, categoryId: value })
               }
-              required
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
+                <SelectValue placeholder="No category" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">None — global brand</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}

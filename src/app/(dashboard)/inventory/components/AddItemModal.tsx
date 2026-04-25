@@ -30,7 +30,7 @@ interface Category {
 interface Brand {
   id: string;
   name: string;
-  categoryId: string;
+  categoryId: string | null;
 }
 
 interface AddItemModalProps {
@@ -85,22 +85,13 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
     }
   }, [formData.name, skuManuallyEdited]);
 
-  // Fetch categories when modal opens
+  // Fetch categories and all brands when modal opens
   useEffect(() => {
     if (open) {
       fetchCategories();
+      fetchAllBrands();
     }
   }, [open]);
-
-  // Fetch brands when category changes
-  useEffect(() => {
-    if (formData.categoryId) {
-      fetchBrands(formData.categoryId);
-    } else {
-      setBrands([]);
-      setFormData((prev) => ({ ...prev, brandId: "" }));
-    }
-  }, [formData.categoryId]);
 
   const fetchCategories = async () => {
     try {
@@ -112,9 +103,9 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
     }
   };
 
-  const fetchBrands = async (categoryId: string) => {
+  const fetchAllBrands = async () => {
     try {
-      const response = await fetch(`/api/brands?categoryId=${categoryId}&limit=1000`);
+      const response = await fetch("/api/brands?limit=5000");
       const data = await response.json();
       setBrands(data.brands || []);
     } catch (error) {
@@ -357,11 +348,7 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
               <Select
                 value={formData.categoryId}
                 onValueChange={(value) => {
-                  setFormData({
-                    ...formData,
-                    categoryId: value,
-                    brandId: "", // Reset brand when category changes
-                  });
+                  setFormData({ ...formData, categoryId: value });
                 }}
                 required
               >
@@ -380,19 +367,22 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
             <div className="space-y-2">
               <Label htmlFor="brandId">Brand</Label>
               <Select
-                value={formData.brandId}
+                value={formData.brandId || "none"}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, brandId: value })
+                  setFormData({
+                    ...formData,
+                    brandId: value === "none" ? "" : value,
+                  })
                 }
-                disabled={!formData.categoryId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={formData.categoryId ? "Select a brand" : "Select category first"} />
+                  <SelectValue placeholder="No brand" />
                 </SelectTrigger>
                 <SelectContent>
-                  {brands.length === 0 && formData.categoryId ? (
-                    <SelectItem value="none" disabled>
-                      No brands available
+                  <SelectItem value="none">No brand</SelectItem>
+                  {brands.length === 0 ? (
+                    <SelectItem value="empty-list" disabled>
+                      No brands in catalog yet
                     </SelectItem>
                   ) : (
                     brands.map((brand) => (
