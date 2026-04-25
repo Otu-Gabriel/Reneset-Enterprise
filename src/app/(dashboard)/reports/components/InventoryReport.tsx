@@ -24,7 +24,10 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useCurrency } from "@/hooks/useCurrency";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { Role } from "@prisma/client";
+import { Loader2, AlertTriangle, LayoutGrid, Tags } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface InventoryReportProps {
   startDate: string;
@@ -40,8 +43,10 @@ const COLORS = [
 ];
 
 export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
+  const { data: session } = useSession();
   const formatCurrency = useCurrency();
   const [data, setData] = useState<any>(null);
+  const isAdmin = session?.user?.role === Role.ADMIN;
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -86,7 +91,12 @@ export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div
+        className={cn(
+          "grid gap-4",
+          isAdmin ? "md:grid-cols-2 lg:grid-cols-3" : "md:grid-cols-2 lg:grid-cols-4"
+        )}
+      >
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Products</CardTitle>
@@ -125,6 +135,36 @@ export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
             </div>
           </CardContent>
         </Card>
+        {isAdmin && (
+          <>
+            <Card className="bg-card border-primary/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <LayoutGrid className="h-4 w-4 text-primary" aria-hidden />
+                  Total Categories
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">
+                  {data.summary.totalCategories ?? 0}
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card border-primary/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Tags className="h-4 w-4 text-primary" aria-hidden />
+                  Total Brands
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">
+                  {data.summary.totalBrands ?? 0}
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Charts */}

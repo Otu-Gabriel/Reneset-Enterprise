@@ -150,28 +150,34 @@ export async function GET(request: NextRequest) {
       }
 
       case "inventory": {
-        const products = await prisma.product.findMany({
-          include: {
-            brand: {
-              select: {
-                name: true,
-                category: {
-                  select: {
-                    name: true,
+        const [products, totalCategories, totalBrands] = await Promise.all([
+          prisma.product.findMany({
+            include: {
+              brand: {
+                select: {
+                  name: true,
+                  category: {
+                    select: {
+                      name: true,
+                    },
                   },
                 },
               },
-            },
-            saleItems: {
-              where: dateFilter ? {
-                createdAt: dateFilter,
-              } : undefined,
-              include: {
-                sale: true,
+              saleItems: {
+                where: dateFilter
+                  ? {
+                      createdAt: dateFilter,
+                    }
+                  : undefined,
+                include: {
+                  sale: true,
+                },
               },
             },
-          },
-        });
+          }),
+          prisma.category.count(),
+          prisma.brand.count(),
+        ]);
 
         const totalProducts = products.length;
         const totalStockValue = products.reduce(
@@ -217,6 +223,8 @@ export async function GET(request: NextRequest) {
             totalStockValue,
             lowStockCount: lowStockItems.length,
             outOfStockCount: outOfStockItems.length,
+            totalCategories,
+            totalBrands,
           },
           categoryBreakdown: Array.from(categoryMap.entries()).map(([category, data]) => ({
             category,
