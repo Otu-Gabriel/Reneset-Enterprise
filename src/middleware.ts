@@ -7,6 +7,15 @@ const IDLE_MS = 2 * 60 * 60 * 1000;
 
 const ACTIVITY_COOKIE = "reneset-last-active";
 
+/** End NextAuth session without visiting the default /api/auth/signout confirmation page. */
+function clearNextAuthCookies(req: NextRequest, res: NextResponse) {
+  for (const { name } of req.cookies.getAll()) {
+    if (name.includes("next-auth")) {
+      res.cookies.delete(name);
+    }
+  }
+}
+
 function activityCookieOptions() {
   return {
     path: "/",
@@ -53,10 +62,10 @@ export async function middleware(req: NextRequest) {
   if (raw) {
     const lastMs = parseInt(raw, 10);
     if (Number.isFinite(lastMs) && now - lastMs > IDLE_MS) {
-      const signOut = new URL("/api/auth/signout", req.url);
-      signOut.searchParams.set("callbackUrl", "/login?reason=idle");
-      const redirectRes = NextResponse.redirect(signOut);
+      const login = new URL("/login?reason=idle", req.url);
+      const redirectRes = NextResponse.redirect(login);
       redirectRes.cookies.delete(ACTIVITY_COOKIE);
+      clearNextAuthCookies(req, redirectRes);
       return redirectRes;
     }
   }
