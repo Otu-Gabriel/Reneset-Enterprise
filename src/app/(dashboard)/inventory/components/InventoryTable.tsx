@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -21,6 +21,7 @@ import {
   Plus,
   Download,
   Upload,
+  Loader2,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
@@ -173,9 +174,14 @@ export function InventoryTable() {
   const formatCurrency = useCurrency();
   const { data: session } = useSession();
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const isFirstFetch = useRef(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  /** What the user types (instant). */
+  const [searchInput, setSearchInput] = useState("");
+  /** Debounced value used for API & export. */
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [stockStatus, setStockStatus] = useState("all");
@@ -209,6 +215,18 @@ export function InventoryTable() {
     hasPermission(session.user.permissions, Permission.CREATE_INVENTORY);
 
   useEffect(() => {
+    const id = setTimeout(() => {
+      setSearch((prev) => {
+        if (prev !== searchInput) {
+          setPage(1);
+        }
+        return searchInput;
+      });
+    }, 400);
+    return () => clearTimeout(id);
+  }, [searchInput]);
+
+  useEffect(() => {
     fetchProducts();
     fetchCategories();
   }, [page, search, category, stockStatus]);
@@ -223,7 +241,11 @@ export function InventoryTable() {
 
   const fetchProducts = async () => {
     try {
-      setLoading(true);
+      if (isFirstFetch.current) {
+        setInitialLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
       const params = new URLSearchParams({
         page: page.toString(),
         limit: "10",
@@ -240,7 +262,9 @@ export function InventoryTable() {
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
+      setIsRefreshing(false);
+      isFirstFetch.current = false;
     }
   };
 
@@ -392,8 +416,13 @@ export function InventoryTable() {
     }
   };
 
-  if (loading) {
-    return <div className="text-center py-8">Loading...</div>;
+  if (initialLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
+        <p className="text-sm">Loading products…</p>
+      </div>
+    );
   }
 
   return (
@@ -549,11 +578,10 @@ export function InventoryTable() {
                 type="search"
                 placeholder="Search name, SKU, category…"
                 className="h-10 pl-9"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                autoComplete="off"
+                aria-busy={isRefreshing}
               />
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-nowrap sm:items-center sm:gap-2">
@@ -597,8 +625,21 @@ export function InventoryTable() {
           </div>
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
-          <div className="overflow-x-auto">
-            <Table className="min-w-full">
+          <div className="relative overflow-x-auto">
+            {isRefreshing && (
+              <div
+                className="pointer-events-none absolute inset-0 z-10 flex items-start justify-center bg-background/40 pt-12 backdrop-blur-[1px]"
+                aria-live="polite"
+              >
+                <span className="inline-flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm text-muted-foreground shadow-sm">
+                  <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                  Updating results…
+                </span>
+              </div>
+            )}
+            <Table
+              className={`min-w-full ${isRefreshing ? "opacity-60 transition-opacity" : ""}`}
+            >
               <TableHeader>
                 <TableRow>
                   <TableHead className="hidden sm:table-cell">Image</TableHead>

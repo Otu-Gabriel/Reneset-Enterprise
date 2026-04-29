@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: "desc" },
+        orderBy: { name: "asc" },
         include: {
           category: {
             select: {

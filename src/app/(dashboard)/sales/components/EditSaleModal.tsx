@@ -21,6 +21,10 @@ import {
 } from "@/components/ui/select";
 import { useCurrency } from "@/hooks/useCurrency";
 import { ProductSearchInput } from "@/components/ProductSearchInput";
+import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const DEFAULT_CUSTOMER_DISPLAY_NAME = "No-name";
 
 interface Product {
   id: string;
@@ -119,10 +123,17 @@ export function EditSaleModal({
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<SaleItem[]>([]);
+  const [moreDetailsOpen, setMoreDetailsOpen] = useState(false);
 
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    if (!open) {
+      setMoreDetailsOpen(false);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (sale) {
@@ -293,7 +304,7 @@ export function EditSaleModal({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          customerName,
+          customerName: customerName.trim() || DEFAULT_CUSTOMER_DISPLAY_NAME,
           customerEmail,
           customerPhone,
           status,
@@ -331,27 +342,15 @@ export function EditSaleModal({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 rounded-lg bg-muted/50 p-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="customerName">Customer Name *</Label>
+              <Label htmlFor="customerName">Customer Name</Label>
               <Input
                 id="customerName"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="customerEmail">Customer Email</Label>
-              <Input
-                id="customerEmail"
-                type="email"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="customerPhone">Customer Phone</Label>
               <Input
@@ -360,48 +359,87 @@ export function EditSaleModal({
                 onChange={(e) => setCustomerPhone(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="paymentMethod">Payment Method *</Label>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select payment method" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="card">Card</SelectItem>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="mobile_money">Mobile Money</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="status">Status *</Label>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                  <SelectItem value="returned">Returned</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+
+          <div className="overflow-hidden rounded-lg border border-border bg-muted/30">
+            <button
+              type="button"
+              onClick={() => setMoreDetailsOpen((o) => !o)}
+              className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm font-medium text-foreground hover:bg-muted/50"
+              aria-expanded={moreDetailsOpen}
+            >
+              <span>More</span>
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+                  moreDetailsOpen && "rotate-180",
+                )}
+                aria-hidden
+              />
+            </button>
+            {moreDetailsOpen && (
+              <div className="space-y-4 border-t border-border bg-muted/50 p-4">
+                <div className="space-y-2">
+                  <Label htmlFor="customerEmail">Customer Email</Label>
+                  <Input
+                    id="customerEmail"
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <textarea
+                    id="notes"
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Additional notes about this sale..."
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="paymentMethod">Payment Method *</Label>
+                    <Select
+                      value={paymentMethod}
+                      onValueChange={setPaymentMethod}
+                    >
+                      <SelectTrigger id="paymentMethod">
+                        <SelectValue placeholder="Select payment method" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cash">Cash</SelectItem>
+                        <SelectItem value="card">Card</SelectItem>
+                        <SelectItem value="bank_transfer">
+                          Bank Transfer
+                        </SelectItem>
+                        <SelectItem value="mobile_money">
+                          Mobile Money
+                        </SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status *</Label>
+                    <Select value={status} onValueChange={setStatus}>
+                      <SelectTrigger id="status">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                        <SelectItem value="returned">Returned</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <textarea
-              id="notes"
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Additional notes about this sale..."
-            />
-          </div>
+
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Items</Label>

@@ -24,8 +24,11 @@ import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, X } from "lucide-react";
+import { ChevronDown, Search, X } from "lucide-react";
 import { ProductSearchInput } from "@/components/ProductSearchInput";
+import { cn } from "@/lib/utils";
+
+const DEFAULT_CUSTOMER_DISPLAY_NAME = "No-name";
 
 interface Product {
   id: string;
@@ -89,6 +92,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const customerInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const [moreDetailsOpen, setMoreDetailsOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState("completed");
@@ -127,6 +131,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
       setNumberOfInstallments(3);
       setFrequency("monthly");
       setStartDate(new Date().toISOString().split("T")[0]);
+      setMoreDetailsOpen(false);
     }
   }, [open]);
 
@@ -437,6 +442,12 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
     setLoading(true);
 
     try {
+      const trimmedForSave = selectedCustomerId
+        ? customerName.trim()
+        : customerSearchQuery.trim() || customerName.trim();
+      const customerNameToSave =
+        trimmedForSave || DEFAULT_CUSTOMER_DISPLAY_NAME;
+
       const response = await fetch("/api/sales", {
         method: "POST",
         headers: {
@@ -444,7 +455,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
         },
         body: JSON.stringify({
           customerId: selectedCustomerId || undefined,
-          customerName,
+          customerName: customerNameToSave,
           customerEmail: customerEmail || undefined,
           customerPhone: customerPhone || undefined,
           paymentMethod,
@@ -492,9 +503,9 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
           <DialogDescription>Create a new sales transaction</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 bg-muted/50 p-4 rounded-lg">
+          <div className="grid grid-cols-1 gap-4 bg-muted/50 p-4 rounded-lg sm:grid-cols-2">
             <div className="space-y-2 relative">
-              <Label htmlFor="customerName">Customer Name *</Label>
+              <Label htmlFor="customerName">Customer Name</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -508,7 +519,6 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                     }
                   }}
                   placeholder="Type to search or enter new customer..."
-                  required
                   className="pl-9 pr-9"
                 />
                 {selectedCustomerId && (
@@ -565,19 +575,6 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                 )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="customerEmail">Customer Email</Label>
-              <Input
-                id="customerEmail"
-                type="email"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                disabled={!!selectedCustomerId}
-                className={selectedCustomerId ? "bg-muted" : ""}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4 bg-muted/50 p-4 rounded-lg">
-            <div className="space-y-2">
               <Label htmlFor="customerPhone">Customer Phone</Label>
               <Input
                 id="customerPhone"
@@ -587,51 +584,101 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                 className={selectedCustomerId ? "bg-muted" : ""}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="paymentMethod">Payment Method *</Label>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select payment method" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="card">Card</SelectItem>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="mobile_money">Mobile Money</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 bg-muted/50 p-4 rounded-lg">
-            <div className="space-y-2">
-              <Label htmlFor="status">Status *</Label>
-              <Select
-                value={status}
-                onValueChange={setStatus}
-                disabled={isInstallment}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center space-x-2 pt-8">
-              <Checkbox
-                id="installment"
-                checked={isInstallment}
-                onCheckedChange={(checked) =>
-                  setIsInstallment(checked as boolean)
-                }
+
+          <div className="overflow-hidden rounded-lg border border-border bg-muted/30">
+            <button
+              type="button"
+              onClick={() => setMoreDetailsOpen((o) => !o)}
+              className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm font-medium text-foreground hover:bg-muted/50"
+              aria-expanded={moreDetailsOpen}
+            >
+              <span>More</span>
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+                  moreDetailsOpen && "rotate-180",
+                )}
+                aria-hidden
               />
-              <Label htmlFor="installment" className="cursor-pointer">
-                Create Installment Plan
-              </Label>
-            </div>
+            </button>
+            {moreDetailsOpen && (
+              <div className="space-y-4 border-t border-border bg-muted/50 p-4">
+                <div className="space-y-2">
+                  <Label htmlFor="customerEmail">Customer Email</Label>
+                  <Input
+                    id="customerEmail"
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    disabled={!!selectedCustomerId}
+                    className={selectedCustomerId ? "bg-muted" : ""}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <textarea
+                    id="notes"
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Additional notes about this sale..."
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="paymentMethod">Payment Method *</Label>
+                    <Select
+                      value={paymentMethod}
+                      onValueChange={setPaymentMethod}
+                    >
+                      <SelectTrigger id="paymentMethod">
+                        <SelectValue placeholder="Select payment method" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cash">Cash</SelectItem>
+                        <SelectItem value="card">Card</SelectItem>
+                        <SelectItem value="bank_transfer">
+                          Bank Transfer
+                        </SelectItem>
+                        <SelectItem value="mobile_money">
+                          Mobile Money
+                        </SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status *</Label>
+                    <Select
+                      value={status}
+                      onValueChange={setStatus}
+                      disabled={isInstallment}
+                    >
+                      <SelectTrigger id="status">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2 pt-1">
+                  <Checkbox
+                    id="installment"
+                    checked={isInstallment}
+                    onCheckedChange={(checked) =>
+                      setIsInstallment(checked as boolean)
+                    }
+                  />
+                  <Label htmlFor="installment" className="cursor-pointer">
+                    Create Installment Plan
+                  </Label>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Installment Plan Section */}
@@ -727,16 +774,6 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
               </div>
             </div>
           )}
-          <div className="space-y-2 bg-muted/50 p-4 rounded-lg">
-            <Label htmlFor="notes">Notes</Label>
-            <textarea
-              id="notes"
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Additional notes about this sale..."
-            />
-          </div>
           <div className="space-y-2 bg-muted/50 p-4 rounded-lg">
             <div className="flex items-center justify-between">
               <Label>Items</Label>

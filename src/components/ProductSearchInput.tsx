@@ -67,8 +67,10 @@ export function ProductSearchInput({
     if (value && !selectedProduct) {
       fetchProductDetails(value);
     } else if (!value) {
-      setSelectedProduct(null);
-      setSearchQuery("");
+      setSelectedProduct((prev) => {
+        if (prev) setSearchQuery("");
+        return null;
+      });
     }
   }, [value]);
 
