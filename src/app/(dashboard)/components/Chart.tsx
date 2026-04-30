@@ -30,8 +30,8 @@ export function SalesOverview({ data }: SalesOverviewProps) {
   const formatCurrency = useCurrency();
 
   return (
-    <Card className="bg-card border-border/80 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-3">
+    <Card className="min-w-0 bg-card border-border/80 shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 pt-3 sm:p-6 sm:pb-2 sm:pt-4">
         <CardTitle className="text-sm font-semibold">
           Today&apos;s Sales by Hour
         </CardTitle>
@@ -44,7 +44,7 @@ export function SalesOverview({ data }: SalesOverviewProps) {
           <Clock className="h-3.5 w-3.5" aria-hidden />
         </div>
       </CardHeader>
-      <CardContent className="pb-3">
+      <CardContent className="min-w-0 px-3 pb-3 pt-0 sm:px-6">
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={data} margin={{ top: 4, right: 4, left: -18, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
@@ -94,8 +94,8 @@ interface TopProductsTodayProps {
 export function TopProductsToday({ data }: TopProductsTodayProps) {
   if (data.length === 0) {
     return (
-      <Card className="bg-card border-border/80 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-3">
+      <Card className="min-w-0 bg-card border-border/80 shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 pt-3 sm:p-6 sm:pb-2 sm:pt-4">
           <CardTitle className="text-sm font-semibold">
             Most sold today (units)
           </CardTitle>
@@ -108,7 +108,7 @@ export function TopProductsToday({ data }: TopProductsTodayProps) {
             <BarChart3 className="h-3.5 w-3.5" aria-hidden />
           </div>
         </CardHeader>
-        <CardContent className="pb-3">
+        <CardContent className="min-w-0 px-3 pb-3 pt-0 sm:px-6">
           <div className="flex h-[200px] items-center justify-center text-xs text-muted-foreground">
             No sales today
           </div>
@@ -124,8 +124,8 @@ export function TopProductsToday({ data }: TopProductsTodayProps) {
   }));
 
   return (
-    <Card className="bg-card border-border/80 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-3">
+    <Card className="min-w-0 bg-card border-border/80 shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 pt-3 sm:p-6 sm:pb-2 sm:pt-4">
         <CardTitle className="text-sm font-semibold">
           Most sold today (units)
         </CardTitle>
@@ -138,7 +138,7 @@ export function TopProductsToday({ data }: TopProductsTodayProps) {
           <BarChart3 className="h-3.5 w-3.5" aria-hidden />
         </div>
       </CardHeader>
-      <CardContent className="pb-3">
+      <CardContent className="min-w-0 px-3 pb-3 pt-0 sm:px-6">
         <ResponsiveContainer width="100%" height={200}>
           <BarChart
             data={chartData}
@@ -250,8 +250,8 @@ export function SalesByCategory({ data }: CategorySalesProps) {
   
   if (data.length === 0) {
     return (
-      <Card className="bg-card border-border/80 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-3">
+      <Card className="min-w-0 bg-card border-border/80 shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 pt-3 sm:p-6 sm:pb-2 sm:pt-4">
           <CardTitle className="text-sm font-semibold text-foreground">
             Today&apos;s Sales by Category
           </CardTitle>
@@ -264,7 +264,7 @@ export function SalesByCategory({ data }: CategorySalesProps) {
             <PieChartIcon className="h-3.5 w-3.5" aria-hidden />
           </div>
         </CardHeader>
-        <CardContent className="pb-3">
+        <CardContent className="min-w-0 px-3 pb-3 pt-0 sm:px-6">
           <div className="flex h-[200px] items-center justify-center text-xs text-muted-foreground">
             No sales data for today
           </div>
@@ -274,8 +274,8 @@ export function SalesByCategory({ data }: CategorySalesProps) {
   }
 
   return (
-    <Card className="bg-card border-border/80 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-3">
+    <Card className="min-w-0 bg-card border-border/80 shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 pt-3 sm:p-6 sm:pb-2 sm:pt-4">
         <CardTitle className="text-sm font-semibold">
           Today&apos;s Sales by Category
         </CardTitle>
@@ -288,57 +288,60 @@ export function SalesByCategory({ data }: CategorySalesProps) {
           <PieChartIcon className="h-3.5 w-3.5" aria-hidden />
         </div>
       </CardHeader>
-      <CardContent className="pb-3">
-        <div className="flex flex-col items-center justify-center gap-3 lg:flex-row">
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ percentage }) =>
-                  percentage > 5 ? `${percentage}%` : ""
-                }
-                outerRadius={72}
-                innerRadius={44}
-                fill="hsl(25, 95%, 53%)"
-                dataKey="value"
-                paddingAngle={2}
-              >
-                {data.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip
-                content={
-                  <PieChartTooltipContent formatter={formatCurrency} />
-                }
-              />
-            </PieChart>
-          </ResponsiveContainer>
+      <CardContent className="min-w-0 px-3 pb-3 pt-0 sm:px-6">
+        <div className="flex min-h-[176px] w-full min-w-0 flex-row items-center gap-1.5 sm:gap-2">
+          <div className="h-[176px] min-w-0 flex-[3] basis-0 sm:h-[200px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
+                <Pie
+                  data={data}
+                  dataKey="value"
+                  nameKey="category"
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ percentage }) =>
+                    percentage > 10 ? `${percentage}%` : ""
+                  }
+                  outerRadius="80%"
+                  innerRadius="52%"
+                  fill="hsl(25, 95%, 53%)"
+                  paddingAngle={2}
+                >
+                  {data.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  content={
+                    <PieChartTooltipContent formatter={formatCurrency} />
+                  }
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
 
-          {/* Custom Legend */}
-          <div className="min-w-0 max-w-full space-y-2 sm:min-w-[160px]">
-            <h4 className="mb-1 text-[10px] font-semibold text-foreground sm:text-xs">
+          <div className="flex max-h-[200px] min-h-0 w-[30%] max-w-[5.75rem] flex-shrink-0 flex-col gap-y-1.5 overflow-y-auto overflow-x-hidden overscroll-y-contain pr-0.5 sm:max-w-[6.75rem] sm:text-[10px]">
+            <h4 className="text-[8px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-[9px]">
               Categories
             </h4>
             {data.map((entry, index) => (
-              <div key={entry.category} className="flex items-center gap-2">
+              <div key={entry.category} className="flex items-start gap-1.5">
                 <div
-                  className="h-3 w-3 shrink-0 rounded-full shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+                  className="mt-0.5 h-2 w-2 shrink-0 rounded-full shadow-sm ring-1 ring-black/5 dark:ring-white/10"
                   style={{ backgroundColor: COLORS[index % COLORS.length] }}
                 />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-[10px] font-medium text-foreground sm:text-xs">
+                <div className="min-w-0 flex-1 leading-tight">
+                  <div className="break-words text-[8px] font-medium text-foreground sm:text-[9px]">
                     {entry.category}
                   </div>
-                  <div className="text-[10px] font-medium text-primary sm:text-xs">
-                    {formatCurrency(entry.value)}{" "}
+                  <div className="text-[8px] font-medium tabular-nums text-primary sm:text-[9px]">
+                    {formatCurrency(entry.value)}
                     <span className="font-normal text-muted-foreground">
+                      {" "}
                       ({entry.percentage}%)
                     </span>
                   </div>

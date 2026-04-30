@@ -264,7 +264,7 @@ export default async function DashboardPage() {
 
       <StatsCards stats={stats} adminProfit={adminProfit} />
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-3">
         <SalesOverview data={salesOverview} />
         <SalesByCategory data={categorySales} />
         <TopProductsToday data={topProductsToday} />

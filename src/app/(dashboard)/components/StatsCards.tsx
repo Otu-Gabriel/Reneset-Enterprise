@@ -130,8 +130,8 @@ export function StatsCards({ stats, adminProfit }: StatsCardsProps) {
   return (
     <div
       className={cn(
-        "grid gap-3 sm:grid-cols-2",
-        adminProfit ? "lg:grid-cols-4" : "lg:grid-cols-3"
+        "grid min-w-0 gap-3 sm:grid-cols-2",
+        adminProfit ? "lg:grid-cols-4" : "md:grid-cols-3"
       )}
     >
       <StatCard
