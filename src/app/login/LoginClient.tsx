@@ -108,7 +108,7 @@ export function LoginClient({ showIdleExpired }: Props) {
             </p>
             <h1
               className={cn(
-                "text-balance break-words text- xl font-bold leading-tight tracking-tight sm:text-2xl",
+                "text-balance break-words text-base font-semibold leading-tight tracking-tight sm:text-xl",
                 "bg-gradient-to-r from-primary via-orange-500 to-amber-600 bg-clip-text text-transparent",
                 "dark:from-primary dark:via-amber-400 dark:to-amber-200",
                 "motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:fill-mode-both motion-safe:duration-700 motion-safe:delay-100"

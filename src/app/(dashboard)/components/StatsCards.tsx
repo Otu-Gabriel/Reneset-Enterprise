@@ -36,7 +36,7 @@ export function StatCard({
   return (
     <Card className="bg-card border-border/80 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+        <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
           {title}
         </CardTitle>
         <div
@@ -49,7 +49,7 @@ export function StatCard({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold tracking-tight text-foreground">
+        <div className="text-xl font-bold tabular-nums tracking-tight text-foreground sm:text-2xl">
           {formattedValue}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs">

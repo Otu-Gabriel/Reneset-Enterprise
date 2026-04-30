@@ -58,12 +58,12 @@ export function UserStatisticsCards() {
         {[1, 2, 3, 4].map((i) => (
           <Card key={i} className="bg-card">
             <CardHeader>
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
                 Loading...
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">---</div>
+              <div className="text-xl font-bold tabular-nums sm:text-2xl">---</div>
             </CardContent>
           </Card>
         ))}
@@ -77,13 +77,13 @@ export function UserStatisticsCards() {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card className="bg-card">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
             Total Users
           </CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.total}</div>
+          <div className="text-xl font-bold tabular-nums sm:text-2xl">{stats.total}</div>
           <p className="text-xs text-muted-foreground mt-1">
             Registered users
           </p>
@@ -92,13 +92,13 @@ export function UserStatisticsCards() {
 
       <Card className="bg-card">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
             Admins
           </CardTitle>
           <Shield className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.byRole.admin}</div>
+          <div className="text-xl font-bold tabular-nums sm:text-2xl">{stats.byRole.admin}</div>
           <p className="text-xs text-muted-foreground mt-1">
             {stats.byRole.manager} Managers, {stats.byRole.employee} Employees
           </p>
@@ -107,13 +107,13 @@ export function UserStatisticsCards() {
 
       <Card className="bg-card">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
             Full Access
           </CardTitle>
           <UserCheck className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.withFullAccess}</div>
+          <div className="text-xl font-bold tabular-nums sm:text-2xl">{stats.withFullAccess}</div>
           <p className="text-xs text-muted-foreground mt-1">
             Users with full access
           </p>
@@ -122,13 +122,13 @@ export function UserStatisticsCards() {
 
       <Card className="bg-card">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
             Active Users
           </CardTitle>
           <UserX className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.activeUsers}</div>
+          <div className="text-xl font-bold tabular-nums sm:text-2xl">{stats.activeUsers}</div>
           <p className="text-xs text-muted-foreground mt-1">
             Currently active
           </p>

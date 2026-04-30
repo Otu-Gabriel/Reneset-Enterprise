@@ -188,7 +188,9 @@ export function HistoryPageClient() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Activity History</h1>
+        <h1 className="text-base font-semibold tracking-tight text-foreground sm:text-xl">
+          Activity History
+        </h1>
         <p className="text-muted-foreground">
           Comprehensive audit log of all system activities
         </p>

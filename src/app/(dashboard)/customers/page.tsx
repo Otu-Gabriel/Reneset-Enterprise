@@ -19,7 +19,9 @@ export default async function CustomersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Customers</h1>
+        <h1 className="text-base font-semibold tracking-tight text-foreground sm:text-xl">
+          Customers
+        </h1>
         <p className="text-muted-foreground">
           Manage your customers and view their purchase history
         </p>

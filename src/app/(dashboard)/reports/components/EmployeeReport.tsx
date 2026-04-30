@@ -130,8 +130,8 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
       {/* Header with refresh button */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Employee Report</h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h2 className="text-base font-semibold tracking-tight text-foreground sm:text-xl">Employee Report</h2>
+          <p className="text-xs text-muted-foreground mt-1 sm:text-sm">
             {startDate || endDate 
               ? `Showing employees hired between ${startDate || "start"} and ${endDate || "end"}`
               : "Showing all employees"}
@@ -152,10 +152,10 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Total Employees</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.summary?.totalEmployees || 0}</div>
+            <div className="text-xl font-bold tabular-nums sm:text-2xl">{data.summary?.totalEmployees || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {data.employees?.length || 0} {startDate || endDate ? "in date range" : "total"}
             </p>
@@ -163,10 +163,10 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Employees</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Active Employees</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-xl font-bold tabular-nums sm:text-2xl text-green-600">
               {data.summary?.activeEmployees || 0}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -178,10 +178,10 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inactive Employees</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Inactive Employees</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-xl font-bold tabular-nums sm:text-2xl text-red-600">
               {data.summary?.inactiveEmployees || 0}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -193,7 +193,7 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Top Sales Employee</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Top Sales Employee</CardTitle>
           </CardHeader>
           <CardContent>
             {data.summary?.topSalesEmployee ? (
@@ -210,7 +210,7 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
               </>
             ) : (
               <>
-                <div className="text-2xl font-bold text-muted-foreground">N/A</div>
+                <div className="text-xl font-bold tabular-nums sm:text-2xl text-muted-foreground">N/A</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   No sales data available
                 </p>

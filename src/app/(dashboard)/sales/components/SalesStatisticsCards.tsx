@@ -56,7 +56,7 @@ export const SalesStatisticsCards = forwardRef<SalesStatisticsCardsRef>((props, 
         {[1, 2, 3, 4].map((i) => (
           <Card key={i} className="bg-card border-border/80 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
                 Loading...
               </CardTitle>
               <div className="h-9 w-9 animate-pulse rounded-lg bg-muted" />
@@ -87,7 +87,7 @@ export const SalesStatisticsCards = forwardRef<SalesStatisticsCardsRef>((props, 
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card className="bg-card border-border/80 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
             Today&apos;s Sales
           </CardTitle>
           {iconTile(
@@ -96,7 +96,7 @@ export const SalesStatisticsCards = forwardRef<SalesStatisticsCardsRef>((props, 
           )}
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold tracking-tight text-foreground">
+          <div className="text-xl font-bold tracking-tight tabular-nums text-foreground sm:text-2xl">
             {formatCurrency(stats.today.total)}
           </div>
           <p className="mt-1 text-xs font-medium text-primary">
@@ -107,7 +107,7 @@ export const SalesStatisticsCards = forwardRef<SalesStatisticsCardsRef>((props, 
 
       <Card className="bg-card border-border/80 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
             This Week
           </CardTitle>
           {iconTile(
@@ -116,7 +116,7 @@ export const SalesStatisticsCards = forwardRef<SalesStatisticsCardsRef>((props, 
           )}
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold tracking-tight text-foreground">
+          <div className="text-xl font-bold tracking-tight tabular-nums text-foreground sm:text-2xl">
             {formatCurrency(stats.week.total)}
           </div>
           <p className="mt-1 text-xs font-medium text-primary">
@@ -127,7 +127,7 @@ export const SalesStatisticsCards = forwardRef<SalesStatisticsCardsRef>((props, 
 
       <Card className="bg-card border-border/80 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
             This Month
           </CardTitle>
           {iconTile(
@@ -136,7 +136,7 @@ export const SalesStatisticsCards = forwardRef<SalesStatisticsCardsRef>((props, 
           )}
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold tracking-tight text-foreground">
+          <div className="text-xl font-bold tracking-tight tabular-nums text-foreground sm:text-2xl">
             {formatCurrency(stats.month.total)}
           </div>
           <p className="mt-1 text-xs font-medium text-primary">
@@ -147,7 +147,7 @@ export const SalesStatisticsCards = forwardRef<SalesStatisticsCardsRef>((props, 
 
       <Card className="bg-card border-border/80 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
             Best Selling Product
           </CardTitle>
           {iconTile(

@@ -114,11 +114,11 @@ export function AccountInformation() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Role</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Role</CardTitle>
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{accountInfo.role}</div>
+            <div className="text-xl font-bold tabular-nums sm:text-2xl">{accountInfo.role}</div>
             <Badge className={getRoleBadgeColor(accountInfo.role)}>
               {accountInfo.role}
             </Badge>
@@ -127,22 +127,22 @@ export function AccountInformation() {
 
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Total Sales</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{accountInfo.statistics.salesCount}</div>
+            <div className="text-xl font-bold tabular-nums sm:text-2xl">{accountInfo.statistics.salesCount}</div>
             <p className="text-xs text-muted-foreground">Sales transactions</p>
           </CardContent>
         </Card>
 
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Total Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-xl font-bold tabular-nums sm:text-2xl">
               {formatCurrency(accountInfo.statistics.totalRevenue)}
             </div>
             <p className="text-xs text-muted-foreground">From your sales</p>
@@ -151,11 +151,11 @@ export function AccountInformation() {
 
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Permissions</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Permissions</CardTitle>
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{accountInfo.permissions.length}</div>
+            <div className="text-xl font-bold tabular-nums sm:text-2xl">{accountInfo.permissions.length}</div>
             <p className="text-xs text-muted-foreground">Active permissions</p>
           </CardContent>
         </Card>

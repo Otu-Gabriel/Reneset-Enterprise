@@ -177,7 +177,7 @@ export function Sidebar() {
             ) : (
               <Grid3x3 className="h-6 w-6 text-primary flex-shrink-0" />
             )}
-            <span className="truncate text-lg font-semibold text-primary">
+            <span className="truncate text-base font-semibold text-primary sm:text-lg">
               {companyName}
             </span>
           </div>
@@ -226,7 +226,7 @@ export function Sidebar() {
                   }
                 }}
                 className={cn(
-                  "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
+                  "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-medium transition-colors sm:text-sm",
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
                     : "text-sidebar-muted hover:bg-foreground/5 hover:text-sidebar-foreground"
@@ -246,7 +246,7 @@ export function Sidebar() {
                 </span>
                 {/* Tooltip for collapsed state */}
                 {isCollapsed && (
-                  <div className="absolute left-full ml-2 px-2 py-1 text-sm rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 pointer-events-none bg-popover text-popover-foreground border border-border shadow-md">
+                  <div className="absolute left-full ml-2 px-2 py-1 text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 pointer-events-none bg-popover text-popover-foreground border border-border shadow-md sm:text-sm">
                     {item.name}
                   </div>
                 )}

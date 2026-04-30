@@ -99,38 +99,38 @@ export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
       >
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Total Products</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.summary.totalProducts}</div>
+            <div className="text-xl font-bold tabular-nums sm:text-2xl">{data.summary.totalProducts}</div>
           </CardContent>
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Stock Value</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Total Stock Value</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-xl font-bold tabular-nums sm:text-2xl">
               {formatCurrency(data.summary.totalStockValue)}
             </div>
           </CardContent>
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Low Stock Items</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Low Stock Items</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
+            <div className="text-xl font-bold tabular-nums sm:text-2xl text-yellow-600">
               {data.summary.lowStockCount}
             </div>
           </CardContent>
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Out of Stock</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-xl font-bold tabular-nums sm:text-2xl text-red-600">
               {data.summary.outOfStockCount}
             </div>
           </CardContent>
@@ -139,26 +139,26 @@ export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
           <>
             <Card className="bg-card border-primary/20">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <CardTitle className="text-xs font-medium flex items-center gap-2 sm:text-sm">
                   <LayoutGrid className="h-4 w-4 text-primary" aria-hidden />
                   Total Categories
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-primary">
+                <div className="text-xl font-bold tabular-nums sm:text-2xl text-primary">
                   {data.summary.totalCategories ?? 0}
                 </div>
               </CardContent>
             </Card>
             <Card className="bg-card border-primary/20">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <CardTitle className="text-xs font-medium flex items-center gap-2 sm:text-sm">
                   <Tags className="h-4 w-4 text-primary" aria-hidden />
                   Total Brands
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-primary">
+                <div className="text-xl font-bold tabular-nums sm:text-2xl text-primary">
                   {data.summary.totalBrands ?? 0}
                 </div>
               </CardContent>

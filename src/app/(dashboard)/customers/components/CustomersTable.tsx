@@ -270,7 +270,7 @@ export function CustomersTable() {
       <Card className="bg-card">
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <CardTitle className="text-xl sm:text-2xl sm:hidden">Customers</CardTitle>
+            <CardTitle className="font-semibold sm:hidden">Customers</CardTitle>
             <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2">
               <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

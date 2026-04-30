@@ -47,7 +47,7 @@ export function CustomerStatisticsCards() {
         {[1, 2, 3, 4].map((i) => (
           <Card key={i} className="bg-card">
             <CardHeader>
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
                 Loading...
               </CardTitle>
             </CardHeader>
@@ -68,13 +68,13 @@ export function CustomerStatisticsCards() {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card className="bg-card">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
             Total Customers
           </CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.totalCustomers}</div>
+          <div className="text-xl font-bold tabular-nums sm:text-2xl">{stats.totalCustomers}</div>
           <p className="text-xs text-muted-foreground mt-1">
             {stats.activeCustomers} active
           </p>
@@ -83,13 +83,13 @@ export function CustomerStatisticsCards() {
 
       <Card className="bg-card">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
             New This Month
           </CardTitle>
           <UserPlus className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
+          <div className="text-xl font-bold tabular-nums sm:text-2xl">
             {stats.newCustomersThisMonth}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
@@ -100,7 +100,7 @@ export function CustomerStatisticsCards() {
 
       <Card className="bg-card">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
             Top Customer
           </CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -108,7 +108,7 @@ export function CustomerStatisticsCards() {
         <CardContent>
           {stats.topCustomers.length > 0 ? (
             <>
-              <div className="text-lg font-bold">
+              <div className="text-base font-bold tabular-nums sm:text-xl">
                 {stats.topCustomers[0].name}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -117,7 +117,7 @@ export function CustomerStatisticsCards() {
             </>
           ) : (
             <>
-              <div className="text-2xl font-bold">-</div>
+              <div className="text-xl font-bold tabular-nums sm:text-2xl">-</div>
               <p className="text-xs text-muted-foreground mt-1">No data</p>
             </>
           )}
@@ -126,13 +126,13 @@ export function CustomerStatisticsCards() {
 
       <Card className="bg-card">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
             Pending Payments
           </CardTitle>
           <CreditCard className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
+          <div className="text-xl font-bold tabular-nums sm:text-2xl">
             {stats.customersWithPendingPayments}
           </div>
           <p className="text-xs text-muted-foreground mt-1">

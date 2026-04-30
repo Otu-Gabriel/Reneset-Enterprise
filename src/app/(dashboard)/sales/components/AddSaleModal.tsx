@@ -973,7 +973,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                 -{formatCurrency(totalDiscount)}
               </span>
             </div>
-            <div className="flex justify-between text-lg font-bold border-t pt-2">
+            <div className="flex justify-between text-base font-bold border-t pt-2 sm:text-lg">
               <span>Total:</span>
               <span>{formatCurrency(total)}</span>
             </div>

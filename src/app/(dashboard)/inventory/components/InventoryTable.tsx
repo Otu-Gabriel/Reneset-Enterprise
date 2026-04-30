@@ -431,10 +431,10 @@ export function InventoryTable() {
         <CardHeader className="space-y-4 pb-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0 space-y-1">
-              <CardTitle className="text-xl font-semibold text-foreground sm:text-2xl">
+              <CardTitle className="font-semibold">
                 Products
               </CardTitle>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground sm:text-sm">
                 Search, filter, and manage inventory &amp; stock levels
               </p>
             </div>

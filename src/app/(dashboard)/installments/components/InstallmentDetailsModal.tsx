@@ -158,44 +158,44 @@ export function InstallmentDetailsModal({
           <div className="grid grid-cols-4 gap-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">
+                <CardTitle className="text-xs font-medium sm:text-sm">
                   Total Amount
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-xl font-bold tabular-nums sm:text-2xl">
                   {formatCurrency(plan.totalAmount)}
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">
+                <CardTitle className="text-xs font-medium sm:text-sm">
                   Total Paid
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-xl font-bold tabular-nums sm:text-2xl text-green-600">
                   {formatCurrency(plan.statistics.totalPaid)}
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Remaining</CardTitle>
+                <CardTitle className="text-xs font-medium sm:text-sm">Remaining</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-orange-600">
+                <div className="text-xl font-bold tabular-nums sm:text-2xl text-orange-600">
                   {formatCurrency(plan.statistics.remainingAmount)}
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Progress</CardTitle>
+                <CardTitle className="text-xs font-medium sm:text-sm">Progress</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-xl font-bold tabular-nums sm:text-2xl">
                   {plan.statistics.paidInstallments} /{" "}
                   {plan.numberOfInstallments}
                 </div>

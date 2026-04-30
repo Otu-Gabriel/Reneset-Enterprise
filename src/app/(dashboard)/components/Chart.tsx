@@ -30,7 +30,7 @@ export function SalesOverview({ data }: SalesOverviewProps) {
   return (
     <Card className="bg-card border-border/80 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-base font-semibold text-foreground">
+        <CardTitle className="font-semibold">
           Today&apos;s Sales by Hour
         </CardTitle>
         <div
@@ -173,7 +173,7 @@ export function SalesByCategory({ data }: CategorySalesProps) {
   return (
     <Card className="bg-card border-border/80 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-base font-semibold text-foreground">
+        <CardTitle className="font-semibold">
           Today&apos;s Sales by Category
         </CardTitle>
         <div
@@ -220,7 +220,7 @@ export function SalesByCategory({ data }: CategorySalesProps) {
 
           {/* Custom Legend */}
           <div className="min-w-[200px] space-y-3">
-            <h4 className="mb-2 text-sm font-semibold text-foreground">
+            <h4 className="mb-2 text-xs font-semibold text-foreground sm:text-sm">
               Categories
             </h4>
             {data.map((entry, index) => (
@@ -230,7 +230,7 @@ export function SalesByCategory({ data }: CategorySalesProps) {
                   style={{ backgroundColor: COLORS[index % COLORS.length] }}
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium text-foreground">
+                  <div className="truncate text-xs font-medium text-foreground sm:text-sm">
                     {entry.category}
                   </div>
                   <div className="text-xs font-medium text-primary">

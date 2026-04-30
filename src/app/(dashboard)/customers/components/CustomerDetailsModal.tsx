@@ -271,12 +271,12 @@ export function CustomerDetailsModal({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                    <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
                       Total Sales
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold flex items-center gap-2">
+                    <div className="text-xl font-bold tabular-nums sm:text-2xl flex items-center gap-2">
                       <ShoppingCart className="h-5 w-5" />
                       {customer.statistics.totalSales}
                     </div>
@@ -284,12 +284,12 @@ export function CustomerDetailsModal({
                 </Card>
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                    <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
                       Lifetime Value
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold flex items-center gap-2">
+                    <div className="text-xl font-bold tabular-nums sm:text-2xl flex items-center gap-2">
                       <DollarSign className="h-5 w-5" />
                       {formatCurrency(customer.statistics.totalSpent)}
                     </div>
@@ -297,24 +297,24 @@ export function CustomerDetailsModal({
                 </Card>
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                    <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
                       Avg Order Value
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">
+                    <div className="text-xl font-bold tabular-nums sm:text-2xl">
                       {formatCurrency(customer.statistics.averageOrderValue)}
                     </div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                    <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
                       Active Installments
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold flex items-center gap-2">
+                    <div className="text-xl font-bold tabular-nums sm:text-2xl flex items-center gap-2">
                       <CreditCard className="h-5 w-5" />
                       {customer.statistics.activeInstallments}
                     </div>

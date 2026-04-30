@@ -262,10 +262,10 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
+        <h1 className="text-base font-semibold tracking-tight text-foreground sm:text-xl">
           Dashboard - Today
         </h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
+        <p className="text-xs text-muted-foreground sm:text-sm">
           Overview of today's sales and performance
         </p>
       </div>
@@ -279,9 +279,7 @@ export default async function DashboardPage() {
 
       <Card className="bg-card border-border/80 shadow-sm">
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-base font-semibold text-foreground">
-            Today&apos;s Transactions
-          </CardTitle>
+          <CardTitle className="font-semibold">Today&apos;s Transactions</CardTitle>
           <div
             className={cn(
               "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",

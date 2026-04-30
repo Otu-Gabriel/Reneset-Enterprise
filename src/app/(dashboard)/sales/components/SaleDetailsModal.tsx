@@ -210,7 +210,7 @@ export function SaleDetailsModal({
         </DialogHeader>
         <div className="space-y-6">
           <div className="border-b pb-4 text-center">
-            <h2 className="text-2xl font-bold">{companyName}</h2>
+            <h2 className="text-base font-semibold tracking-tight sm:text-xl">{companyName}</h2>
             {businessAddress && (
               <p className="text-sm text-muted-foreground">{businessAddress}</p>
             )}

@@ -83,30 +83,30 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Total Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-xl font-bold tabular-nums sm:text-2xl">
               {formatCurrency(data.summary.totalRevenue)}
             </div>
           </CardContent>
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Total Cost</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-xl font-bold tabular-nums sm:text-2xl">
               {formatCurrency(data.summary.totalCost)}
             </div>
           </CardContent>
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Gross Profit</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Gross Profit</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold flex items-center gap-2 ${isProfit ? "text-green-600" : "text-red-600"}`}>
+            <div className={`text-xl font-bold tabular-nums sm:text-2xl flex items-center gap-2 ${isProfit ? "text-green-600" : "text-red-600"}`}>
               {isProfit ? (
                 <TrendingUp className="h-5 w-5" />
               ) : (
@@ -118,10 +118,10 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Profit Margin</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Profit Margin</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${isProfit ? "text-green-600" : "text-red-600"}`}>
+            <div className={`text-xl font-bold tabular-nums sm:text-2xl ${isProfit ? "text-green-600" : "text-red-600"}`}>
               {data.summary.profitMargin.toFixed(2)}%
             </div>
           </CardContent>

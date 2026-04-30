@@ -133,30 +133,30 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Total Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-xl font-bold tabular-nums sm:text-2xl">
               {formatCurrency(data.summary.totalRevenue)}
             </div>
           </CardContent>
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+            <CardTitle className="text-xs font-medium sm:text-sm">Total Orders</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.summary.totalOrders}</div>
+            <div className="text-xl font-bold tabular-nums sm:text-2xl">{data.summary.totalOrders}</div>
           </CardContent>
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-xs font-medium sm:text-sm">
               Average Order Value
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-xl font-bold tabular-nums sm:text-2xl">
               {formatCurrency(data.summary.averageOrderValue)}
             </div>
           </CardContent>

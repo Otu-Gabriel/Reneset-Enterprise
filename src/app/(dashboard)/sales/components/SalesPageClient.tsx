@@ -42,8 +42,10 @@ export function SalesPageClient({ canCreate }: SalesPageClientProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Sales</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-base font-semibold tracking-tight text-foreground sm:text-xl">
+            Sales
+          </h1>
+          <p className="text-xs text-muted-foreground sm:text-sm">
             Manage and track all sales transactions
           </p>
         </div>
