@@ -258,10 +258,18 @@ export async function POST(request: NextRequest) {
     let totalAmount = 0;
     const saleItems = [];
 
+    const uniqueProductIds: string[] = Array.from(
+      new Set(
+        items.map((item: { productId: string }) => item.productId as string)
+      )
+    );
+    const products = await prisma.product.findMany({
+      where: { id: { in: uniqueProductIds } },
+    });
+    const productById = new Map(products.map((p) => [p.id, p]));
+
     for (const item of items) {
-      const product = await prisma.product.findUnique({
-        where: { id: item.productId },
-      });
+      const product = productById.get(item.productId);
 
       if (!product) {
         return NextResponse.json(

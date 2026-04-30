@@ -24,7 +24,7 @@ import { ProductSearchInput } from "@/components/ProductSearchInput";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const DEFAULT_CUSTOMER_DISPLAY_NAME = "No-name";
+const DEFAULT_CUSTOMER_DISPLAY_NAME = ".............";
 
 interface Product {
   id: string;

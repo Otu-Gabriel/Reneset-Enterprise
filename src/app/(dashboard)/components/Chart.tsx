@@ -12,8 +12,10 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  BarChart,
+  Bar,
 } from "recharts";
-import { Clock, PieChart as PieChartIcon } from "lucide-react";
+import { Clock, PieChart as PieChartIcon, BarChart3 } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { cn } from "@/lib/utils";
 
@@ -29,34 +31,36 @@ export function SalesOverview({ data }: SalesOverviewProps) {
 
   return (
     <Card className="bg-card border-border/80 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="font-semibold">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-3">
+        <CardTitle className="text-sm font-semibold">
           Today&apos;s Sales by Hour
         </CardTitle>
         <div
           className={cn(
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+            "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
             "bg-amber-500/15 text-amber-700 dark:bg-amber-500/25 dark:text-amber-300"
           )}
         >
-          <Clock className="h-4 w-4" aria-hidden />
+          <Clock className="h-3.5 w-3.5" aria-hidden />
         </div>
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
+      <CardContent className="pb-3">
+        <ResponsiveContainer width="100%" height={200}>
+          <LineChart data={data} margin={{ top: 4, right: 4, left: -18, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
             <XAxis
               dataKey="hour"
               stroke="hsl(var(--muted-foreground))"
-              style={{ fontSize: "12px" }}
-              angle={-45}
+              tick={{ fontSize: 9 }}
+              angle={-40}
               textAnchor="end"
-              height={60}
+              height={46}
+              interval="preserveStartEnd"
             />
             <YAxis
               stroke="hsl(var(--muted-foreground))"
-              style={{ fontSize: "12px" }}
+              tick={{ fontSize: 9 }}
+              width={36}
             />
             <Tooltip
               contentStyle={{
@@ -73,10 +77,109 @@ export function SalesOverview({ data }: SalesOverviewProps) {
               stroke="hsl(25, 95%, 53%)"
               strokeWidth={2}
               name="Revenue"
-              dot={{ fill: "hsl(25, 95%, 53%)", r: 4 }}
-              activeDot={{ r: 6 }}
+              dot={{ fill: "hsl(25, 95%, 53%)", r: 3 }}
+              activeDot={{ r: 5 }}
             />
           </LineChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface TopProductsTodayProps {
+  data: Array<{ name: string; quantity: number }>;
+}
+
+export function TopProductsToday({ data }: TopProductsTodayProps) {
+  if (data.length === 0) {
+    return (
+      <Card className="bg-card border-border/80 shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-3">
+          <CardTitle className="text-sm font-semibold">
+            Most sold today (units)
+          </CardTitle>
+          <div
+            className={cn(
+              "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+              "bg-sky-500/15 text-sky-700 dark:bg-sky-500/25 dark:text-sky-300"
+            )}
+          >
+            <BarChart3 className="h-3.5 w-3.5" aria-hidden />
+          </div>
+        </CardHeader>
+        <CardContent className="pb-3">
+          <div className="flex h-[200px] items-center justify-center text-xs text-muted-foreground">
+            No sales today
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const chartData = data.map((d) => ({
+    ...d,
+    shortName:
+      d.name.length > 14 ? `${d.name.slice(0, 12)}…` : d.name,
+  }));
+
+  return (
+    <Card className="bg-card border-border/80 shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-3">
+        <CardTitle className="text-sm font-semibold">
+          Most sold today (units)
+        </CardTitle>
+        <div
+          className={cn(
+            "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+            "bg-sky-500/15 text-sky-700 dark:bg-sky-500/25 dark:text-sky-300"
+          )}
+        >
+          <BarChart3 className="h-3.5 w-3.5" aria-hidden />
+        </div>
+      </CardHeader>
+      <CardContent className="pb-3">
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart
+            data={chartData}
+            margin={{ top: 4, right: 4, left: -14, bottom: 2 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+            <XAxis
+              dataKey="shortName"
+              stroke="hsl(var(--muted-foreground))"
+              tick={{ fontSize: 9 }}
+              interval={0}
+              angle={-30}
+              textAnchor="end"
+              height={52}
+            />
+            <YAxis
+              stroke="hsl(var(--muted-foreground))"
+              tick={{ fontSize: 9 }}
+              width={28}
+              allowDecimals={false}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "hsl(var(--popover))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "8px",
+                color: "hsl(var(--popover-foreground))",
+                fontSize: "12px",
+              }}
+              formatter={(value: number) => [value, "Units"]}
+              labelFormatter={(_, payload) =>
+                payload?.[0]?.payload?.name ?? ""
+              }
+            />
+            <Bar
+              dataKey="quantity"
+              name="Units sold"
+              fill="hsl(199, 55%, 42%)"
+              radius={[3, 3, 0, 0]}
+            />
+          </BarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
@@ -148,21 +251,21 @@ export function SalesByCategory({ data }: CategorySalesProps) {
   if (data.length === 0) {
     return (
       <Card className="bg-card border-border/80 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-base font-semibold text-foreground">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-3">
+          <CardTitle className="text-sm font-semibold text-foreground">
             Today&apos;s Sales by Category
           </CardTitle>
           <div
             className={cn(
-              "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+              "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
               "bg-violet-500/15 text-violet-700 dark:bg-violet-500/25 dark:text-violet-300"
             )}
           >
-            <PieChartIcon className="h-4 w-4" aria-hidden />
+            <PieChartIcon className="h-3.5 w-3.5" aria-hidden />
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+        <CardContent className="pb-3">
+          <div className="flex h-[200px] items-center justify-center text-xs text-muted-foreground">
             No sales data for today
           </div>
         </CardContent>
@@ -172,22 +275,22 @@ export function SalesByCategory({ data }: CategorySalesProps) {
 
   return (
     <Card className="bg-card border-border/80 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="font-semibold">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-3">
+        <CardTitle className="text-sm font-semibold">
           Today&apos;s Sales by Category
         </CardTitle>
         <div
           className={cn(
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+            "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
             "bg-violet-500/15 text-violet-700 dark:bg-violet-500/25 dark:text-violet-300"
           )}
         >
-          <PieChartIcon className="h-4 w-4" aria-hidden />
+          <PieChartIcon className="h-3.5 w-3.5" aria-hidden />
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-6">
-          <ResponsiveContainer width="100%" height={300}>
+      <CardContent className="pb-3">
+        <div className="flex flex-col items-center justify-center gap-3 lg:flex-row">
+          <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
                 data={data}
@@ -197,8 +300,8 @@ export function SalesByCategory({ data }: CategorySalesProps) {
                 label={({ percentage }) =>
                   percentage > 5 ? `${percentage}%` : ""
                 }
-                outerRadius={100}
-                innerRadius={40}
+                outerRadius={72}
+                innerRadius={44}
                 fill="hsl(25, 95%, 53%)"
                 dataKey="value"
                 paddingAngle={2}
@@ -219,21 +322,21 @@ export function SalesByCategory({ data }: CategorySalesProps) {
           </ResponsiveContainer>
 
           {/* Custom Legend */}
-          <div className="min-w-[200px] space-y-3">
-            <h4 className="mb-2 text-xs font-semibold text-foreground sm:text-sm">
+          <div className="min-w-0 max-w-full space-y-2 sm:min-w-[160px]">
+            <h4 className="mb-1 text-[10px] font-semibold text-foreground sm:text-xs">
               Categories
             </h4>
             {data.map((entry, index) => (
-              <div key={entry.category} className="flex items-center gap-3">
+              <div key={entry.category} className="flex items-center gap-2">
                 <div
-                  className="h-4 w-4 shrink-0 rounded-full shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+                  className="h-3 w-3 shrink-0 rounded-full shadow-sm ring-1 ring-black/5 dark:ring-white/10"
                   style={{ backgroundColor: COLORS[index % COLORS.length] }}
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-xs font-medium text-foreground sm:text-sm">
+                  <div className="truncate text-[10px] font-medium text-foreground sm:text-xs">
                     {entry.category}
                   </div>
-                  <div className="text-xs font-medium text-primary">
+                  <div className="text-[10px] font-medium text-primary sm:text-xs">
                     {formatCurrency(entry.value)}{" "}
                     <span className="font-normal text-muted-foreground">
                       ({entry.percentage}%)
