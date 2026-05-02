@@ -179,11 +179,11 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
                 <XAxis
                   dataKey="date"
                   stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
+                  style={{ fontSize: "0.75rem" }}
                 />
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
+                  style={{ fontSize: "0.75rem" }}
                 />
                 <Tooltip
                   contentStyle={{
@@ -321,14 +321,14 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
                 <XAxis
                   dataKey="name"
                   stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
+                  style={{ fontSize: "0.75rem" }}
                   angle={-45}
                   textAnchor="end"
                   height={100}
                 />
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
+                  style={{ fontSize: "0.75rem" }}
                 />
                 <Tooltip
                   contentStyle={{
@@ -360,11 +360,11 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
                 <XAxis
                   dataKey="method"
                   stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
+                  style={{ fontSize: "0.75rem" }}
                 />
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
+                  style={{ fontSize: "0.75rem" }}
                 />
                 <Tooltip
                   contentStyle={{

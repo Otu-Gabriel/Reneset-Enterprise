@@ -141,11 +141,11 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
                 <XAxis
                   dataKey="month"
                   stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
+                  style={{ fontSize: "0.75rem" }}
                 />
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
+                  style={{ fontSize: "0.75rem" }}
                 />
                 <Tooltip
                   contentStyle={{
@@ -186,11 +186,11 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
                 <XAxis
                   dataKey="month"
                   stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
+                  style={{ fontSize: "0.75rem" }}
                 />
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
+                  style={{ fontSize: "0.75rem" }}
                 />
                 <Tooltip
                   contentStyle={{

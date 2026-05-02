@@ -51,7 +51,7 @@ export function SalesOverview({ data }: SalesOverviewProps) {
             <XAxis
               dataKey="hour"
               stroke="hsl(var(--muted-foreground))"
-              tick={{ fontSize: 9 }}
+              tick={{ fontSize: "0.75rem" }}
               angle={-40}
               textAnchor="end"
               height={46}
@@ -59,7 +59,7 @@ export function SalesOverview({ data }: SalesOverviewProps) {
             />
             <YAxis
               stroke="hsl(var(--muted-foreground))"
-              tick={{ fontSize: 9 }}
+              tick={{ fontSize: "0.75rem" }}
               width={36}
             />
             <Tooltip
@@ -148,7 +148,7 @@ export function TopProductsToday({ data }: TopProductsTodayProps) {
             <XAxis
               dataKey="shortName"
               stroke="hsl(var(--muted-foreground))"
-              tick={{ fontSize: 9 }}
+              tick={{ fontSize: "0.75rem" }}
               interval={0}
               angle={-30}
               textAnchor="end"
@@ -156,7 +156,7 @@ export function TopProductsToday({ data }: TopProductsTodayProps) {
             />
             <YAxis
               stroke="hsl(var(--muted-foreground))"
-              tick={{ fontSize: 9 }}
+              tick={{ fontSize: "0.75rem" }}
               width={28}
               allowDecimals={false}
             />
@@ -166,7 +166,7 @@ export function TopProductsToday({ data }: TopProductsTodayProps) {
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "8px",
                 color: "hsl(var(--popover-foreground))",
-                fontSize: "12px",
+                fontSize: "0.75rem",
               }}
               formatter={(value: number) => [value, "Units"]}
               labelFormatter={(_, payload) =>
@@ -324,8 +324,8 @@ export function SalesByCategory({ data }: CategorySalesProps) {
             </ResponsiveContainer>
           </div>
 
-          <div className="flex max-h-[200px] min-h-0 w-[30%] max-w-[5.75rem] flex-shrink-0 flex-col gap-y-1.5 overflow-y-auto overflow-x-hidden overscroll-y-contain pr-0.5 sm:max-w-[6.75rem] sm:text-[10px]">
-            <h4 className="text-[8px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-[9px]">
+          <div className="flex max-h-[200px] min-h-0 w-[30%] max-w-[5.75rem] flex-shrink-0 flex-col gap-y-1.5 overflow-y-auto overflow-x-hidden overscroll-y-contain pr-0.5 sm:max-w-[6.75rem] sm:text-[0.625rem]">
+            <h4 className="text-[0.5rem] font-semibold uppercase tracking-wide text-muted-foreground sm:text-[0.5625rem]">
               Categories
             </h4>
             {data.map((entry, index) => (
@@ -335,10 +335,10 @@ export function SalesByCategory({ data }: CategorySalesProps) {
                   style={{ backgroundColor: COLORS[index % COLORS.length] }}
                 />
                 <div className="min-w-0 flex-1 leading-tight">
-                  <div className="break-words text-[8px] font-medium text-foreground sm:text-[9px]">
+                  <div className="break-words text-[0.5rem] font-medium text-foreground sm:text-[0.5625rem]">
                     {entry.category}
                   </div>
-                  <div className="text-[8px] font-medium tabular-nums text-primary sm:text-[9px]">
+                  <div className="text-[0.5rem] font-medium tabular-nums text-primary sm:text-[0.5625rem]">
                     {formatCurrency(entry.value)}
                     <span className="font-normal text-muted-foreground">
                       {" "}

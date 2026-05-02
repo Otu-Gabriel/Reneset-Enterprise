@@ -139,7 +139,7 @@ function StockDisplayCell({ product }: { product: Product }) {
           <span
             key={`${p.name}-${i}`}
             className={cn(
-              "inline-flex max-w-full items-center rounded-md border px-1.5 py-0.5 text-[11px] font-semibold leading-tight tabular-nums",
+              "inline-flex max-w-full items-center rounded-md border px-1.5 py-0.5 text-[0.6875rem] font-semibold leading-tight tabular-nums",
               STOCK_PART_CHIP[i % STOCK_PART_CHIP.length],
             )}
           >
@@ -149,12 +149,12 @@ function StockDisplayCell({ product }: { product: Product }) {
           </span>
         ))}
       </div>
-      <div className="mt-1.5 border-t border-border/70 pt-1.5 text-[11px] leading-snug text-muted-foreground">
+      <div className="mt-1.5 border-t border-border/70 pt-1.5 text-[0.6875rem] leading-snug text-muted-foreground">
         <span className="font-semibold tabular-nums text-foreground/90">
           {b.totalBase}
         </span>{" "}
         <span className="text-muted-foreground">{b.baseUnit}</span>
-        <span className="ml-1 text-[10px] uppercase tracking-wide text-primary/90">
+        <span className="ml-1 text-[0.625rem] uppercase tracking-wide text-primary/90">
           total
         </span>
       </div>
@@ -693,7 +693,7 @@ export function InventoryTable() {
                         {product.name}
                       </TableCell>
                       <TableCell className="hidden md:table-cell align-top">
-                        <span className="font-mono text-[11px] leading-snug text-muted-foreground">
+                        <span className="font-mono text-[0.6875rem] leading-snug text-muted-foreground">
                           {product.sku}
                         </span>
                       </TableCell>

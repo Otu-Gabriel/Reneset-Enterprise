@@ -60,7 +60,7 @@ function TablePagination({
         >
           Previous
         </Button>
-        <span className="shrink-0 text-center text-[11px] text-muted-foreground sm:text-xs">
+        <span className="shrink-0 text-center text-[0.6875rem] text-muted-foreground sm:text-xs">
           Page {page} of {totalPages}
         </span>
         <Button

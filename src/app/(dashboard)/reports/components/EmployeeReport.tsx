@@ -234,14 +234,14 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
                   <XAxis
                     dataKey="department"
                     stroke="hsl(var(--muted-foreground))"
-                    style={{ fontSize: "12px" }}
+                    style={{ fontSize: "0.75rem" }}
                     angle={-45}
                     textAnchor="end"
                     height={100}
                   />
                   <YAxis
                     stroke="hsl(var(--muted-foreground))"
-                    style={{ fontSize: "12px" }}
+                    style={{ fontSize: "0.75rem" }}
                   />
                   <Tooltip
                     contentStyle={{

@@ -3,15 +3,27 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+/**
+ * Every `Permission` value from the generated Prisma client (mirrors `enum Permission`
+ * in prisma/schema.prisma). Run `npx prisma generate` after editing the schema, then seed.
+ *
+ * Filters to strings so numeric reverse-keys from TS numeric enums cannot slip in.
+ */
+function allPermissionsFromSchema(): Permission[] {
+  const values = Object.values(Permission).filter(
+    (value): value is Permission => typeof value === "string"
+  );
+  return Array.from(new Set(values));
+}
+
 async function main() {
   console.log("Seeding database...");
+
+  const allPermissions = allPermissionsFromSchema();
 
   // Create default admin user
   const hashedPassword = await bcrypt.hash("admin123", 10);
 
-  // Get all available permissions
-  const allPermissions = Object.values(Permission);
-  
   const admin = await prisma.user.upsert({
     where: { email: "admin@example.com" },
     update: {
@@ -29,6 +41,18 @@ async function main() {
   });
 
   console.log("Created admin user:", admin.email);
+
+  // Existing rows keep their permission array until updated; newly added enum values
+  // are not appended automatically. Sync full set for admins / FULL_ACCESS accounts.
+  const privilegedSync = await prisma.user.updateMany({
+    where: {
+      OR: [{ role: Role.ADMIN }, { permissions: { has: Permission.FULL_ACCESS } }],
+    },
+    data: { permissions: allPermissions },
+  });
+  console.log(
+    `Synced ${allPermissions.length} permissions on ${privilegedSync.count} privileged user(s).`
+  );
 
   // Create sample categories
   // const categories = ["Electronics", "Fashion", "Home & Garden"];

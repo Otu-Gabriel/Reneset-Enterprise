@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Permission, Role } from "@prisma/client";
+import { permissionGroups } from "@/lib/permission-groups";
 
 interface User {
   id: string;
@@ -38,35 +39,6 @@ interface EditUserModalProps {
   onOpenChange: (open: boolean) => void;
   onUserUpdated?: () => void;
 }
-
-// Group permissions by category
-const permissionGroups = {
-  Dashboard: [Permission.VIEW_DASHBOARD],
-  Sales: [
-    Permission.VIEW_SALES,
-    Permission.CREATE_SALES,
-    Permission.EDIT_SALES,
-    Permission.DELETE_SALES,
-  ],
-  Inventory: [
-    Permission.VIEW_INVENTORY,
-    Permission.CREATE_INVENTORY,
-    Permission.EDIT_INVENTORY,
-    Permission.DELETE_INVENTORY,
-  ],
-  Employees: [
-    Permission.VIEW_EMPLOYEES,
-    Permission.CREATE_EMPLOYEES,
-    Permission.EDIT_EMPLOYEES,
-    Permission.DELETE_EMPLOYEES,
-  ],
-  System: [
-    Permission.VIEW_REPORTS,
-    Permission.VIEW_SETTINGS,
-    Permission.MANAGE_USERS,
-    Permission.FULL_ACCESS,
-  ],
-};
 
 export function EditUserModal({
   user,

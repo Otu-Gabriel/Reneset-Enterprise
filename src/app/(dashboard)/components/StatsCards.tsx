@@ -48,7 +48,7 @@ export function StatCard({
         <CardTitle
           className={cn(
             "font-medium leading-tight text-muted-foreground",
-            compact ? "text-[10px] sm:text-[11px]" : "text-xs sm:text-sm"
+            compact ? "text-[0.625rem] sm:text-[0.6875rem]" : "text-xs sm:text-sm"
           )}
         >
           {title}
@@ -75,7 +75,7 @@ export function StatCard({
         <div
           className={cn(
             "mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5",
-            compact ? "text-[10px] sm:text-[11px]" : "text-xs"
+            compact ? "text-[0.625rem] sm:text-[0.6875rem]" : "text-xs"
           )}
         >
           <span className="font-medium text-primary">vs yesterday</span>

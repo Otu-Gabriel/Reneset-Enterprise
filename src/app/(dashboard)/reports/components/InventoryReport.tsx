@@ -180,14 +180,14 @@ export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
                 <XAxis
                   dataKey="category"
                   stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
+                  style={{ fontSize: "0.75rem" }}
                   angle={-45}
                   textAnchor="end"
                   height={100}
                 />
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
+                  style={{ fontSize: "0.75rem" }}
                 />
                 <Tooltip
                   contentStyle={{
@@ -219,14 +219,14 @@ export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
                 <XAxis
                   dataKey="name"
                   stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
+                  style={{ fontSize: "0.75rem" }}
                   angle={-45}
                   textAnchor="end"
                   height={100}
                 />
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
+                  style={{ fontSize: "0.75rem" }}
                 />
                 <Tooltip
                   contentStyle={{

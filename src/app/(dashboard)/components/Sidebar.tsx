@@ -285,13 +285,13 @@ export function Sidebar() {
                   aria-hidden
                 />
                 <div className="min-w-0 flex-1 space-y-1.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
+                  <p className="text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-primary">
                     Operations hub
                   </p>
                   <p className="text-xs leading-relaxed text-sidebar-muted">
                     Inventory, sales, and reporting in one place.
                   </p>
-                  <p className="truncate pt-0.5 text-[10px] text-sidebar-muted/70">
+                  <p className="truncate pt-0.5 text-[0.625rem] text-sidebar-muted/70">
                     © {new Date().getFullYear()}{" "}
                     <span className="text-sidebar-muted/90">GabyGod Technologies</span>
                   </p>
