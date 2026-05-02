@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatDate } from "@/lib/utils";
-import { Edit, Trash2, Search, Plus, Eye, Download, Upload } from "lucide-react";
+import { Edit, Trash2, Search, Plus, Eye, Download, Upload, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
@@ -38,6 +38,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+
+const SEARCH_DEBOUNCE_MS = 400;
 
 interface Customer {
   id: string;
@@ -65,9 +67,12 @@ export function CustomersTable() {
   const formatCurrency = useCurrency();
   const { data: session } = useSession();
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
+  const isFirstFetch = useRef(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -94,6 +99,18 @@ export function CustomersTable() {
   const canDelete =
     session?.user?.permissions &&
     hasPermission(session.user.permissions, Permission.DELETE_CUSTOMERS);
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setSearch((prev) => {
+        if (prev !== searchInput) {
+          setPage(1);
+        }
+        return searchInput;
+      });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(id);
+  }, [searchInput]);
 
   useEffect(() => {
     fetchCustomers();
@@ -126,7 +143,11 @@ export function CustomersTable() {
 
   const fetchCustomers = async () => {
     try {
-      setLoading(true);
+      if (isFirstFetch.current) {
+        setInitialLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
       const params = new URLSearchParams({
         page: page.toString(),
         limit: "10",
@@ -141,7 +162,9 @@ export function CustomersTable() {
     } catch (error) {
       console.error("Error fetching customers:", error);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
+      setIsRefreshing(false);
+      isFirstFetch.current = false;
     }
   };
 
@@ -261,8 +284,13 @@ export function CustomersTable() {
     }
   };
 
-  if (loading) {
-    return <div className="text-center py-8">Loading...</div>;
+  if (initialLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
+        <p className="text-sm">Loading customers…</p>
+      </div>
+    );
   }
 
   return (
@@ -273,16 +301,15 @@ export function CustomersTable() {
             <CardTitle className="font-semibold sm:hidden">Customers</CardTitle>
             <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2">
               <div className="relative w-full sm:w-auto">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Search customers..."
                   className="pl-9 w-full sm:w-64"
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                  }}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  autoComplete="off"
+                  aria-busy={isRefreshing}
                 />
               </div>
               <Select
@@ -409,8 +436,21 @@ export function CustomersTable() {
           </div>
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
-          <div className="overflow-x-auto">
-            <Table className="min-w-full">
+          <div className="relative overflow-x-auto">
+            {isRefreshing && (
+              <div
+                className="pointer-events-none absolute inset-0 z-10 flex items-start justify-center bg-background/40 pt-12 backdrop-blur-[1px]"
+                aria-live="polite"
+              >
+                <span className="inline-flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm text-muted-foreground shadow-sm">
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                  Updating results…
+                </span>
+              </div>
+            )}
+            <Table
+              className={`min-w-full ${isRefreshing ? "opacity-60 transition-opacity" : ""}`}
+            >
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>

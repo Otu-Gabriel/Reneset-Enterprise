@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Edit, Trash2, Search, Plus, Upload } from "lucide-react";
+import { Edit, Trash2, Search, Plus, Upload, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
@@ -28,6 +28,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+
+const SEARCH_DEBOUNCE_MS = 400;
 
 interface Category {
   id: string;
@@ -53,9 +55,12 @@ export function CategoriesTable({
 }: CategoriesTableProps) {
   const { data: session } = useSession();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const isFirstFetch = useRef(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [importOpen, setImportOpen] = useState(false);
@@ -68,12 +73,28 @@ export function CategoriesTable({
   } | null>(null);
 
   useEffect(() => {
+    const id = setTimeout(() => {
+      setSearch((prev) => {
+        if (prev !== searchInput) {
+          setPage(1);
+        }
+        return searchInput;
+      });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(id);
+  }, [searchInput]);
+
+  useEffect(() => {
     fetchCategories();
   }, [page, search]);
 
   const fetchCategories = async () => {
     try {
-      setLoading(true);
+      if (isFirstFetch.current) {
+        setInitialLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
       const params = new URLSearchParams({
         page: page.toString(),
         limit: "10",
@@ -87,7 +108,9 @@ export function CategoriesTable({
     } catch (error) {
       console.error("Error fetching categories:", error);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
+      setIsRefreshing(false);
+      isFirstFetch.current = false;
     }
   };
 
@@ -149,8 +172,13 @@ export function CategoriesTable({
     }
   };
 
-  if (loading) {
-    return <div className="text-center py-8">Loading...</div>;
+  if (initialLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
+        <p className="text-sm">Loading categories…</p>
+      </div>
+    );
   }
 
   return (
@@ -247,23 +275,36 @@ export function CategoriesTable({
                 </>
               )}
               <div className="relative w-full sm:w-auto ">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Search categories..."
                   className="pl-9 sm:w-64 w-full"
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                  }}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  autoComplete="off"
+                  aria-busy={isRefreshing}
                 />
               </div>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="relative">
+          <div className="relative overflow-x-auto">
+            {isRefreshing && (
+              <div
+                className="pointer-events-none absolute inset-0 z-10 flex items-start justify-center bg-background/40 pt-12 backdrop-blur-[1px]"
+                aria-live="polite"
+              >
+                <span className="inline-flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm text-muted-foreground shadow-sm">
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                  Updating results…
+                </span>
+              </div>
+            )}
+          <Table
+            className={isRefreshing ? "opacity-60 transition-opacity" : ""}
+          >
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
@@ -330,6 +371,7 @@ export function CategoriesTable({
               )}
             </TableBody>
           </Table>
+          </div>
           {totalPages > 1 && (
             <div className="flex items-center justify-end gap-2 mt-4">
               <Button

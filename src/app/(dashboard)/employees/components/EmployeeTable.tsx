@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -14,11 +14,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDate } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
-import { Edit, Trash2, Search } from "lucide-react";
+import { Edit, Trash2, Search, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { EditEmployeeModal } from "./EditEmployeeModal";
+
+const SEARCH_DEBOUNCE_MS = 400;
 
 interface Employee {
   id: string;
@@ -40,9 +42,12 @@ export function EmployeeTable({ refreshTrigger }: EmployeeTableProps = {}) {
   const formatCurrency = useCurrency();
   const { data: session } = useSession();
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
+  const isFirstFetch = useRef(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -55,12 +60,28 @@ export function EmployeeTable({ refreshTrigger }: EmployeeTableProps = {}) {
     hasPermission(session.user.permissions, Permission.DELETE_EMPLOYEES);
 
   useEffect(() => {
+    const id = setTimeout(() => {
+      setSearch((prev) => {
+        if (prev !== searchInput) {
+          setPage(1);
+        }
+        return searchInput;
+      });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(id);
+  }, [searchInput]);
+
+  useEffect(() => {
     fetchEmployees();
   }, [page, search, refreshTrigger]);
 
   const fetchEmployees = async () => {
     try {
-      setLoading(true);
+      if (isFirstFetch.current) {
+        setInitialLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
       const params = new URLSearchParams({
         page: page.toString(),
         limit: "10",
@@ -74,7 +95,9 @@ export function EmployeeTable({ refreshTrigger }: EmployeeTableProps = {}) {
     } catch (error) {
       console.error("Error fetching employees:", error);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
+      setIsRefreshing(false);
+      isFirstFetch.current = false;
     }
   };
 
@@ -128,32 +151,51 @@ export function EmployeeTable({ refreshTrigger }: EmployeeTableProps = {}) {
     }
   };
 
-  if (loading) {
-    return <div className="text-center py-8">Loading...</div>;
+  if (initialLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
+        <p className="text-sm">Loading employees…</p>
+      </div>
+    );
   }
 
   return (
+    <>
     <Card className="bg-card">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Employees</CardTitle>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Search..."
-              className="pl-9 w-64"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
+              className="pl-9 w-64 max-w-full"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              autoComplete="off"
+              aria-busy={isRefreshing}
             />
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <Table>
+      <CardContent className="relative">
+        <div className="relative overflow-x-auto">
+          {isRefreshing && (
+            <div
+              className="pointer-events-none absolute inset-0 z-10 flex items-start justify-center bg-background/40 pt-12 backdrop-blur-[1px]"
+              aria-live="polite"
+            >
+              <span className="inline-flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm text-muted-foreground shadow-sm">
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                Updating results…
+              </span>
+            </div>
+          )}
+        <Table
+          className={isRefreshing ? "opacity-60 transition-opacity" : ""}
+        >
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
@@ -232,6 +274,7 @@ export function EmployeeTable({ refreshTrigger }: EmployeeTableProps = {}) {
             )}
           </TableBody>
         </Table>
+        </div>
         {totalPages > 1 && (
           <div className="flex items-center justify-end gap-2 mt-4">
             <Button
@@ -256,15 +299,16 @@ export function EmployeeTable({ refreshTrigger }: EmployeeTableProps = {}) {
           </div>
         )}
       </CardContent>
-      <EditEmployeeModal
+    </Card>
+    <EditEmployeeModal
         employee={editingEmployee}
         open={editModalOpen}
         onOpenChange={setEditModalOpen}
         onSuccess={() => {
           fetchEmployees();
           setEditingEmployee(null);
-        }}
-      />
-    </Card>
+      }}
+    />
+    </>
   );
 }
