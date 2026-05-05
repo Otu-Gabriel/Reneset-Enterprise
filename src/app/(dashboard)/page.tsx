@@ -6,7 +6,7 @@ import {
 } from "./components/Chart";
 import { DashboardPaginatedTables } from "./components/DashboardPaginatedTables";
 import { prisma } from "@/lib/prisma";
-import { Permission, Role } from "@prisma/client";
+import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -223,7 +223,10 @@ export default async function DashboardPage() {
   const yesterdayEnd = new Date(todayEnd);
   yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
 
-  const canSeeProfit = session.user.role === Role.ADMIN;
+  const canSeeProfit = hasPermission(
+    session.user.permissions,
+    Permission.VIEW_PRODUCT_COST
+  );
 
   const profitPromise = canSeeProfit
     ? Promise.all([

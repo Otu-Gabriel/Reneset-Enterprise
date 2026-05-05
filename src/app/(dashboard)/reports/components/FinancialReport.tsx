@@ -75,12 +75,21 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
     );
   }
 
-  const isProfit = data.summary.grossProfit >= 0;
+  const showCostMetrics = data.canViewProductCost === true;
+  const isProfit = showCostMetrics && data.summary.grossProfit >= 0;
 
   return (
     <div className="space-y-6">
+      {!showCostMetrics && (
+        <p className="text-sm text-muted-foreground rounded-lg border bg-muted/30 px-4 py-3">
+          Revenue and installments are shown. Cost, gross profit, and margin require the{" "}
+          <span className="font-medium text-foreground">VIEW_PRODUCT_COST</span> permission.
+        </p>
+      )}
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div
+        className={`grid gap-4 ${showCostMetrics ? "md:grid-cols-4" : "md:grid-cols-1 sm:grid-cols-2"}`}
+      >
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium sm:text-sm">Total Revenue</CardTitle>
@@ -91,6 +100,8 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
             </div>
           </CardContent>
         </Card>
+        {showCostMetrics && (
+          <>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium sm:text-sm">Total Cost</CardTitle>
@@ -126,13 +137,17 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
             </div>
           </CardContent>
         </Card>
+          </>
+        )}
       </div>
 
       {/* Charts */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="bg-card">
           <CardHeader>
-            <CardTitle>Monthly Revenue & Cost</CardTitle>
+            <CardTitle>
+              {showCostMetrics ? "Monthly Revenue & Cost" : "Monthly Revenue"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -163,6 +178,7 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
                   strokeWidth={2}
                   name="Revenue"
                 />
+                {showCostMetrics && (
                 <Line
                   type="monotone"
                   dataKey="cost"
@@ -170,11 +186,13 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
                   strokeWidth={2}
                   name="Cost"
                 />
+                )}
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
+        {showCostMetrics && (
         <Card className="bg-card">
           <CardHeader>
             <CardTitle>Monthly Profit</CardTitle>
@@ -215,6 +233,7 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
             </ResponsiveContainer>
           </CardContent>
         </Card>
+        )}
       </div>
 
       {/* Monthly Breakdown Table */}
@@ -228,9 +247,13 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
               <TableRow>
                 <TableHead>Month</TableHead>
                 <TableHead>Revenue</TableHead>
+                {showCostMetrics && (
+                  <>
                 <TableHead>Cost</TableHead>
                 <TableHead>Profit</TableHead>
                 <TableHead>Margin</TableHead>
+                  </>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -238,6 +261,8 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
                 <TableRow key={month.month}>
                   <TableCell className="font-medium">{month.month}</TableCell>
                   <TableCell>{formatCurrency(month.revenue)}</TableCell>
+                  {showCostMetrics && (
+                  <>
                   <TableCell>{formatCurrency(month.cost)}</TableCell>
                   <TableCell
                     className={
@@ -253,6 +278,8 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
                   >
                     {month.margin.toFixed(2)}%
                   </TableCell>
+                  </>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

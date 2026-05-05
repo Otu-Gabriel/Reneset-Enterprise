@@ -6,6 +6,11 @@ import { Permission, Prisma } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { auditLogger, getRequestMetadata } from "@/lib/audit";
 import { normalizeVariationsForStorage } from "@/lib/product-variations";
+import {
+  redactProductsCosts,
+  stripCostsFromVariationsInput,
+  redactProductCostFields,
+} from "@/lib/product-cost-access";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -20,6 +25,11 @@ export async function GET(request: NextRequest) {
     ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const canViewCost = hasPermission(
+      session.user.permissions,
+      Permission.VIEW_PRODUCT_COST
+    );
 
     const searchParams = request.nextUrl.searchParams;
     const page = parseInt(searchParams.get("page") || "1");
@@ -179,7 +189,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      products,
+      products: redactProductsCosts(products as Record<string, unknown>[], canViewCost),
       pagination: {
         page,
         limit,
@@ -207,6 +217,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const canViewCost = hasPermission(
+      session.user.permissions,
+      Permission.VIEW_PRODUCT_COST
+    );
+    const canEditCost = hasPermission(
+      session.user.permissions,
+      Permission.EDIT_PRODUCT_COST
+    );
+
     const body = await request.json();
     const {
       name,
@@ -224,7 +243,9 @@ export async function POST(request: NextRequest) {
       imageUrl,
     } = body;
 
-    const normalizedVariations = normalizeVariationsForStorage(variations);
+    const normalizedVariations = normalizeVariationsForStorage(
+      canEditCost ? variations : stripCostsFromVariationsInput(variations)
+    );
 
     if (!name || !sku || !categoryId || !baseUnit || normalizedVariations.length === 0) {
       return NextResponse.json(
@@ -290,7 +311,7 @@ export async function POST(request: NextRequest) {
         category: category.name,
         brandId: brandId || null,
         price: parseFloat(String(price ?? primaryPrice)),
-        cost: cost ? parseFloat(cost) : null,
+        cost: canEditCost && cost ? parseFloat(String(cost)) : null,
         baseUnit: String(baseUnit),
         variations: normalizedVariations as unknown as Prisma.InputJsonValue,
         imageUrl: imageUrl || null,
@@ -309,7 +330,14 @@ export async function POST(request: NextRequest) {
       metadata
     );
 
-    return NextResponse.json(product, { status: 201 });
+    return NextResponse.json(
+      (canViewCost
+        ? product
+        : redactProductCostFields({
+            ...(product as unknown as Record<string, unknown>),
+          })) as typeof product,
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Error creating product:", error);
     return NextResponse.json(

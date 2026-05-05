@@ -19,6 +19,20 @@ export default async function InventoryPage() {
     session.user.permissions,
     Permission.CREATE_INVENTORY
   );
+  const canViewProductCost = hasPermission(
+    session.user.permissions,
+    Permission.VIEW_PRODUCT_COST
+  );
+  const canEditProductCost = hasPermission(
+    session.user.permissions,
+    Permission.EDIT_PRODUCT_COST
+  );
 
-  return <InventoryTableWithAddButton canCreate={canCreate} />;
+  return (
+    <InventoryTableWithAddButton
+      canCreate={canCreate}
+      canViewProductCost={canViewProductCost}
+      canEditProductCost={canEditProductCost}
+    />
+  );
 }

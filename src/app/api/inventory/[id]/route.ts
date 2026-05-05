@@ -5,7 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { auditLogger, getRequestMetadata } from "@/lib/audit";
-import { normalizeVariationsForStorage } from "@/lib/product-variations";
+import {
+  applyCostEditPolicyToVariations,
+  redactProductCostFields,
+} from "@/lib/product-cost-access";
 import { Prisma } from "@prisma/client";
 
 export const dynamic = 'force-dynamic';
@@ -42,7 +45,18 @@ export async function GET(
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    return NextResponse.json(product);
+    const canViewCost = hasPermission(
+      session.user.permissions,
+      Permission.VIEW_PRODUCT_COST
+    );
+
+    return NextResponse.json(
+      canViewCost
+        ? product
+        : redactProductCostFields({
+            ...(product as unknown as Record<string, unknown>),
+          })
+    );
   } catch (error) {
     console.error("Error fetching product:", error);
     return NextResponse.json(
@@ -66,6 +80,15 @@ export async function PUT(
     ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const canViewCost = hasPermission(
+      session.user.permissions,
+      Permission.VIEW_PRODUCT_COST
+    );
+    const canEditCost = hasPermission(
+      session.user.permissions,
+      Permission.EDIT_PRODUCT_COST
+    );
 
     const body = await request.json();
     const {
@@ -162,7 +185,14 @@ export async function PUT(
     let variationsPayload: Prisma.InputJsonValue | undefined;
     let derivedPrice: number | undefined;
     if (variations !== undefined) {
-      const normalized = normalizeVariationsForStorage(variations);
+      if (!oldProduct) {
+        return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      }
+      const normalized = applyCostEditPolicyToVariations(
+        variations,
+        oldProduct,
+        canEditCost
+      );
       if (normalized.length === 0) {
         return NextResponse.json(
           { error: "At least one valid variation is required" },
@@ -171,7 +201,8 @@ export async function PUT(
       }
       variationsPayload = normalized as unknown as Prisma.InputJsonValue;
       derivedPrice =
-        normalized.find((v) => v.quantityInBaseUnit === 1)?.price ?? normalized[0].price;
+        normalized.find((v) => v.quantityInBaseUnit === 1)?.price ??
+        normalized[0].price;
     }
 
     const product = await prisma.product.update({
@@ -184,7 +215,10 @@ export async function PUT(
         ...(brandId !== undefined && { brandId: brandId || null }),
         ...(price !== undefined && { price: parseFloat(price) }),
         ...(derivedPrice !== undefined && price === undefined && { price: derivedPrice }),
-        ...(cost !== undefined && { cost: cost ? parseFloat(cost) : null }),
+        ...(canEditCost &&
+          cost !== undefined && {
+            cost: cost ? parseFloat(String(cost)) : null,
+          }),
         ...(baseUnit !== undefined && { baseUnit: String(baseUnit) }),
         ...(variationsPayload !== undefined && { variations: variationsPayload }),
         ...(imageUrl !== undefined && { imageUrl: imageUrl || null }),
@@ -218,7 +252,13 @@ export async function PUT(
       metadata
     );
 
-    return NextResponse.json(product);
+    return NextResponse.json(
+      canViewCost
+        ? product
+        : redactProductCostFields({
+            ...(product as unknown as Record<string, unknown>),
+          })
+    );
   } catch (error) {
     console.error("Error updating product:", error);
     return NextResponse.json(

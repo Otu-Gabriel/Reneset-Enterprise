@@ -38,6 +38,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const canViewProductCost = hasPermission(
+      session.user.permissions,
+      Permission.VIEW_PRODUCT_COST
+    );
+
     const { searchParams } = new URL(request.url);
     const reportType = searchParams.get("type") || "sales";
     const startDate = searchParams.get("startDate");
@@ -154,7 +159,7 @@ export async function GET(request: NextRequest) {
           "Category": product.category,
           "Brand": product.brand?.name || "",
           "Price": product.price,
-          "Cost": product.cost || 0,
+          ...(canViewProductCost ? { Cost: product.cost ?? 0 } : {}),
           "Stock": product.stock,
           "Min Stock": product.minStock,
           "Unit": product.unit,
@@ -162,19 +167,20 @@ export async function GET(request: NextRequest) {
           "Status": product.stock === 0 ? "Out of Stock" : product.stock <= product.minStock ? "Low Stock" : "In Stock",
         }));
 
-        csvContent = convertToCSV(exportData, [
+        const headers = [
           "Product Name",
           "SKU",
           "Category",
           "Brand",
           "Price",
-          "Cost",
+          ...(canViewProductCost ? (["Cost"] as const) : []),
           "Stock",
           "Min Stock",
           "Unit",
           "Stock Value",
           "Status",
-        ]);
+        ];
+        csvContent = convertToCSV(exportData, headers);
         filename = `inventory-report-${new Date().toISOString().split("T")[0]}.csv`;
         break;
       }
@@ -248,23 +254,33 @@ export async function GET(request: NextRequest) {
           });
         });
 
-        const exportData = Array.from(monthlyMap.entries())
+        const exportDataFull = Array.from(monthlyMap.entries())
           .map(([month, data]) => ({
-            "Month": month,
-            "Revenue": data.revenue,
-            "Cost": data.cost,
-            "Profit": data.profit,
-            "Profit Margin": data.revenue > 0 ? ((data.profit / data.revenue) * 100).toFixed(2) : "0.00",
+            Month: month,
+            Revenue: data.revenue,
+            ...(canViewProductCost
+              ? {
+                  Cost: data.cost,
+                  Profit: data.profit,
+                  "Profit Margin":
+                    data.revenue > 0
+                      ? ((data.profit / data.revenue) * 100).toFixed(2)
+                      : "0.00",
+                }
+              : {}),
           }))
           .sort((a, b) => a.Month.localeCompare(b.Month));
 
-        csvContent = convertToCSV(exportData, [
-          "Month",
-          "Revenue",
-          "Cost",
-          "Profit",
-          "Profit Margin",
-        ]);
+        csvContent = convertToCSV(
+          exportDataFull,
+          [
+            "Month",
+            "Revenue",
+            ...(canViewProductCost
+              ? (["Cost", "Profit", "Profit Margin"] as const)
+              : []),
+          ]
+        );
         filename = `financial-report-${new Date().toISOString().split("T")[0]}.csv`;
         break;
       }

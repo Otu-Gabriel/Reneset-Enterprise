@@ -18,6 +18,8 @@ export const permissionGroups: Record<string, Permission[]> = {
     Permission.CREATE_INVENTORY,
     Permission.EDIT_INVENTORY,
     Permission.DELETE_INVENTORY,
+    Permission.VIEW_PRODUCT_COST,
+    Permission.EDIT_PRODUCT_COST,
   ],
   Categories: [
     Permission.VIEW_CATEGORIES,

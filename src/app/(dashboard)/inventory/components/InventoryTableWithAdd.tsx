@@ -8,10 +8,14 @@ import { Plus } from "lucide-react";
 
 interface InventoryTableWithAddButtonProps {
   canCreate: boolean;
+  canViewProductCost: boolean;
+  canEditProductCost: boolean;
 }
 
 export function InventoryTableWithAddButton({
   canCreate,
+  canViewProductCost,
+  canEditProductCost,
 }: InventoryTableWithAddButtonProps) {
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -35,7 +39,10 @@ export function InventoryTableWithAddButton({
           <p className="text-muted-foreground">Manage your product inventory</p>
         </div>
         {canCreate && (
-          <AddItemModal onSuccess={handleRefresh}>
+          <AddItemModal
+            onSuccess={handleRefresh}
+            canEditProductCost={canEditProductCost}
+          >
             <Button>
               <Plus className="mr-2 h-4 w-4" />
               Add Item
@@ -43,7 +50,11 @@ export function InventoryTableWithAddButton({
           </AddItemModal>
         )}
       </div>
-      <InventoryTable key={refreshKey} />
+      <InventoryTable
+        key={refreshKey}
+        canViewProductCost={canViewProductCost}
+        canEditProductCost={canEditProductCost}
+      />
     </>
   );
 }

@@ -62,6 +62,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const canEditProductCost = hasPermission(
+      session.user.permissions,
+      Permission.EDIT_PRODUCT_COST
+    );
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
@@ -186,7 +191,7 @@ export async function POST(request: NextRequest) {
           const im = getFromMap(m, "imageurl", "image url", "image");
           if (im) imageUrl = im.trim();
         }
-        if (fallbackCost === null) {
+        if (canEditProductCost && fallbackCost === null) {
           const fc = parseOptionalCost(
             getFromMap(
               m,
@@ -265,7 +270,9 @@ export async function POST(request: NextRequest) {
             name: String(vName).trim(),
             quantityInBaseUnit: qty,
             price,
-            cost: parseOptionalCost(vCostRaw) ?? parseOptionalCost(rowCost),
+            cost: canEditProductCost
+              ? parseOptionalCost(vCostRaw) ?? parseOptionalCost(rowCost)
+              : null,
           });
           continue;
         }
@@ -288,10 +295,11 @@ export async function POST(request: NextRequest) {
             name: nm || "item",
             quantityInBaseUnit: 1,
             price,
-            cost:
-              parseOptionalCost(vCostRaw) ??
-              parseOptionalCost(rowCost) ??
-              fallbackCost,
+            cost: canEditProductCost
+              ? parseOptionalCost(vCostRaw) ??
+                parseOptionalCost(rowCost) ??
+                fallbackCost
+              : null,
           });
           continue;
         }
@@ -387,7 +395,7 @@ export async function POST(request: NextRequest) {
             category: category.name,
             brandId,
             price: primaryPrice,
-            cost: fallbackCost,
+            cost: canEditProductCost ? fallbackCost : null,
             description: description || null,
             baseUnit,
             unit: baseUnit,

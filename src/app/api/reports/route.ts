@@ -5,6 +5,7 @@ import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { saleItemLineCogs } from "@/lib/product-variations";
+import { redactSaleForClient } from "@/lib/product-cost-access";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -19,6 +20,11 @@ export async function GET(request: NextRequest) {
     ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const canViewProductCost = hasPermission(
+      session.user.permissions,
+      Permission.VIEW_PRODUCT_COST
+    );
 
     const { searchParams } = new URL(request.url);
     const reportType = searchParams.get("type") || "sales";
@@ -145,7 +151,14 @@ export async function GET(request: NextRequest) {
             method,
             value,
           })),
-          sales: sales.slice(0, 100), // Limit for performance
+          sales: sales
+            .slice(0, 100)
+            .map((s) =>
+              redactSaleForClient(
+                s as unknown as Record<string, unknown>,
+                canViewProductCost
+              )
+            ),
         });
       }
 
@@ -440,8 +453,35 @@ export async function GET(request: NextRequest) {
           }))
           .sort((a, b) => a.month.localeCompare(b.month));
 
+        if (!canViewProductCost) {
+          return NextResponse.json({
+            type: "financial",
+            canViewProductCost: false,
+            summary: {
+              totalRevenue,
+              totalCost: null,
+              grossProfit: null,
+              profitMargin: null,
+              installmentStats: {
+                totalInstallmentAmount,
+                totalInstallmentPaid,
+                totalInstallmentOutstanding,
+                installmentCount: installmentSales.length,
+              },
+            },
+            monthlyBreakdown: monthlyBreakdown.map(({ month, revenue }) => ({
+              month,
+              revenue,
+              cost: null,
+              profit: null,
+              margin: null,
+            })),
+          });
+        }
+
         return NextResponse.json({
           type: "financial",
+          canViewProductCost: true,
           summary: {
             totalRevenue,
             totalCost,

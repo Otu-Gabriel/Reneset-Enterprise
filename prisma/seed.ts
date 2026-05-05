@@ -22,25 +22,25 @@ async function main() {
   const allPermissions = allPermissionsFromSchema();
 
   // Create default admin user
-  const hashedPassword = await bcrypt.hash("admin123", 10);
+  // const hashedPassword = await bcrypt.hash("admin123", 10);
 
-  const admin = await prisma.user.upsert({
-    where: { email: "admin@example.com" },
-    update: {
+  // const admin = await prisma.user.upsert({
+  //   where: { email: "admin@example.com" },
+  //   update: {
       // Update existing admin to have all permissions including new ones
-      permissions: allPermissions,
-      role: Role.ADMIN,
-    },
-    create: {
-      email: "admin@example.com",
-      password: hashedPassword,
-      name: "Admin User",
-      role: Role.ADMIN,
-      permissions: allPermissions, // Give admin ALL permissions including MANAGE_USERS
-    },
-  });
+  //     permissions: allPermissions,
+  //     role: Role.ADMIN,
+  //   },
+  //   create: {
+  //     email: "admin@example.com",
+  //     password: hashedPassword,
+  //     name: "Admin User",
+  //     role: Role.ADMIN,
+  //     permissions: allPermissions, // Give admin ALL permissions including MANAGE_USERS
+  //   },
+  // });
 
-  console.log("Created admin user:", admin.email);
+  // console.log("Created admin user:", admin.email);
 
   // Existing rows keep their permission array until updated; newly added enum values
   // are not appended automatically. Sync full set for admins / FULL_ACCESS accounts.

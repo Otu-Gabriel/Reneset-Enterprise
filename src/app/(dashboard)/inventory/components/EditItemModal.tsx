@@ -61,6 +61,8 @@ interface EditItemModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  canViewProductCost: boolean;
+  canEditProductCost: boolean;
 }
 
 export function EditItemModal({
@@ -68,6 +70,8 @@ export function EditItemModal({
   open,
   onOpenChange,
   onSuccess,
+  canViewProductCost,
+  canEditProductCost,
 }: EditItemModalProps) {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -227,16 +231,16 @@ export function EditItemModal({
         .map((variation) => {
           const costStr = String(variation.cost ?? "").trim();
           let cost: number | null = null;
-          if (costStr !== "") {
+          if (canEditProductCost && costStr !== "") {
             const c = Number(costStr);
             if (!Number.isNaN(c) && c >= 0) cost = c;
           }
-          return {
+          const base = {
             name: variation.name.trim(),
             quantityInBaseUnit: Number(variation.quantityInBaseUnit),
             price: Number(variation.price),
-            cost,
           };
+          return canEditProductCost ? { ...base, cost } : base;
         })
         .filter((variation) => variation.name && variation.quantityInBaseUnit > 0 && variation.price >= 0);
 
@@ -250,7 +254,7 @@ export function EditItemModal({
       payload.price = normalizedVariations.find((v) => v.quantityInBaseUnit === 1)?.price ?? normalizedVariations[0].price;
 
       payload.brandId = formData.brandId || null;
-      if (formData.cost) {
+      if (canEditProductCost && formData.cost) {
         payload.cost = formData.cost;
       }
       if (imageUrl) {
@@ -393,6 +397,7 @@ export function EditItemModal({
               </Select>
             </div>
           </div>
+          {canViewProductCost && (
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="cost">Fallback product cost</Label>
@@ -405,12 +410,14 @@ export function EditItemModal({
                   setFormData({ ...formData, cost: e.target.value })
                 }
                 placeholder="Used when a variation has no cost"
+                disabled={!canEditProductCost}
               />
               <p className="text-xs text-muted-foreground">
                 Prefer setting cost on each variation for accurate margins.
               </p>
             </div>
           </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="stock">Stock</Label>
@@ -437,7 +444,11 @@ export function EditItemModal({
           </div>
           <div className="space-y-3 rounded-md border p-3">
             <div className="flex items-center justify-between">
-              <Label>Variations (price & cost per sale unit)</Label>
+              <Label>
+                {canViewProductCost
+                  ? "Variations (price & cost per sale unit)"
+                  : "Variations (price per sale unit)"}
+              </Label>
               <Button
                 type="button"
                 variant="outline"
@@ -491,6 +502,7 @@ export function EditItemModal({
                     )
                   }
                 />
+                {canViewProductCost && (
                 <Input
                   className="sm:col-span-2"
                   type="number"
@@ -502,7 +514,9 @@ export function EditItemModal({
                       prev.map((v, i) => (i === index ? { ...v, cost: e.target.value } : v)),
                     )
                   }
+                  disabled={!canEditProductCost}
                 />
+                )}
                 <div className="flex gap-2 sm:col-span-3">
                   {variations.length > 1 && (
                     <Button

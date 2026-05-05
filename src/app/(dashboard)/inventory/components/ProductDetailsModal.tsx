@@ -38,12 +38,14 @@ interface ProductDetailsModalProps {
   product: Product | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  canViewProductCost: boolean;
 }
 
 export function ProductDetailsModal({
   product,
   open,
   onOpenChange,
+  canViewProductCost,
 }: ProductDetailsModalProps) {
   const formatCurrency = useCurrency();
   
@@ -98,7 +100,7 @@ export function ProductDetailsModal({
                 {formatCurrency(product.price)}
               </p>
             </div>
-            {product.cost !== null && (
+            {canViewProductCost && product.cost !== null && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
                   Cost
@@ -156,6 +158,7 @@ export function ProductDetailsModal({
                       </span>
                     </span>
                     <span>{formatCurrency(v.price)}</span>
+                    {canViewProductCost && (
                     <span className="text-muted-foreground">
                       {v.cost != null && v.cost !== undefined
                         ? `Cost ${formatCurrency(v.cost)}`
@@ -163,6 +166,7 @@ export function ProductDetailsModal({
                           ? `Fallback ${formatCurrency(product.cost)}`
                           : "—"}
                     </span>
+                    )}
                   </div>
                 ))}
               </div>

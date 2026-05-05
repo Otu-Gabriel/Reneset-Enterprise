@@ -19,6 +19,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const canViewCost = hasPermission(
+      session.user.permissions,
+      Permission.VIEW_PRODUCT_COST
+    );
+
     const searchParams = request.nextUrl.searchParams;
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category") || "";
@@ -71,20 +76,21 @@ export async function GET(request: NextRequest) {
     const csvRows = [];
     
     // Header row
-    csvRows.push([
+    const header = [
       "Name",
       "SKU",
       "Description",
       "Category",
       "Brand",
       "Price",
-      "Cost",
+      ...(canViewCost ? (["Cost"] as const) : []),
       "Stock",
       "Min Stock",
       "Unit",
       "Status",
       "Image URL",
-    ].join(","));
+    ];
+    csvRows.push(header.join(","));
 
     // Data rows
     products.forEach((product) => {
@@ -95,20 +101,21 @@ export async function GET(request: NextRequest) {
         status = "Low Stock";
       }
 
-      csvRows.push([
+      const cells = [
         `"${product.name}"`,
         product.sku,
         product.description ? `"${product.description.replace(/"/g, '""')}"` : "",
         product.category,
         product.brand?.name || "",
         product.price.toString(),
-        product.cost?.toString() || "",
+        ...(canViewCost ? [product.cost?.toString() || ""] : []),
         product.stock.toString(),
         product.minStock.toString(),
         product.unit,
         status,
         product.imageUrl || "",
-      ].join(","));
+      ];
+      csvRows.push(cells.join(","));
     });
 
     const csvContent = csvRows.join("\n");

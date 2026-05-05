@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
+import { redactProductsCosts } from "@/lib/product-cost-access";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -18,6 +19,11 @@ export async function GET(request: NextRequest) {
     ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const canViewCost = hasPermission(
+      session.user.permissions,
+      Permission.VIEW_PRODUCT_COST
+    );
 
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get("q") || "";
@@ -150,7 +156,12 @@ export async function GET(request: NextRequest) {
       .map((item) => item.product)
       .slice(0, limit); // Apply limit after ranking
 
-    return NextResponse.json({ products: rankedProducts });
+    return NextResponse.json({
+      products: redactProductsCosts(
+        rankedProducts as Record<string, unknown>[],
+        canViewCost
+      ),
+    });
   } catch (error) {
     console.error("Error searching products:", error);
     return NextResponse.json(

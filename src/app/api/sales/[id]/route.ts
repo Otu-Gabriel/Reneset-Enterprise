@@ -11,6 +11,7 @@ import {
   getProductUnitPrice,
   normalizeSaleUnit,
 } from "@/lib/product-variations";
+import { redactSaleForClient } from "@/lib/product-cost-access";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -29,6 +30,11 @@ export async function GET(
     ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const canViewCost = hasPermission(
+      session.user.permissions,
+      Permission.VIEW_PRODUCT_COST
+    );
 
     const sale = await prisma.sale.findUnique({
       where: { id: id },
@@ -51,7 +57,9 @@ export async function GET(
       return NextResponse.json({ error: "Sale not found" }, { status: 404 });
     }
 
-    return NextResponse.json(sale);
+    return NextResponse.json(
+      redactSaleForClient(sale as unknown as Record<string, unknown>, canViewCost)
+    );
   } catch (error) {
     console.error("Error fetching sale:", error);
     return NextResponse.json(
@@ -75,6 +83,11 @@ export async function PUT(
     ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const canViewCost = hasPermission(
+      session.user.permissions,
+      Permission.VIEW_PRODUCT_COST
+    );
 
     // Get existing sale with items
     const existingSale = await prisma.sale.findUnique({
@@ -259,7 +272,9 @@ export async function PUT(
         metadata
       );
 
-      return NextResponse.json(sale);
+      return NextResponse.json(
+        redactSaleForClient(sale as unknown as Record<string, unknown>, canViewCost)
+      );
     } else {
       // Update sale without changing items - only handle status changes
       // Handle stock restoration if status changes to cancelled/returned
@@ -354,7 +369,9 @@ export async function PUT(
         metadata
       );
 
-      return NextResponse.json(sale);
+      return NextResponse.json(
+        redactSaleForClient(sale as unknown as Record<string, unknown>, canViewCost)
+      );
     }
   } catch (error) {
     console.error("Error updating sale:", error);

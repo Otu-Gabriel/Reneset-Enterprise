@@ -117,7 +117,7 @@ interface StatsCardsProps {
     ordersChange: number;
     averagePriceChange: number;
   };
-  /** Today's gross profit (revenue − recorded COGS); admins only. */
+  /** Today's gross profit (revenue − recorded COGS); requires VIEW_PRODUCT_COST. */
   adminProfit?: {
     todayProfit: number;
     profitChange: number;

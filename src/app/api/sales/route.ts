@@ -11,6 +11,7 @@ import {
   getProductUnitPrice,
   normalizeSaleUnit,
 } from "@/lib/product-variations";
+import { redactSaleForClient } from "@/lib/product-cost-access";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -25,6 +26,11 @@ export async function GET(request: NextRequest) {
     ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const canViewCost = hasPermission(
+      session.user.permissions,
+      Permission.VIEW_PRODUCT_COST
+    );
 
     const searchParams = request.nextUrl.searchParams;
     const page = parseInt(searchParams.get("page") || "1");
@@ -82,7 +88,12 @@ export async function GET(request: NextRequest) {
     ]);
 
     return NextResponse.json({
-      sales,
+      sales: sales.map((s) =>
+        redactSaleForClient(
+          { ...(s as unknown as Record<string, unknown>) },
+          canViewCost
+        )
+      ),
       pagination: {
         page,
         limit,
@@ -109,6 +120,11 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const canViewCost = hasPermission(
+      session.user.permissions,
+      Permission.VIEW_PRODUCT_COST
+    );
 
     // Verify the user exists in the database
     const userExists = await prisma.user.findUnique({
@@ -524,10 +540,13 @@ export async function POST(request: NextRequest) {
         );
 
         return NextResponse.json(
-          {
-            ...sale,
-            installmentPlan: installmentPlanData,
-          },
+          redactSaleForClient(
+            {
+              ...(sale as unknown as Record<string, unknown>),
+              installmentPlan: installmentPlanData,
+            },
+            canViewCost
+          ),
           { status: 201 }
         );
       } catch (error: any) {

@@ -36,9 +36,14 @@ interface Brand {
 interface AddItemModalProps {
   children: React.ReactNode;
   onSuccess?: () => void;
+  canEditProductCost: boolean;
 }
 
-export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
+export function AddItemModal({
+  children,
+  onSuccess,
+  canEditProductCost,
+}: AddItemModalProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -184,7 +189,7 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
         .map((variation) => {
           const costStr = String(variation.cost ?? "").trim();
           let cost: number | null = null;
-          if (costStr !== "") {
+          if (canEditProductCost && costStr !== "") {
             const c = Number(costStr);
             if (!Number.isNaN(c) && c >= 0) cost = c;
           }
@@ -209,7 +214,7 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
       if (formData.brandId) {
         payload.brandId = formData.brandId;
       }
-      if (formData.cost) {
+      if (canEditProductCost && formData.cost) {
         payload.cost = formData.cost;
       }
       if (imageUrl) {
@@ -395,6 +400,7 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
               </Select>
             </div>
           </div>
+          {canEditProductCost && (
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="cost">Fallback product cost</Label>
@@ -413,6 +419,7 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
               </p>
             </div>
           </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="stock">Stock</Label>
@@ -441,7 +448,11 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
           </div>
           <div className="space-y-3 rounded-md border p-3">
             <div className="flex items-center justify-between">
-              <Label>Variations (price & cost per sale unit)</Label>
+              <Label>
+                {canEditProductCost
+                  ? "Variations (price & cost per sale unit)"
+                  : "Variations (price per sale unit)"}
+              </Label>
               <Button
                 type="button"
                 variant="outline"
@@ -495,6 +506,7 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
                     )
                   }
                 />
+                {canEditProductCost && (
                 <Input
                   className="sm:col-span-2"
                   type="number"
@@ -507,6 +519,7 @@ export function AddItemModal({ children, onSuccess }: AddItemModalProps) {
                     )
                   }
                 />
+                )}
                 <div className="flex gap-2 sm:col-span-3">
                   {variations.length > 1 && (
                     <Button

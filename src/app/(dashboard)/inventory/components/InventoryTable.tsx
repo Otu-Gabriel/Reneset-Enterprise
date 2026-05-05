@@ -82,6 +82,11 @@ type StockBreakdown =
       baseUnit: string;
     };
 
+interface InventoryTableProps {
+  canViewProductCost: boolean;
+  canEditProductCost: boolean;
+}
+
 const STOCK_PART_CHIP = [
   "border-primary/30 bg-primary/12 text-primary dark:bg-primary/18",
   "border-sky-500/30 bg-sky-500/12 text-sky-800 dark:text-sky-300 dark:bg-sky-500/15",
@@ -162,7 +167,10 @@ function StockDisplayCell({ product }: { product: Product }) {
   );
 }
 
-export function InventoryTable() {
+export function InventoryTable({
+  canViewProductCost,
+  canEditProductCost,
+}: InventoryTableProps) {
   const getBaseVariationPrice = (product: Product) => {
     if (!Array.isArray(product.variations) || product.variations.length === 0) {
       return product.price;
@@ -807,6 +815,7 @@ export function InventoryTable() {
         product={selectedProduct}
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
+        canViewProductCost={canViewProductCost}
       />
       <EditItemModal
         product={editingProduct}
@@ -816,6 +825,8 @@ export function InventoryTable() {
           if (!open) setEditingProduct(null);
         }}
         onSuccess={fetchProducts}
+        canViewProductCost={canViewProductCost}
+        canEditProductCost={canEditProductCost}
       />
       <AddStockModal
         product={addingStockProduct}
