@@ -586,13 +586,12 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-lg border border-border bg-muted/30">
-            <button
-              type="button"
-              onClick={() => setMoreDetailsOpen((o) => !o)}
-              className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm font-medium text-foreground hover:bg-muted/50"
-              aria-expanded={moreDetailsOpen}
-            >
+          <details
+            className="overflow-hidden rounded-lg border border-border bg-muted/30"
+            open={moreDetailsOpen}
+            onToggle={(e) => setMoreDetailsOpen(e.currentTarget.open)}
+          >
+            <summary className="flex w-full cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-left text-sm font-medium text-foreground hover:bg-muted/50 [&::-webkit-details-marker]:hidden">
               <span>More</span>
               <ChevronDown
                 className={cn(
@@ -601,9 +600,8 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                 )}
                 aria-hidden
               />
-            </button>
-            {moreDetailsOpen && (
-              <div className="space-y-4 border-t border-border bg-muted/50 p-4">
+            </summary>
+            <div className="space-y-4 border-t border-border bg-muted/50 p-4">
                 <div className="space-y-2">
                   <Label htmlFor="customerEmail">Customer Email</Label>
                   <Input
@@ -678,8 +676,7 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                   </Label>
                 </div>
               </div>
-            )}
-          </div>
+          </details>
 
           {/* Installment Plan Section */}
           {isInstallment && (

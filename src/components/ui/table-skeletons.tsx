@@ -19,6 +19,7 @@ import {
   dashboardSectionChartContentClass,
   dashboardSectionTableContentClass,
 } from "@/lib/dashboard-card";
+import { REPORT_CHART_HEIGHT } from "@/lib/reports-chart";
 
 const CELL_WIDTH_ROTATION = ["w-[88%]", "w-[72%]", "w-[92%]", "w-[65%]", "w-[80%]", "w-[76%]", "w-[84%]", "w-[70%]", "w-[90%]"];
 
@@ -289,7 +290,10 @@ export function ReportPageSkeleton({
               <Skeleton className="h-7 w-7 shrink-0 rounded-md" />
             </CardHeader>
             <CardContent className={dashboardSectionChartContentClass}>
-              <Skeleton className="h-[280px] w-full rounded-lg" />
+              <Skeleton
+                className="w-full rounded-lg"
+                style={{ height: REPORT_CHART_HEIGHT }}
+              />
             </CardContent>
           </Card>
         ))}

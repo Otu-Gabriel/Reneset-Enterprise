@@ -26,9 +26,14 @@ import {
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSession } from "next-auth/react";
 import { Role } from "@prisma/client";
-import { AlertTriangle, LayoutGrid, Tags } from "lucide-react";
+import { AlertTriangle, Archive, LayoutGrid, Package, Tags, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ReportPageSkeleton } from "@/components/ui/table-skeletons";
+import { ReportMetricCard, reportMetricValueClass } from "./ReportMetricCard";
+import {
+  REPORT_CHART_HEIGHT,
+  REPORT_CHART_ANGLED_XAXIS_HEIGHT,
+} from "@/lib/reports-chart";
 
 interface InventoryReportProps {
   startDate: string;
@@ -101,72 +106,69 @@ export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
           isAdmin ? "md:grid-cols-2 lg:grid-cols-3" : "md:grid-cols-2 lg:grid-cols-4"
         )}
       >
-        <Card className="bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium sm:text-sm">Total Products</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold tabular-nums sm:text-2xl">{data.summary.totalProducts}</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium sm:text-sm">Total Stock Value</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold tabular-nums sm:text-2xl">
-              {formatCurrency(data.summary.totalStockValue)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium sm:text-sm">Low Stock Items</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold tabular-nums sm:text-2xl text-yellow-600">
-              {data.summary.lowStockCount}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium sm:text-sm">Out of Stock</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold tabular-nums sm:text-2xl text-red-600">
-              {data.summary.outOfStockCount}
-            </div>
-          </CardContent>
-        </Card>
+        <ReportMetricCard
+          title="Total Products"
+          icon={Package}
+          iconClassName="bg-primary/15 text-primary dark:bg-primary/25 dark:text-primary"
+        >
+          <div className={reportMetricValueClass}>{data.summary.totalProducts}</div>
+        </ReportMetricCard>
+        <ReportMetricCard
+          title="Total Stock Value"
+          icon={Wallet}
+          iconClassName="bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/25 dark:text-emerald-300"
+        >
+          <div className={reportMetricValueClass}>
+            {formatCurrency(data.summary.totalStockValue)}
+          </div>
+        </ReportMetricCard>
+        <ReportMetricCard
+          title="Low Stock Items"
+          icon={AlertTriangle}
+          iconClassName="bg-amber-500/15 text-amber-700 dark:bg-amber-500/25 dark:text-amber-300"
+        >
+          <div
+            className={cn(
+              reportMetricValueClass,
+              "text-amber-700 dark:text-amber-400"
+            )}
+          >
+            {data.summary.lowStockCount}
+          </div>
+        </ReportMetricCard>
+        <ReportMetricCard
+          title="Out of Stock"
+          icon={Archive}
+          iconClassName="bg-red-500/15 text-red-700 dark:bg-red-500/25 dark:text-red-300"
+        >
+          <div
+            className={cn(reportMetricValueClass, "text-red-600 dark:text-red-400")}
+          >
+            {data.summary.outOfStockCount}
+          </div>
+        </ReportMetricCard>
         {isAdmin && (
           <>
-            <Card className="bg-card border-primary/20">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xs font-medium flex items-center gap-2 sm:text-sm">
-                  <LayoutGrid className="h-4 w-4 text-primary" aria-hidden />
-                  Total Categories
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-xl font-bold tabular-nums sm:text-2xl text-primary">
-                  {data.summary.totalCategories ?? 0}
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-card border-primary/20">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xs font-medium flex items-center gap-2 sm:text-sm">
-                  <Tags className="h-4 w-4 text-primary" aria-hidden />
-                  Total Brands
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-xl font-bold tabular-nums sm:text-2xl text-primary">
-                  {data.summary.totalBrands ?? 0}
-                </div>
-              </CardContent>
-            </Card>
+            <ReportMetricCard
+              title="Total Categories"
+              icon={LayoutGrid}
+              className="border-primary/20"
+              iconClassName="bg-primary/15 text-primary dark:bg-primary/25 dark:text-primary"
+            >
+              <div className={cn(reportMetricValueClass, "text-primary")}>
+                {data.summary.totalCategories ?? 0}
+              </div>
+            </ReportMetricCard>
+            <ReportMetricCard
+              title="Total Brands"
+              icon={Tags}
+              className="border-primary/20"
+              iconClassName="bg-sky-500/15 text-sky-700 dark:bg-sky-500/25 dark:text-sky-300"
+            >
+              <div className={cn(reportMetricValueClass, "text-primary")}>
+                {data.summary.totalBrands ?? 0}
+              </div>
+            </ReportMetricCard>
           </>
         )}
       </div>
@@ -178,7 +180,7 @@ export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
             <CardTitle>Inventory by Category</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={REPORT_CHART_HEIGHT}>
               <BarChart data={data.categoryBreakdown}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
                 <XAxis
@@ -187,7 +189,7 @@ export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
                   style={{ fontSize: "0.75rem" }}
                   angle={-45}
                   textAnchor="end"
-                  height={100}
+                  height={REPORT_CHART_ANGLED_XAXIS_HEIGHT}
                 />
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"
@@ -217,7 +219,7 @@ export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
             <CardTitle>Most Sold Products</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={REPORT_CHART_HEIGHT}>
               <BarChart data={data.mostSoldProducts.slice(0, 10)}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
                 <XAxis
@@ -226,7 +228,7 @@ export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
                   style={{ fontSize: "0.75rem" }}
                   angle={-45}
                   textAnchor="end"
-                  height={100}
+                  height={REPORT_CHART_ANGLED_XAXIS_HEIGHT}
                 />
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"

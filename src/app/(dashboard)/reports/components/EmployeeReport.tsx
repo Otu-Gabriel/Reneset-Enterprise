@@ -23,11 +23,17 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { formatDate } from "@/lib/utils";
+import { formatDate, cn } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
 import { ReportPageSkeleton } from "@/components/ui/table-skeletons";
-import { RefreshCw } from "lucide-react";
+import {
+  REPORT_CHART_HEIGHT,
+  REPORT_CHART_ANGLED_XAXIS_HEIGHT,
+  REPORT_PIE_OUTER_RADIUS_SOLID,
+} from "@/lib/reports-chart";
+import { RefreshCw, Trophy, UserCheck, Users, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ReportMetricCard, reportMetricValueClass } from "./ReportMetricCard";
 
 interface EmployeeReportProps {
   startDate: string;
@@ -154,74 +160,94 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium sm:text-sm">Total Employees</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold tabular-nums sm:text-2xl">{data.summary?.totalEmployees || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {data.employees?.length || 0} {startDate || endDate ? "in date range" : "total"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium sm:text-sm">Active Employees</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold tabular-nums sm:text-2xl text-green-600">
-              {data.summary?.activeEmployees || 0}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {data.summary?.totalEmployees 
-                ? `${Math.round((data.summary.activeEmployees / data.summary.totalEmployees) * 100)}% of total`
-                : "0% of total"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium sm:text-sm">Inactive Employees</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold tabular-nums sm:text-2xl text-red-600">
-              {data.summary?.inactiveEmployees || 0}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {data.summary?.totalEmployees 
-                ? `${Math.round((data.summary.inactiveEmployees / data.summary.totalEmployees) * 100)}% of total`
-                : "0% of total"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium sm:text-sm">Top Sales Employee</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {data.summary?.topSalesEmployee ? (
-              <>
-                <div className="text-lg font-bold truncate">
-                  {data.summary.topSalesEmployee.name}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {formatCurrency(data.summary.topSalesEmployee.totalRevenue)} revenue
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {data.summary.topSalesEmployee.salesCount} {data.summary.topSalesEmployee.salesCount === 1 ? "sale" : "sales"}
-                </p>
-              </>
-            ) : (
-              <>
-                <div className="text-xl font-bold tabular-nums sm:text-2xl text-muted-foreground">N/A</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  No sales data available
-                </p>
-              </>
+        <ReportMetricCard
+          title="Total Employees"
+          icon={Users}
+          iconClassName="bg-primary/15 text-primary dark:bg-primary/25 dark:text-primary"
+        >
+          <div className={reportMetricValueClass}>
+            {data.summary?.totalEmployees || 0}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {data.employees?.length || 0}{" "}
+            {startDate || endDate ? "in date range" : "total"}
+          </p>
+        </ReportMetricCard>
+        <ReportMetricCard
+          title="Active Employees"
+          icon={UserCheck}
+          iconClassName="bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/25 dark:text-emerald-300"
+        >
+          <div
+            className={cn(
+              reportMetricValueClass,
+              "text-emerald-700 dark:text-emerald-400"
             )}
-          </CardContent>
-        </Card>
+          >
+            {data.summary?.activeEmployees || 0}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {data.summary?.totalEmployees
+              ? `${Math.round((data.summary.activeEmployees / data.summary.totalEmployees) * 100)}% of total`
+              : "0% of total"}
+          </p>
+        </ReportMetricCard>
+        <ReportMetricCard
+          title="Inactive Employees"
+          icon={UserX}
+          iconClassName="bg-red-500/15 text-red-700 dark:bg-red-500/25 dark:text-red-300"
+        >
+          <div
+            className={cn(
+              reportMetricValueClass,
+              "text-red-600 dark:text-red-400"
+            )}
+          >
+            {data.summary?.inactiveEmployees || 0}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {data.summary?.totalEmployees
+              ? `${Math.round((data.summary.inactiveEmployees / data.summary.totalEmployees) * 100)}% of total`
+              : "0% of total"}
+          </p>
+        </ReportMetricCard>
+        <ReportMetricCard
+          title="Top Sales Employee"
+          icon={Trophy}
+          iconClassName="bg-amber-500/15 text-amber-700 dark:bg-amber-500/25 dark:text-amber-300"
+        >
+          {data.summary?.topSalesEmployee ? (
+            <>
+              <div className="truncate text-sm font-semibold text-foreground sm:text-base">
+                {data.summary.topSalesEmployee.name}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                <span className="font-semibold tabular-nums text-foreground text-xs sm:text-sm">
+                  {formatCurrency(data.summary.topSalesEmployee.totalRevenue)}
+                </span>{" "}
+                revenue
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {data.summary.topSalesEmployee.salesCount}{" "}
+                {data.summary.topSalesEmployee.salesCount === 1 ? "sale" : "sales"}
+              </p>
+            </>
+          ) : (
+            <>
+              <div
+                className={cn(
+                  reportMetricValueClass,
+                  "text-muted-foreground"
+                )}
+              >
+                N/A
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                No sales data available
+              </p>
+            </>
+          )}
+        </ReportMetricCard>
       </div>
 
       {/* Charts */}
@@ -232,7 +258,7 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
           </CardHeader>
           <CardContent>
             {data.departmentBreakdown && data.departmentBreakdown.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={REPORT_CHART_HEIGHT}>
                 <BarChart data={data.departmentBreakdown}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
                   <XAxis
@@ -241,7 +267,7 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
                     style={{ fontSize: "0.75rem" }}
                     angle={-45}
                     textAnchor="end"
-                    height={100}
+                    height={REPORT_CHART_ANGLED_XAXIS_HEIGHT}
                   />
                   <YAxis
                     stroke="hsl(var(--muted-foreground))"
@@ -258,7 +284,10 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+              <div
+                className="flex items-center justify-center text-muted-foreground"
+                style={{ height: REPORT_CHART_HEIGHT }}
+              >
                 No department data available
               </div>
             )}
@@ -271,7 +300,7 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
           </CardHeader>
           <CardContent>
             {data.positionBreakdown && data.positionBreakdown.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={REPORT_CHART_HEIGHT}>
                 <PieChart>
                   <Pie
                     data={data.positionBreakdown}
@@ -279,7 +308,7 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
                     cy="50%"
                     labelLine={false}
                     label={({ position, count }) => `${position}: ${count}`}
-                    outerRadius={100}
+                    outerRadius={REPORT_PIE_OUTER_RADIUS_SOLID}
                     fill="hsl(25, 95%, 53%)"
                     dataKey="count"
                   >
@@ -300,7 +329,10 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+              <div
+                className="flex items-center justify-center text-muted-foreground"
+                style={{ height: REPORT_CHART_HEIGHT }}
+              >
                 No position data available
               </div>
             )}

@@ -24,8 +24,11 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useCurrency } from "@/hooks/useCurrency";
+import { cn } from "@/lib/utils";
 import { ReportPageSkeleton } from "@/components/ui/table-skeletons";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { REPORT_CHART_HEIGHT } from "@/lib/reports-chart";
+import { DollarSign, Percent, Receipt, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+import { ReportMetricCard, reportMetricValueClass } from "./ReportMetricCard";
 
 interface FinancialReportProps {
   startDate: string;
@@ -94,53 +97,80 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
       <div
         className={`grid gap-4 ${showCostMetrics ? "md:grid-cols-4" : "md:grid-cols-1 sm:grid-cols-2"}`}
       >
-        <Card className="bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium sm:text-sm">Total Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold tabular-nums sm:text-2xl">
-              {formatCurrency(data.summary.totalRevenue)}
-            </div>
-          </CardContent>
-        </Card>
+        <ReportMetricCard
+          title="Total Revenue"
+          icon={DollarSign}
+          iconClassName="bg-amber-500/15 text-amber-800 dark:bg-amber-500/25 dark:text-amber-200"
+        >
+          <div className={reportMetricValueClass}>
+            {formatCurrency(data.summary.totalRevenue)}
+          </div>
+        </ReportMetricCard>
         {showCostMetrics && (
           <>
-        <Card className="bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium sm:text-sm">Total Cost</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold tabular-nums sm:text-2xl">
-              {formatCurrency(data.summary.totalCost)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium sm:text-sm">Gross Profit</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className={`text-xl font-bold tabular-nums sm:text-2xl flex items-center gap-2 ${isProfit ? "text-green-600" : "text-red-600"}`}>
-              {isProfit ? (
-                <TrendingUp className="h-5 w-5" />
-              ) : (
-                <TrendingDown className="h-5 w-5" />
-              )}
-              {formatCurrency(data.summary.grossProfit)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium sm:text-sm">Profit Margin</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className={`text-xl font-bold tabular-nums sm:text-2xl ${isProfit ? "text-green-600" : "text-red-600"}`}>
-              {data.summary.profitMargin.toFixed(2)}%
-            </div>
-          </CardContent>
-        </Card>
+            <ReportMetricCard
+              title="Total Cost"
+              icon={Receipt}
+              iconClassName="bg-rose-500/15 text-rose-700 dark:bg-rose-500/25 dark:text-rose-300"
+            >
+              <div className={reportMetricValueClass}>
+                {formatCurrency(data.summary.totalCost)}
+              </div>
+            </ReportMetricCard>
+            <ReportMetricCard
+              title="Gross Profit"
+              icon={Wallet}
+              iconClassName={
+                isProfit
+                  ? "bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/25 dark:text-emerald-300"
+                  : "bg-red-500/15 text-red-700 dark:bg-red-500/25 dark:text-red-300"
+              }
+            >
+              <div
+                className={cn(
+                  reportMetricValueClass,
+                  isProfit
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-600 dark:text-red-400"
+                )}
+              >
+                {formatCurrency(data.summary.grossProfit)}
+              </div>
+              <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                {isProfit ? (
+                  <TrendingUp
+                    className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
+                    aria-hidden
+                  />
+                ) : (
+                  <TrendingDown
+                    className="h-3.5 w-3.5 shrink-0 text-red-500 dark:text-red-400"
+                    aria-hidden
+                  />
+                )}
+                {isProfit ? "Above cost line" : "Below cost line"}
+              </p>
+            </ReportMetricCard>
+            <ReportMetricCard
+              title="Profit Margin"
+              icon={Percent}
+              iconClassName={
+                isProfit
+                  ? "bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/25 dark:text-emerald-300"
+                  : "bg-red-500/15 text-red-700 dark:bg-red-500/25 dark:text-red-300"
+              }
+            >
+              <div
+                className={cn(
+                  reportMetricValueClass,
+                  isProfit
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-600 dark:text-red-400"
+                )}
+              >
+                {data.summary.profitMargin.toFixed(2)}%
+              </div>
+            </ReportMetricCard>
           </>
         )}
       </div>
@@ -154,7 +184,7 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={REPORT_CHART_HEIGHT}>
               <LineChart data={data.monthlyBreakdown}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
                 <XAxis
@@ -202,7 +232,7 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
             <CardTitle>Monthly Profit</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={REPORT_CHART_HEIGHT}>
               <BarChart data={data.monthlyBreakdown}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
                 <XAxis

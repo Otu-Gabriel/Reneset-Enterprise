@@ -27,7 +27,15 @@ import {
 } from "recharts";
 import { formatDate } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
+import {
+  REPORT_CHART_HEIGHT,
+  REPORT_CHART_ANGLED_XAXIS_HEIGHT,
+  REPORT_PIE_OUTER_RADIUS,
+  REPORT_PIE_INNER_RADIUS,
+} from "@/lib/reports-chart";
 import { ReportPageSkeleton } from "@/components/ui/table-skeletons";
+import { ReportMetricCard, reportMetricValueClass } from "./ReportMetricCard";
+import { DollarSign, ShoppingCart, BadgePercent } from "lucide-react";
 
 interface SalesReportProps {
   startDate: string;
@@ -134,36 +142,31 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium sm:text-sm">Total Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold tabular-nums sm:text-2xl">
-              {formatCurrency(data.summary.totalRevenue)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium sm:text-sm">Total Orders</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold tabular-nums sm:text-2xl">{data.summary.totalOrders}</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium sm:text-sm">
-              Average Order Value
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold tabular-nums sm:text-2xl">
-              {formatCurrency(data.summary.averageOrderValue)}
-            </div>
-          </CardContent>
-        </Card>
+        <ReportMetricCard
+          title="Total Revenue"
+          icon={DollarSign}
+          iconClassName="bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/25 dark:text-emerald-300"
+        >
+          <div className={reportMetricValueClass}>
+            {formatCurrency(data.summary.totalRevenue)}
+          </div>
+        </ReportMetricCard>
+        <ReportMetricCard
+          title="Total Orders"
+          icon={ShoppingCart}
+          iconClassName="bg-sky-500/15 text-sky-700 dark:bg-sky-500/25 dark:text-sky-300"
+        >
+          <div className={reportMetricValueClass}>{data.summary.totalOrders}</div>
+        </ReportMetricCard>
+        <ReportMetricCard
+          title="Average Order Value"
+          icon={BadgePercent}
+          iconClassName="bg-violet-500/15 text-violet-700 dark:bg-violet-500/25 dark:text-violet-300"
+        >
+          <div className={reportMetricValueClass}>
+            {formatCurrency(data.summary.averageOrderValue)}
+          </div>
+        </ReportMetricCard>
       </div>
 
       {/* Charts */}
@@ -173,7 +176,7 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
             <CardTitle>Daily Sales</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={REPORT_CHART_HEIGHT}>
               <LineChart data={data.dailySales}>
                 <CartesianGrid
                   strokeDasharray="3 3"
@@ -220,12 +223,15 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
           </CardHeader>
           <CardContent>
             {!data.categorySales || data.categorySales.length === 0 ? (
-              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+              <div
+                className="flex items-center justify-center text-muted-foreground"
+                style={{ height: REPORT_CHART_HEIGHT }}
+              >
                 No sales data for selected period
               </div>
             ) : (
-              <div className="flex flex-col lg:flex-row items-center justify-center gap-6">
-                <ResponsiveContainer width="100%" height={300}>
+              <div className="flex flex-col items-center justify-center gap-4 lg:flex-row">
+                <ResponsiveContainer width="100%" height={REPORT_CHART_HEIGHT}>
                   <PieChart>
                     <Pie
                       data={data.categorySales}
@@ -243,8 +249,8 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
                             : 0;
                         return percentage > 5 ? `${percentage}%` : "";
                       }}
-                      outerRadius={100}
-                      innerRadius={40}
+                      outerRadius={REPORT_PIE_OUTER_RADIUS}
+                      innerRadius={REPORT_PIE_INNER_RADIUS}
                       fill="hsl(25, 95%, 53%)"
                       dataKey="value"
                       paddingAngle={2}
@@ -315,7 +321,7 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
             <CardTitle>Top Products</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={REPORT_CHART_HEIGHT}>
               <BarChart data={data.topProducts.slice(0, 10)}>
                 <CartesianGrid
                   strokeDasharray="3 3"
@@ -327,7 +333,7 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
                   style={{ fontSize: "0.75rem" }}
                   angle={-45}
                   textAnchor="end"
-                  height={100}
+                  height={REPORT_CHART_ANGLED_XAXIS_HEIGHT}
                 />
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"
@@ -354,7 +360,7 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
             <CardTitle>Payment Methods</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={REPORT_CHART_HEIGHT}>
               <BarChart data={data.paymentMethods}>
                 <CartesianGrid
                   strokeDasharray="3 3"
