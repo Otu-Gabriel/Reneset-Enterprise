@@ -14,13 +14,31 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
-import { Loader2, DollarSign, Eye } from "lucide-react";
+import { DollarSign, Eye } from "lucide-react";
 import { RecordPaymentModal } from "./RecordPaymentModal";
 import { InstallmentDetailsModal } from "./InstallmentDetailsModal";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
+import { CardTableSkeleton } from "@/components/ui/table-skeletons";
 import { formatSaleNumberShort } from "@/lib/sale-number";
+import { cn } from "@/lib/utils";
+import {
+  dashboardSectionCardClass,
+  dashboardSectionTableContentClass,
+} from "@/lib/dashboard-card";
+
+const INSTALLMENT_COLUMN_LABELS = [
+  "Sale Number",
+  "Customer",
+  "Total Amount",
+  "Paid",
+  "Remaining",
+  "Installments",
+  "Status",
+  "Next Payment",
+  "Actions",
+];
 
 interface InstallmentPlan {
   id: string;
@@ -121,20 +139,20 @@ export function InstallmentsTable({ filters }: InstallmentsTableProps) {
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        </CardContent>
-      </Card>
+      <CardTableSkeleton
+        columnCount={9}
+        rowCount={8}
+        columnLabels={INSTALLMENT_COLUMN_LABELS}
+      />
     );
   }
 
   return (
     <>
-      <Card className="bg-card">
-        <CardContent className="pt-6">
+      <Card className={dashboardSectionCardClass}>
+        <CardContent
+          className={cn(dashboardSectionTableContentClass, "pt-6")}
+        >
           <Table>
             <TableHeader>
               <TableRow>

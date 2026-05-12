@@ -15,6 +15,16 @@ import { ListOrdered, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatSaleNumberShort } from "@/lib/sale-number";
+import { DataTableSkeleton } from "@/components/ui/table-skeletons";
+import {
+  dashboardSectionCardClass,
+  dashboardSectionCardHeaderClass,
+  dashboardSectionCardTitleClass,
+  dashboardSectionTableContentClass,
+} from "@/lib/dashboard-card";
+
+const TX_COLUMN_LABELS = ["Sale", "Customer", "Time", "Amount"];
+const STOCK_COLUMN_LABELS = ["Product", "SKU", "Stock", "Min"];
 
 const PAGE_SIZE = 8;
 
@@ -135,9 +145,9 @@ export function DashboardPaginatedTables() {
 
   return (
     <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2">
-      <Card className="min-w-0 overflow-hidden bg-card border-border/80 shadow-sm">
-        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0 p-3 pb-2 sm:p-6 sm:pb-2 sm:pt-5">
-          <CardTitle className="text-sm font-semibold">
+      <Card className={dashboardSectionCardClass}>
+        <CardHeader className={dashboardSectionCardHeaderClass}>
+          <CardTitle className={dashboardSectionCardTitleClass}>
             Today&apos;s transactions
           </CardTitle>
           <div
@@ -149,10 +159,15 @@ export function DashboardPaginatedTables() {
             <ListOrdered className="h-3.5 w-3.5" aria-hidden />
           </div>
         </CardHeader>
-        <CardContent className="min-w-0 px-0 pb-4 pt-0 sm:px-6">
+        <CardContent className={dashboardSectionTableContentClass}>
           {txLoading ? (
-            <div className="px-3 py-8 text-center text-xs text-muted-foreground sm:px-0">
-              Loading…
+            <div className="min-w-0 px-3 sm:px-0">
+              <DataTableSkeleton
+                columnCount={4}
+                rowCount={PAGE_SIZE}
+                size="compact"
+                columnLabels={TX_COLUMN_LABELS}
+              />
             </div>
           ) : txRows.length === 0 ? (
             <div className="px-3 py-8 text-center text-xs text-muted-foreground sm:px-0">
@@ -221,9 +236,9 @@ export function DashboardPaginatedTables() {
         </CardContent>
       </Card>
 
-      <Card className="min-w-0 overflow-hidden bg-card border-border/80 shadow-sm">
-        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0 p-3 pb-2 sm:p-6 sm:pb-2 sm:pt-5">
-          <CardTitle className="text-sm font-semibold">
+      <Card className={dashboardSectionCardClass}>
+        <CardHeader className={dashboardSectionCardHeaderClass}>
+          <CardTitle className={dashboardSectionCardTitleClass}>
             Low stock alerts
           </CardTitle>
           <div
@@ -235,10 +250,15 @@ export function DashboardPaginatedTables() {
             <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
           </div>
         </CardHeader>
-        <CardContent className="min-w-0 px-0 pb-4 pt-0 sm:px-6">
+        <CardContent className={dashboardSectionTableContentClass}>
           {stockLoading ? (
-            <div className="px-3 py-8 text-center text-xs text-muted-foreground sm:px-0">
-              Loading…
+            <div className="min-w-0 px-3 sm:px-0">
+              <DataTableSkeleton
+                columnCount={4}
+                rowCount={PAGE_SIZE}
+                size="compact"
+                columnLabels={STOCK_COLUMN_LABELS}
+              />
             </div>
           ) : stockRows.length === 0 ? (
             <div className="px-3 py-8 text-center text-xs text-muted-foreground sm:px-0">

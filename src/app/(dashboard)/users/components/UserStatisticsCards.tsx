@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Shield, UserCheck, UserX } from "lucide-react";
+import { Users, Shield, UserCheck, UserX, type LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  dashboardKpiCardClass,
+  dashboardKpiCardContentClass,
+  dashboardKpiCardHeaderClass,
+  dashboardKpiCardTitleClass,
+} from "@/lib/dashboard-card";
+import { StatCardsSkeleton } from "@/components/ui/table-skeletons";
 
 interface Statistics {
   total: number;
@@ -53,83 +61,91 @@ export function UserStatisticsCards() {
   };
 
   if (loading) {
-    return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="bg-card">
-            <CardHeader>
-              <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
-                Loading...
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl font-bold tabular-nums sm:text-2xl">---</div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+    return <StatCardsSkeleton count={4} />;
   }
 
   if (!stats) return null;
 
+  const iconWrap = (Icon: LucideIcon, tone: string) => (
+    <div
+      className={cn(
+        "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+        tone
+      )}
+    >
+      <Icon className="h-4 w-4" aria-hidden />
+    </div>
+  );
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="bg-card">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
-            Total Users
-          </CardTitle>
-          <Users className="h-4 w-4 text-muted-foreground" />
+    <div className="grid min-w-0 gap-3 md:grid-cols-2 lg:grid-cols-4">
+      <Card className={dashboardKpiCardClass}>
+        <CardHeader className={dashboardKpiCardHeaderClass}>
+          <CardTitle className={dashboardKpiCardTitleClass}>Total Users</CardTitle>
+          {iconWrap(
+            Users,
+            "bg-primary/15 text-primary dark:bg-primary/25 dark:text-primary"
+          )}
         </CardHeader>
-        <CardContent>
-          <div className="text-xl font-bold tabular-nums sm:text-2xl">{stats.total}</div>
-          <p className="text-xs text-muted-foreground mt-1">
+        <CardContent className={dashboardKpiCardContentClass}>
+          <div className="text-base font-bold tabular-nums text-foreground sm:text-lg">
+            {stats.total}
+          </div>
+          <p className="mt-1 text-[0.625rem] font-medium text-muted-foreground sm:text-[0.6875rem]">
             Registered users
           </p>
         </CardContent>
       </Card>
 
-      <Card className="bg-card">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
-            Admins
-          </CardTitle>
-          <Shield className="h-4 w-4 text-muted-foreground" />
+      <Card className={dashboardKpiCardClass}>
+        <CardHeader className={dashboardKpiCardHeaderClass}>
+          <CardTitle className={dashboardKpiCardTitleClass}>Admins</CardTitle>
+          {iconWrap(
+            Shield,
+            "bg-purple-500/15 text-purple-700 dark:bg-purple-500/25 dark:text-purple-300"
+          )}
         </CardHeader>
-        <CardContent>
-          <div className="text-xl font-bold tabular-nums sm:text-2xl">{stats.byRole.admin}</div>
-          <p className="text-xs text-muted-foreground mt-1">
+        <CardContent className={dashboardKpiCardContentClass}>
+          <div className="text-base font-bold tabular-nums text-foreground sm:text-lg">
+            {stats.byRole.admin}
+          </div>
+          <p className="mt-1 text-[0.625rem] font-medium text-muted-foreground sm:text-[0.6875rem]">
             {stats.byRole.manager} Managers, {stats.byRole.employee} Employees
           </p>
         </CardContent>
       </Card>
 
-      <Card className="bg-card">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
-            Full Access
-          </CardTitle>
-          <UserCheck className="h-4 w-4 text-muted-foreground" />
+      <Card className={dashboardKpiCardClass}>
+        <CardHeader className={dashboardKpiCardHeaderClass}>
+          <CardTitle className={dashboardKpiCardTitleClass}>Full Access</CardTitle>
+          {iconWrap(
+            UserCheck,
+            "bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/25 dark:text-emerald-300"
+          )}
         </CardHeader>
-        <CardContent>
-          <div className="text-xl font-bold tabular-nums sm:text-2xl">{stats.withFullAccess}</div>
-          <p className="text-xs text-muted-foreground mt-1">
+        <CardContent className={dashboardKpiCardContentClass}>
+          <div className="text-base font-bold tabular-nums text-foreground sm:text-lg">
+            {stats.withFullAccess}
+          </div>
+          <p className="mt-1 text-[0.625rem] font-medium text-muted-foreground sm:text-[0.6875rem]">
             Users with full access
           </p>
         </CardContent>
       </Card>
 
-      <Card className="bg-card">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
-            Active Users
-          </CardTitle>
-          <UserX className="h-4 w-4 text-muted-foreground" />
+      <Card className={dashboardKpiCardClass}>
+        <CardHeader className={dashboardKpiCardHeaderClass}>
+          <CardTitle className={dashboardKpiCardTitleClass}>Active Users</CardTitle>
+          {iconWrap(
+            UserX,
+            "bg-sky-500/15 text-sky-700 dark:bg-sky-500/25 dark:text-sky-300"
+          )}
         </CardHeader>
-        <CardContent>
-          <div className="text-xl font-bold tabular-nums sm:text-2xl">{stats.activeUsers}</div>
-          <p className="text-xs text-muted-foreground mt-1">
+        <CardContent className={dashboardKpiCardContentClass}>
+          <div className="text-base font-bold tabular-nums text-foreground sm:text-lg">
+            {stats.activeUsers}
+          </div>
+          <p className="mt-1 text-[0.625rem] font-medium text-muted-foreground sm:text-[0.6875rem]">
             Currently active
           </p>
         </CardContent>

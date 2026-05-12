@@ -24,7 +24,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useCurrency } from "@/hooks/useCurrency";
-import { Loader2, TrendingUp, TrendingDown } from "lucide-react";
+import { ReportPageSkeleton } from "@/components/ui/table-skeletons";
+import { TrendingUp, TrendingDown } from "lucide-react";
 
 interface FinancialReportProps {
   startDate: string;
@@ -59,9 +60,12 @@ export function FinancialReport({ startDate, endDate }: FinancialReportProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
+      <ReportPageSkeleton
+        summaryCards={4}
+        summaryGridClassName="md:grid-cols-2 lg:grid-cols-4"
+        chartCards={2}
+        tables={[{ columns: 5, rows: 8 }]}
+      />
     );
   }
 

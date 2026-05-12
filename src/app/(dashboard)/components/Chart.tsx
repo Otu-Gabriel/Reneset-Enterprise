@@ -18,6 +18,12 @@ import {
 import { Clock, PieChart as PieChartIcon, BarChart3 } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { cn } from "@/lib/utils";
+import {
+  dashboardSectionCardClass,
+  dashboardSectionCardHeaderClass,
+  dashboardSectionCardTitleClass,
+  dashboardSectionChartContentClass,
+} from "@/lib/dashboard-card";
 
 interface SalesOverviewProps {
   data: Array<{
@@ -30,9 +36,9 @@ export function SalesOverview({ data }: SalesOverviewProps) {
   const formatCurrency = useCurrency();
 
   return (
-    <Card className="min-w-0 bg-card border-border/80 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 pt-3 sm:p-6 sm:pb-2 sm:pt-4">
-        <CardTitle className="text-sm font-semibold">
+    <Card className={dashboardSectionCardClass}>
+      <CardHeader className={dashboardSectionCardHeaderClass}>
+        <CardTitle className={dashboardSectionCardTitleClass}>
           Today&apos;s Sales by Hour
         </CardTitle>
         <div
@@ -44,7 +50,7 @@ export function SalesOverview({ data }: SalesOverviewProps) {
           <Clock className="h-3.5 w-3.5" aria-hidden />
         </div>
       </CardHeader>
-      <CardContent className="min-w-0 px-3 pb-3 pt-0 sm:px-6">
+      <CardContent className={dashboardSectionChartContentClass}>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={data} margin={{ top: 4, right: 4, left: -18, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
@@ -94,9 +100,9 @@ interface TopProductsTodayProps {
 export function TopProductsToday({ data }: TopProductsTodayProps) {
   if (data.length === 0) {
     return (
-      <Card className="min-w-0 bg-card border-border/80 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 pt-3 sm:p-6 sm:pb-2 sm:pt-4">
-          <CardTitle className="text-sm font-semibold">
+      <Card className={dashboardSectionCardClass}>
+        <CardHeader className={dashboardSectionCardHeaderClass}>
+          <CardTitle className={dashboardSectionCardTitleClass}>
             Most sold today (units)
           </CardTitle>
           <div
@@ -108,7 +114,7 @@ export function TopProductsToday({ data }: TopProductsTodayProps) {
             <BarChart3 className="h-3.5 w-3.5" aria-hidden />
           </div>
         </CardHeader>
-        <CardContent className="min-w-0 px-3 pb-3 pt-0 sm:px-6">
+        <CardContent className={dashboardSectionChartContentClass}>
           <div className="flex h-[200px] items-center justify-center text-xs text-muted-foreground">
             No sales today
           </div>
@@ -124,9 +130,9 @@ export function TopProductsToday({ data }: TopProductsTodayProps) {
   }));
 
   return (
-    <Card className="min-w-0 bg-card border-border/80 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 pt-3 sm:p-6 sm:pb-2 sm:pt-4">
-        <CardTitle className="text-sm font-semibold">
+    <Card className={dashboardSectionCardClass}>
+      <CardHeader className={dashboardSectionCardHeaderClass}>
+        <CardTitle className={dashboardSectionCardTitleClass}>
           Most sold today (units)
         </CardTitle>
         <div
@@ -138,7 +144,7 @@ export function TopProductsToday({ data }: TopProductsTodayProps) {
           <BarChart3 className="h-3.5 w-3.5" aria-hidden />
         </div>
       </CardHeader>
-      <CardContent className="min-w-0 px-3 pb-3 pt-0 sm:px-6">
+      <CardContent className={dashboardSectionChartContentClass}>
         <ResponsiveContainer width="100%" height={200}>
           <BarChart
             data={chartData}
@@ -250,9 +256,9 @@ export function SalesByCategory({ data }: CategorySalesProps) {
   
   if (data.length === 0) {
     return (
-      <Card className="min-w-0 bg-card border-border/80 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 pt-3 sm:p-6 sm:pb-2 sm:pt-4">
-          <CardTitle className="text-sm font-semibold text-foreground">
+      <Card className={dashboardSectionCardClass}>
+        <CardHeader className={dashboardSectionCardHeaderClass}>
+          <CardTitle className={dashboardSectionCardTitleClass}>
             Today&apos;s Sales by Category
           </CardTitle>
           <div
@@ -264,7 +270,7 @@ export function SalesByCategory({ data }: CategorySalesProps) {
             <PieChartIcon className="h-3.5 w-3.5" aria-hidden />
           </div>
         </CardHeader>
-        <CardContent className="min-w-0 px-3 pb-3 pt-0 sm:px-6">
+        <CardContent className={dashboardSectionChartContentClass}>
           <div className="flex h-[200px] items-center justify-center text-xs text-muted-foreground">
             No sales data for today
           </div>
@@ -274,9 +280,9 @@ export function SalesByCategory({ data }: CategorySalesProps) {
   }
 
   return (
-    <Card className="min-w-0 bg-card border-border/80 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 pt-3 sm:p-6 sm:pb-2 sm:pt-4">
-        <CardTitle className="text-sm font-semibold">
+    <Card className={dashboardSectionCardClass}>
+      <CardHeader className={dashboardSectionCardHeaderClass}>
+        <CardTitle className={dashboardSectionCardTitleClass}>
           Today&apos;s Sales by Category
         </CardTitle>
         <div
@@ -288,7 +294,7 @@ export function SalesByCategory({ data }: CategorySalesProps) {
           <PieChartIcon className="h-3.5 w-3.5" aria-hidden />
         </div>
       </CardHeader>
-      <CardContent className="min-w-0 px-3 pb-3 pt-0 sm:px-6">
+      <CardContent className={dashboardSectionChartContentClass}>
         <div className="flex min-h-[176px] w-full min-w-0 flex-row items-center gap-1.5 sm:gap-2">
           <div className="h-[176px] min-w-0 flex-[3] basis-0 sm:h-[200px]">
             <ResponsiveContainer width="100%" height="100%">

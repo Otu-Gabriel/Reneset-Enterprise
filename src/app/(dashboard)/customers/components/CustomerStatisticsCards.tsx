@@ -3,7 +3,15 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCurrency } from "@/hooks/useCurrency";
-import { Users, UserPlus, TrendingUp, CreditCard, Loader2 } from "lucide-react";
+import { Users, UserPlus, TrendingUp, CreditCard, type LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  dashboardKpiCardClass,
+  dashboardKpiCardContentClass,
+  dashboardKpiCardHeaderClass,
+  dashboardKpiCardTitleClass,
+} from "@/lib/dashboard-card";
+import { StatCardsSkeleton } from "@/components/ui/table-skeletons";
 
 interface Statistics {
   totalCustomers: number;
@@ -42,100 +50,112 @@ export function CustomerStatisticsCards() {
   };
 
   if (loading) {
-    return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="bg-card">
-            <CardHeader>
-              <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
-                Loading...
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-center h-12">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+    return <StatCardsSkeleton count={4} />;
   }
 
   if (!stats) return null;
 
+  const iconWrap = (Icon: LucideIcon, tone: string) => (
+    <div
+      className={cn(
+        "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+        tone
+      )}
+    >
+      <Icon className="h-4 w-4" aria-hidden />
+    </div>
+  );
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="bg-card">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
+    <div className="grid min-w-0 gap-3 md:grid-cols-2 lg:grid-cols-4">
+      <Card className={dashboardKpiCardClass}>
+        <CardHeader className={dashboardKpiCardHeaderClass}>
+          <CardTitle className={dashboardKpiCardTitleClass}>
             Total Customers
           </CardTitle>
-          <Users className="h-4 w-4 text-muted-foreground" />
+          {iconWrap(
+            Users,
+            "bg-primary/15 text-primary dark:bg-primary/25 dark:text-primary"
+          )}
         </CardHeader>
-        <CardContent>
-          <div className="text-xl font-bold tabular-nums sm:text-2xl">{stats.totalCustomers}</div>
-          <p className="text-xs text-muted-foreground mt-1">
+        <CardContent className={dashboardKpiCardContentClass}>
+          <div className="text-base font-bold tabular-nums text-foreground sm:text-lg">
+            {stats.totalCustomers}
+          </div>
+          <p className="mt-1 text-[0.625rem] font-medium text-muted-foreground sm:text-[0.6875rem]">
             {stats.activeCustomers} active
           </p>
         </CardContent>
       </Card>
 
-      <Card className="bg-card">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
+      <Card className={dashboardKpiCardClass}>
+        <CardHeader className={dashboardKpiCardHeaderClass}>
+          <CardTitle className={dashboardKpiCardTitleClass}>
             New This Month
           </CardTitle>
-          <UserPlus className="h-4 w-4 text-muted-foreground" />
+          {iconWrap(
+            UserPlus,
+            "bg-sky-500/15 text-sky-700 dark:bg-sky-500/25 dark:text-sky-300"
+          )}
         </CardHeader>
-        <CardContent>
-          <div className="text-xl font-bold tabular-nums sm:text-2xl">
+        <CardContent className={dashboardKpiCardContentClass}>
+          <div className="text-base font-bold tabular-nums text-foreground sm:text-lg">
             {stats.newCustomersThisMonth}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="mt-1 text-[0.625rem] font-medium text-muted-foreground sm:text-[0.6875rem]">
             New customers added
           </p>
         </CardContent>
       </Card>
 
-      <Card className="bg-card">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
+      <Card className={dashboardKpiCardClass}>
+        <CardHeader className={dashboardKpiCardHeaderClass}>
+          <CardTitle className={dashboardKpiCardTitleClass}>
             Top Customer
           </CardTitle>
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          {iconWrap(
+            TrendingUp,
+            "bg-amber-500/15 text-amber-700 dark:bg-amber-500/25 dark:text-amber-300"
+          )}
         </CardHeader>
-        <CardContent>
+        <CardContent className={dashboardKpiCardContentClass}>
           {stats.topCustomers.length > 0 ? (
             <>
-              <div className="text-base font-bold tabular-nums sm:text-xl">
+              <div className="text-base font-bold tabular-nums text-foreground sm:text-lg">
                 {stats.topCustomers[0].name}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="mt-1 text-[0.625rem] font-medium text-muted-foreground sm:text-[0.6875rem]">
                 {formatCurrency(stats.topCustomers[0].totalSpent)} lifetime value
               </p>
             </>
           ) : (
             <>
-              <div className="text-xl font-bold tabular-nums sm:text-2xl">-</div>
-              <p className="text-xs text-muted-foreground mt-1">No data</p>
+              <div className="text-base font-bold tabular-nums text-foreground sm:text-lg">
+                -
+              </div>
+              <p className="mt-1 text-[0.625rem] font-medium text-muted-foreground sm:text-[0.6875rem]">
+                No data
+              </p>
             </>
           )}
         </CardContent>
       </Card>
 
-      <Card className="bg-card">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
+      <Card className={dashboardKpiCardClass}>
+        <CardHeader className={dashboardKpiCardHeaderClass}>
+          <CardTitle className={dashboardKpiCardTitleClass}>
             Pending Payments
           </CardTitle>
-          <CreditCard className="h-4 w-4 text-muted-foreground" />
+          {iconWrap(
+            CreditCard,
+            "bg-violet-500/15 text-violet-700 dark:bg-violet-500/25 dark:text-violet-300"
+          )}
         </CardHeader>
-        <CardContent>
-          <div className="text-xl font-bold tabular-nums sm:text-2xl">
+        <CardContent className={dashboardKpiCardContentClass}>
+          <div className="text-base font-bold tabular-nums text-foreground sm:text-lg">
             {stats.customersWithPendingPayments}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="mt-1 text-[0.625rem] font-medium text-muted-foreground sm:text-[0.6875rem]">
             Customers with installments
           </p>
         </CardContent>

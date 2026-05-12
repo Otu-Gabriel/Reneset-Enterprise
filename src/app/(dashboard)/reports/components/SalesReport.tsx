@@ -27,7 +27,7 @@ import {
 } from "recharts";
 import { formatDate } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
-import { Loader2 } from "lucide-react";
+import { ReportPageSkeleton } from "@/components/ui/table-skeletons";
 
 interface SalesReportProps {
   startDate: string;
@@ -111,9 +111,12 @@ export function SalesReport({ startDate, endDate }: SalesReportProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
+      <ReportPageSkeleton
+        summaryCards={3}
+        summaryGridClassName="md:grid-cols-3"
+        chartCards={2}
+        tables={[{ columns: 3, rows: 8 }]}
+      />
     );
   }
 

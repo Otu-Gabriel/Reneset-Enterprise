@@ -23,6 +23,13 @@ import { Edit, Trash2, Search, Plus, Upload, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
+import { TablePageSkeleton } from "@/components/ui/table-skeletons";
+import {
+  dashboardSectionCardClass,
+  dashboardSectionCardHeaderClass,
+  dashboardSectionCardTitleClass,
+  dashboardSectionTableContentClass,
+} from "@/lib/dashboard-card";
 import { EditBrandModal } from "./EditBrandModal";
 import { AddBrandModal } from "./AddBrandModal";
 import {
@@ -65,6 +72,15 @@ export function BrandsTable({
   canDelete = false,
 }: BrandsTableProps) {
   const { data: session } = useSession();
+  const showBrandActions = canEdit || canDelete;
+  const brandColumnCount = showBrandActions ? 5 : 4;
+  const brandColumnLabels = [
+    "Brand Name",
+    "Category",
+    "Description",
+    "Created",
+    ...(showBrandActions ? ["Actions"] : []),
+  ];
   const [brands, setBrands] = useState<Brand[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const isFirstFetch = useRef(true);
@@ -204,19 +220,25 @@ export function BrandsTable({
 
   if (initialLoading) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
-        <p className="text-sm">Loading brands…</p>
-      </div>
+      <TablePageSkeleton
+        columnCount={brandColumnCount}
+        rowCount={10}
+        toolbar="filters"
+        columnLabels={brandColumnLabels}
+      />
     );
   }
 
   return (
     <>
-      <Card className="bg-card">
-        <CardHeader>
+      <Card className={dashboardSectionCardClass}>
+        <CardHeader className={dashboardSectionCardHeaderClass}>
           <div className="flex items-center gap-3 justify-between">
-            <CardTitle className="hidden sm:block">Brands</CardTitle>
+            <CardTitle
+              className={`${dashboardSectionCardTitleClass} hidden sm:block`}
+            >
+              Brands
+            </CardTitle>
             <div className="flex items-center gap-2 flex-col sm:flex-row sm:flex-wrap w-full sm:w-auto">
               {canCreate && (
                 <>
@@ -339,7 +361,7 @@ export function BrandsTable({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="relative">
+        <CardContent className={`relative ${dashboardSectionTableContentClass}`}>
           <div className="relative overflow-x-auto">
             {isRefreshing && (
               <div

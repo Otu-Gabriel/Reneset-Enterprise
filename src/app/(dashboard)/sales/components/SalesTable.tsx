@@ -22,6 +22,23 @@ import { SaleDetailsModal } from "./SaleDetailsModal";
 import { EditSaleModal } from "./EditSaleModal";
 import { saleItemLineCogs } from "@/lib/product-variations";
 import { formatSaleNumberShort } from "@/lib/sale-number";
+import { DataTableSkeleton } from "@/components/ui/table-skeletons";
+import {
+  dashboardSectionCardClass,
+  dashboardSectionCardHeaderClass,
+  dashboardSectionCardTitleClass,
+  dashboardSectionTableContentClass,
+} from "@/lib/dashboard-card";
+
+const SALES_TABLE_COLUMN_LABELS = [
+  "Sale",
+  "Customer",
+  "Products",
+  "Date",
+  "Amount",
+  "Status",
+  "Actions",
+] as const;
 
 interface Sale {
   id: string;
@@ -184,14 +201,12 @@ export const SalesTable = forwardRef<SalesTableRef, SalesTableProps>(
       );
     };
 
-    if (loading) {
-      return <div className="text-center py-8">Loading...</div>;
-    }
-
     return (
-      <Card className="bg-card border-border/80 shadow-sm">
-        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0">
-          <CardTitle className="text-foreground">Sales Transactions</CardTitle>
+      <Card className={dashboardSectionCardClass}>
+        <CardHeader className={dashboardSectionCardHeaderClass}>
+          <CardTitle className={dashboardSectionCardTitleClass}>
+            Sales Transactions
+          </CardTitle>
           {canCreate && (
             <AddSaleModal
               onSaleCreated={() => {
@@ -205,7 +220,15 @@ export const SalesTable = forwardRef<SalesTableRef, SalesTableProps>(
             </AddSaleModal>
           )}
         </CardHeader>
-        <CardContent>
+        <CardContent className={dashboardSectionTableContentClass}>
+          {loading ? (
+            <DataTableSkeleton
+              columnCount={7}
+              rowCount={8}
+              columnLabels={[...SALES_TABLE_COLUMN_LABELS]}
+            />
+          ) : (
+            <>
           <Table>
             <TableHeader>
               <TableRow>
@@ -323,6 +346,8 @@ export const SalesTable = forwardRef<SalesTableRef, SalesTableProps>(
                 Next
               </Button>
             </div>
+          )}
+            </>
           )}
         </CardContent>
         <SaleDetailsModal

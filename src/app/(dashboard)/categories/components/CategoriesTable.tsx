@@ -16,6 +16,13 @@ import { Edit, Trash2, Search, Plus, Upload, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
+import { TablePageSkeleton } from "@/components/ui/table-skeletons";
+import {
+  dashboardSectionCardClass,
+  dashboardSectionCardHeaderClass,
+  dashboardSectionCardTitleClass,
+  dashboardSectionTableContentClass,
+} from "@/lib/dashboard-card";
 import { EditCategoryModal } from "./EditCategoryModal";
 import { AddCategoryModal } from "./AddCategoryModal";
 import {
@@ -54,6 +61,15 @@ export function CategoriesTable({
   canDelete = false,
 }: CategoriesTableProps) {
   const { data: session } = useSession();
+  const showCategoryActions = canEdit || canDelete;
+  const categoryColumnCount = showCategoryActions ? 5 : 4;
+  const categoryColumnLabels = [
+    "Name",
+    "Description",
+    "Brands",
+    "Created",
+    ...(showCategoryActions ? ["Actions"] : []),
+  ];
   const [categories, setCategories] = useState<Category[]>([]);
   const isFirstFetch = useRef(true);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -174,19 +190,25 @@ export function CategoriesTable({
 
   if (initialLoading) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
-        <p className="text-sm">Loading categories…</p>
-      </div>
+      <TablePageSkeleton
+        columnCount={categoryColumnCount}
+        rowCount={10}
+        toolbar="filters"
+        columnLabels={categoryColumnLabels}
+      />
     );
   }
 
   return (
     <>
-      <Card className="bg-card">
-        <CardHeader>
-          <div className="flex items-center flex-col sm:flex-row gap-5 sm:gap-3 sm:justify-between">
-            <CardTitle className="hidden sm:block">Categories</CardTitle>
+      <Card className={dashboardSectionCardClass}>
+        <CardHeader className={dashboardSectionCardHeaderClass}>
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <CardTitle
+              className={`${dashboardSectionCardTitleClass} hidden sm:block`}
+            >
+              Categories
+            </CardTitle>
             <div className="flex items-center flex-col sm:flex-row sm:flex-wrap gap-2 w-full sm:w-auto">
               {canCreate && (
                 <>
@@ -289,7 +311,7 @@ export function CategoriesTable({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="relative">
+        <CardContent className={`relative ${dashboardSectionTableContentClass}`}>
           <div className="relative overflow-x-auto">
             {isRefreshing && (
               <div

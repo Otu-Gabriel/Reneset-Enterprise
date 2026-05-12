@@ -12,6 +12,12 @@ import {
 } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { cn } from "@/lib/utils";
+import {
+  dashboardKpiCardClass,
+  dashboardKpiCardContentClass,
+  dashboardKpiCardHeaderClass,
+  dashboardKpiCardTitleClass,
+} from "@/lib/dashboard-card";
 
 interface StatCardProps {
   title: string;
@@ -38,17 +44,17 @@ export function StatCard({
   const trendSize = compact ? "h-3 w-3" : "h-3.5 w-3.5";
 
   return (
-    <Card className="bg-card border-border/80 shadow-sm">
+    <Card className={dashboardKpiCardClass}>
       <CardHeader
         className={cn(
-          "flex flex-row items-center justify-between space-y-0 pb-1",
-          compact ? "px-3 pt-3" : "pb-2"
+          dashboardKpiCardHeaderClass,
+          !compact && "px-6 pt-6 pb-2",
         )}
       >
         <CardTitle
           className={cn(
-            "font-medium leading-tight text-muted-foreground",
-            compact ? "text-[0.625rem] sm:text-[0.6875rem]" : "text-xs sm:text-sm"
+            dashboardKpiCardTitleClass,
+            !compact && "text-xs sm:text-sm",
           )}
         >
           {title}
@@ -63,7 +69,7 @@ export function StatCard({
           {icon}
         </div>
       </CardHeader>
-      <CardContent className={compact ? "px-3 pb-3 pt-0" : undefined}>
+      <CardContent className={compact ? dashboardKpiCardContentClass : undefined}>
         <div
           className={cn(
             "font-bold tabular-nums tracking-tight text-foreground",

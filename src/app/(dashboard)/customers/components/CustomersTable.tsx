@@ -19,6 +19,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TablePageSkeleton } from "@/components/ui/table-skeletons";
+import {
+  dashboardSectionCardClass,
+  dashboardSectionCardHeaderClass,
+  dashboardSectionCardTitleClass,
+  dashboardSectionTableContentClass,
+} from "@/lib/dashboard-card";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatDate } from "@/lib/utils";
 import { Edit, Trash2, Search, Plus, Eye, Download, Upload, Loader2 } from "lucide-react";
@@ -40,6 +47,17 @@ import {
 import { Label } from "@/components/ui/label";
 
 const SEARCH_DEBOUNCE_MS = 400;
+
+const CUSTOMER_TABLE_COLUMN_LABELS = [
+  "Name",
+  "Contact",
+  "Location",
+  "Total Sales",
+  "Total Spent",
+  "Last Purchase",
+  "Status",
+  "Actions",
+];
 
 interface Customer {
   id: string;
@@ -286,19 +304,25 @@ export function CustomersTable() {
 
   if (initialLoading) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
-        <p className="text-sm">Loading customers…</p>
-      </div>
+      <TablePageSkeleton
+        columnCount={8}
+        rowCount={10}
+        toolbar="filters"
+        columnLabels={CUSTOMER_TABLE_COLUMN_LABELS}
+      />
     );
   }
 
   return (
     <>
-      <Card className="bg-card">
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <CardTitle className="font-semibold sm:hidden">Customers</CardTitle>
+      <Card className={dashboardSectionCardClass}>
+        <CardHeader className={dashboardSectionCardHeaderClass}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle
+              className={`font-semibold sm:hidden ${dashboardSectionCardTitleClass}`}
+            >
+              Customers
+            </CardTitle>
             <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2">
               <div className="relative w-full sm:w-auto">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -435,7 +459,7 @@ export function CustomersTable() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6">
+        <CardContent className={dashboardSectionTableContentClass}>
           <div className="relative overflow-x-auto">
             {isRefreshing && (
               <div

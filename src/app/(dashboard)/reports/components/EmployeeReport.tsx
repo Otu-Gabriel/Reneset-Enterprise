@@ -25,7 +25,8 @@ import {
 } from "recharts";
 import { formatDate } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
-import { Loader2, RefreshCw } from "lucide-react";
+import { ReportPageSkeleton } from "@/components/ui/table-skeletons";
+import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface EmployeeReportProps {
@@ -90,9 +91,12 @@ export function EmployeeReport({ startDate, endDate }: EmployeeReportProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
+      <ReportPageSkeleton
+        summaryCards={4}
+        summaryGridClassName="md:grid-cols-2 lg:grid-cols-4"
+        chartCards={2}
+        tables={[{ columns: 4, rows: 6 }, { columns: 9, rows: 8 }]}
+      />
     );
   }
 

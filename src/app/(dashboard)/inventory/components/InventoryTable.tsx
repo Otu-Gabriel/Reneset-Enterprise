@@ -33,6 +33,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TablePageSkeleton } from "@/components/ui/table-skeletons";
+import {
+  dashboardSectionCardClass,
+  dashboardSectionCardHeaderPadding,
+  dashboardSectionCardTitleClass,
+  dashboardSectionTableContentClass,
+} from "@/lib/dashboard-card";
 import { ProductDetailsModal } from "./ProductDetailsModal";
 import { EditItemModal } from "./EditItemModal";
 import { AddStockModal } from "./AddStockModal";
@@ -47,6 +54,18 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+
+const INVENTORY_TABLE_COLUMN_LABELS = [
+  "Image",
+  "Name",
+  "SKU",
+  "Category",
+  "Brand",
+  "Price",
+  "Stock",
+  "Status",
+  "Actions",
+];
 
 interface Product {
   id: string;
@@ -426,20 +445,24 @@ export function InventoryTable({
 
   if (initialLoading) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
-        <p className="text-sm">Loading products…</p>
-      </div>
+      <TablePageSkeleton
+        columnCount={9}
+        rowCount={10}
+        toolbar="inventory"
+        columnLabels={INVENTORY_TABLE_COLUMN_LABELS}
+      />
     );
   }
 
   return (
     <>
-      <Card className="bg-card border-border/80 shadow-sm">
-        <CardHeader className="space-y-4 pb-4">
+      <Card className={dashboardSectionCardClass}>
+        <CardHeader
+          className={cn(dashboardSectionCardHeaderPadding, "space-y-4")}
+        >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0 space-y-1">
-              <CardTitle className="font-semibold">
+              <CardTitle className={dashboardSectionCardTitleClass}>
                 Products
               </CardTitle>
               <p className="text-xs text-muted-foreground sm:text-sm">
@@ -632,7 +655,7 @@ export function InventoryTable({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6">
+        <CardContent className={dashboardSectionTableContentClass}>
           <div className="relative overflow-x-auto">
             {isRefreshing && (
               <div

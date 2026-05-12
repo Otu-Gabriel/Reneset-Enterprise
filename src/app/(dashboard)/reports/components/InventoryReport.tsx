@@ -26,8 +26,9 @@ import {
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSession } from "next-auth/react";
 import { Role } from "@prisma/client";
-import { Loader2, AlertTriangle, LayoutGrid, Tags } from "lucide-react";
+import { AlertTriangle, LayoutGrid, Tags } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ReportPageSkeleton } from "@/components/ui/table-skeletons";
 
 interface InventoryReportProps {
   startDate: string;
@@ -72,9 +73,12 @@ export function InventoryReport({ startDate, endDate }: InventoryReportProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
+      <ReportPageSkeleton
+        summaryCards={4}
+        summaryGridClassName="md:grid-cols-2 lg:grid-cols-4"
+        chartCards={2}
+        tables={[{ columns: 5, rows: 8 }, { columns: 3, rows: 8 }]}
+      />
     );
   }
 

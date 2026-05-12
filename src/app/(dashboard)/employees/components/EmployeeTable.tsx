@@ -18,9 +18,26 @@ import { Edit, Trash2, Search, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
+import { TablePageSkeleton } from "@/components/ui/table-skeletons";
+import {
+  dashboardSectionCardClass,
+  dashboardSectionCardHeaderClass,
+  dashboardSectionCardTitleClass,
+  dashboardSectionTableContentClass,
+} from "@/lib/dashboard-card";
 import { EditEmployeeModal } from "./EditEmployeeModal";
 
 const SEARCH_DEBOUNCE_MS = 400;
+
+const EMPLOYEE_TABLE_COLUMN_LABELS = [
+  "Name",
+  "Email",
+  "Position",
+  "Department",
+  "Salary",
+  "Status",
+  "Actions",
+];
 
 interface Employee {
   id: string;
@@ -153,19 +170,21 @@ export function EmployeeTable({ refreshTrigger }: EmployeeTableProps = {}) {
 
   if (initialLoading) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
-        <p className="text-sm">Loading employees…</p>
-      </div>
+      <TablePageSkeleton
+        columnCount={7}
+        rowCount={10}
+        toolbar="employee"
+        columnLabels={EMPLOYEE_TABLE_COLUMN_LABELS}
+      />
     );
   }
 
   return (
     <>
-    <Card className="bg-card">
-      <CardHeader>
+    <Card className={dashboardSectionCardClass}>
+      <CardHeader className={dashboardSectionCardHeaderClass}>
         <div className="flex items-center justify-between">
-          <CardTitle>Employees</CardTitle>
+          <CardTitle className={dashboardSectionCardTitleClass}>Employees</CardTitle>
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -180,7 +199,7 @@ export function EmployeeTable({ refreshTrigger }: EmployeeTableProps = {}) {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="relative">
+      <CardContent className={`relative ${dashboardSectionTableContentClass}`}>
         <div className="relative overflow-x-auto">
           {isRefreshing && (
             <div

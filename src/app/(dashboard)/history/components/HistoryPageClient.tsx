@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,7 +20,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { DataTableSkeleton } from "@/components/ui/table-skeletons";
+import { Search, X, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  dashboardSectionCardClass,
+  dashboardSectionCardHeaderClass,
+  dashboardSectionCardTitleClass,
+  dashboardSectionTableContentClass,
+} from "@/lib/dashboard-card";
+
+const AUDIT_LOG_COLUMN_LABELS = [
+  "Timestamp",
+  "User",
+  "Action",
+  "Entity",
+  "Description",
+  "IP Address",
+];
 
 // Define enum values as constants for client-side use
 const AuditAction = {
@@ -196,8 +212,8 @@ export function HistoryPageClient() {
         </p>
       </div>
 
-      <Card className="p-4">
-        <div className="space-y-4">
+      <Card className={dashboardSectionCardClass}>
+        <CardContent className="space-y-4 p-4 sm:p-6">
           {/* Search and Filters */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="lg:col-span-2">
@@ -275,23 +291,31 @@ export function HistoryPageClient() {
               />
             </div>
           </div>
-        </div>
+        </CardContent>
       </Card>
 
       {/* Audit Logs Table */}
-      <Card>
-        {loading ? (
-          <div className="flex items-center justify-center p-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : auditLogs.length === 0 ? (
-          <div className="text-center p-12 text-muted-foreground">
-            No audit logs found
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <Table>
+      <Card className={dashboardSectionCardClass}>
+        <CardHeader className={dashboardSectionCardHeaderClass}>
+          <CardTitle className={dashboardSectionCardTitleClass}>
+            Activity log
+          </CardTitle>
+        </CardHeader>
+        <CardContent className={dashboardSectionTableContentClass}>
+          {loading ? (
+            <DataTableSkeleton
+              columnCount={6}
+              rowCount={10}
+              columnLabels={AUDIT_LOG_COLUMN_LABELS}
+            />
+          ) : auditLogs.length === 0 ? (
+            <div className="py-12 text-center text-muted-foreground">
+              No audit logs found
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Timestamp</TableHead>
@@ -345,8 +369,8 @@ export function HistoryPageClient() {
               </Table>
             </div>
 
-            {/* Pagination */}
-            <div className="flex items-center justify-between p-4 border-t">
+              {/* Pagination */}
+              <div className="flex flex-col gap-3 border-t px-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
               <div className="text-sm text-muted-foreground">
                 Showing {((pagination.page - 1) * pagination.limit) + 1} to{" "}
                 {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
@@ -383,8 +407,9 @@ export function HistoryPageClient() {
                 </Button>
               </div>
             </div>
-          </>
-        )}
+            </>
+          )}
+        </CardContent>
       </Card>
     </div>
   );

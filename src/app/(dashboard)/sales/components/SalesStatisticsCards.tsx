@@ -11,6 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCurrency } from "@/hooks/useCurrency";
 import { DollarSign, Calendar, TrendingUp, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  dashboardKpiCardClass,
+  dashboardKpiCardContentClass,
+  dashboardKpiCardHeaderClass,
+  dashboardKpiCardTitleClass,
+} from "@/lib/dashboard-card";
+import { StatCardsSkeleton } from "@/components/ui/table-skeletons";
 
 interface Statistics {
   today: { total: number; count: number };
@@ -51,23 +58,7 @@ export const SalesStatisticsCards = forwardRef<SalesStatisticsCardsRef>((props, 
   }));
 
   if (loading) {
-    return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="bg-card border-border/80 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
-                Loading...
-              </CardTitle>
-              <div className="h-9 w-9 animate-pulse rounded-lg bg-muted" />
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 w-28 animate-pulse rounded bg-muted" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+    return <StatCardsSkeleton count={4} />;
   }
 
   if (!stats) return null;
@@ -75,7 +66,7 @@ export const SalesStatisticsCards = forwardRef<SalesStatisticsCardsRef>((props, 
   const iconTile = (icon: ReactNode, className: string) => (
     <div
       className={cn(
-        "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+        "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
         className
       )}
     >
@@ -84,10 +75,10 @@ export const SalesStatisticsCards = forwardRef<SalesStatisticsCardsRef>((props, 
   );
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="bg-card border-border/80 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
+    <div className="grid min-w-0 gap-3 md:grid-cols-2 lg:grid-cols-4">
+      <Card className={dashboardKpiCardClass}>
+        <CardHeader className={dashboardKpiCardHeaderClass}>
+          <CardTitle className={dashboardKpiCardTitleClass}>
             Today&apos;s Sales
           </CardTitle>
           {iconTile(
@@ -95,8 +86,8 @@ export const SalesStatisticsCards = forwardRef<SalesStatisticsCardsRef>((props, 
             "bg-primary/15 text-primary dark:bg-primary/25 dark:text-primary"
           )}
         </CardHeader>
-        <CardContent>
-          <div className="text-xl font-bold tracking-tight tabular-nums text-foreground sm:text-2xl">
+        <CardContent className={dashboardKpiCardContentClass}>
+          <div className="text-base font-bold tabular-nums tracking-tight text-foreground sm:text-lg">
             {formatCurrency(stats.today.total)}
           </div>
           <p className="mt-1 text-xs font-medium text-primary">
@@ -105,18 +96,16 @@ export const SalesStatisticsCards = forwardRef<SalesStatisticsCardsRef>((props, 
         </CardContent>
       </Card>
 
-      <Card className="bg-card border-border/80 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
-            This Week
-          </CardTitle>
+      <Card className={dashboardKpiCardClass}>
+        <CardHeader className={dashboardKpiCardHeaderClass}>
+          <CardTitle className={dashboardKpiCardTitleClass}>This Week</CardTitle>
           {iconTile(
             <TrendingUp className="h-4 w-4" />,
             "bg-sky-500/15 text-sky-600 dark:bg-sky-500/25 dark:text-sky-300"
           )}
         </CardHeader>
-        <CardContent>
-          <div className="text-xl font-bold tracking-tight tabular-nums text-foreground sm:text-2xl">
+        <CardContent className={dashboardKpiCardContentClass}>
+          <div className="text-base font-bold tabular-nums tracking-tight text-foreground sm:text-lg">
             {formatCurrency(stats.week.total)}
           </div>
           <p className="mt-1 text-xs font-medium text-primary">
@@ -125,18 +114,16 @@ export const SalesStatisticsCards = forwardRef<SalesStatisticsCardsRef>((props, 
         </CardContent>
       </Card>
 
-      <Card className="bg-card border-border/80 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
-            This Month
-          </CardTitle>
+      <Card className={dashboardKpiCardClass}>
+        <CardHeader className={dashboardKpiCardHeaderClass}>
+          <CardTitle className={dashboardKpiCardTitleClass}>This Month</CardTitle>
           {iconTile(
             <DollarSign className="h-4 w-4" />,
             "bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/25 dark:text-emerald-300"
           )}
         </CardHeader>
-        <CardContent>
-          <div className="text-xl font-bold tracking-tight tabular-nums text-foreground sm:text-2xl">
+        <CardContent className={dashboardKpiCardContentClass}>
+          <div className="text-base font-bold tabular-nums tracking-tight text-foreground sm:text-lg">
             {formatCurrency(stats.month.total)}
           </div>
           <p className="mt-1 text-xs font-medium text-primary">
@@ -145,9 +132,9 @@ export const SalesStatisticsCards = forwardRef<SalesStatisticsCardsRef>((props, 
         </CardContent>
       </Card>
 
-      <Card className="bg-card border-border/80 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
+      <Card className={dashboardKpiCardClass}>
+        <CardHeader className={dashboardKpiCardHeaderClass}>
+          <CardTitle className={dashboardKpiCardTitleClass}>
             Best Selling Product
           </CardTitle>
           {iconTile(
@@ -155,8 +142,8 @@ export const SalesStatisticsCards = forwardRef<SalesStatisticsCardsRef>((props, 
             "bg-amber-500/15 text-amber-700 dark:bg-amber-500/25 dark:text-amber-300"
           )}
         </CardHeader>
-        <CardContent>
-          <div className="text-lg font-bold leading-snug text-foreground">
+        <CardContent className={dashboardKpiCardContentClass}>
+          <div className="text-base font-bold leading-snug text-foreground sm:text-lg">
             {stats.bestSellingProduct.name}
           </div>
           <p className="mt-1 text-xs font-medium text-primary">
