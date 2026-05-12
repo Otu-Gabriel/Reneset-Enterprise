@@ -32,6 +32,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatSaleNumberShort } from "@/lib/sale-number";
 
 interface Customer {
   id: string;
@@ -407,8 +408,11 @@ export function CustomerDetailsModal({
                         <TableBody>
                           {customer.sales.map((sale) => (
                             <TableRow key={sale.id}>
-                              <TableCell className="font-medium">
-                                {sale.saleNumber}
+                              <TableCell
+                                className="font-medium tabular-nums"
+                                title={sale.saleNumber}
+                              >
+                                {formatSaleNumberShort(sale.saleNumber)}
                               </TableCell>
                               <TableCell>{formatDate(sale.saleDate)}</TableCell>
                               <TableCell>
@@ -501,7 +505,7 @@ export function CustomerDetailsModal({
                                 <div className="flex justify-between items-start">
                                   <div>
                                     <CardTitle className="text-base">
-                                      Sale #{sale.saleNumber}
+                                      Sale {sale.saleNumber}
                                     </CardTitle>
                                     <p className="text-sm text-muted-foreground">
                                       {formatDate(sale.saleDate)}

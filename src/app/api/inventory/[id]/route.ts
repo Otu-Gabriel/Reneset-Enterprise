@@ -222,8 +222,12 @@ export async function PUT(
         ...(baseUnit !== undefined && { baseUnit: String(baseUnit) }),
         ...(variationsPayload !== undefined && { variations: variationsPayload }),
         ...(imageUrl !== undefined && { imageUrl: imageUrl || null }),
-        ...(stock !== undefined && { stock: parseInt(stock) }),
-        ...(minStock !== undefined && { minStock: parseInt(minStock) }),
+        ...(stock !== undefined && {
+          stock: parseInt(String(stock).trim() || "0", 10) || 0,
+        }),
+        ...(minStock !== undefined && {
+          minStock: parseInt(String(minStock).trim() || "0", 10) || 0,
+        }),
         ...(unit && { unit }),
       },
       include: {
@@ -242,7 +246,11 @@ export async function PUT(
     if (oldProduct) {
       if (name && name !== oldProduct.name) changes.name = { from: oldProduct.name, to: name };
       if (price !== undefined && parseFloat(price) !== oldProduct.price) changes.price = { from: oldProduct.price, to: parseFloat(price) };
-      if (stock !== undefined && parseInt(stock) !== oldProduct.stock) changes.stock = { from: oldProduct.stock, to: parseInt(stock) };
+      if (stock !== undefined) {
+        const nextStock = parseInt(String(stock).trim() || "0", 10) || 0;
+        if (nextStock !== oldProduct.stock)
+          changes.stock = { from: oldProduct.stock, to: nextStock };
+      }
     }
     await auditLogger.productUpdated(
       session.user.id,

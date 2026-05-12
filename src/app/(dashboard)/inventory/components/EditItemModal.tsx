@@ -85,8 +85,8 @@ export function EditItemModal({
     brandId: "",
     baseUnit: "item",
     cost: "",
-    stock: "0",
-    minStock: "0",
+    stock: "",
+    minStock: "",
     imageUrl: "",
   });
   const [variations, setVariations] = useState([
@@ -115,8 +115,8 @@ export function EditItemModal({
         brandId: product.brand?.id || "",
         baseUnit: product.baseUnit || product.unit || "item",
         cost: product.cost?.toString() || "",
-        stock: product.stock.toString(),
-        minStock: product.minStock.toString(),
+        stock: product.stock === 0 ? "" : String(product.stock),
+        minStock: product.minStock === 0 ? "" : String(product.minStock),
         imageUrl: product.imageUrl || "",
       });
       if (Array.isArray(product.variations) && product.variations.length > 0) {
@@ -428,6 +428,7 @@ export function EditItemModal({
                 onChange={(e) =>
                   setFormData({ ...formData, stock: e.target.value })
                 }
+                placeholder="0"
               />
             </div>
             <div className="space-y-2">
@@ -439,6 +440,7 @@ export function EditItemModal({
                 onChange={(e) =>
                   setFormData({ ...formData, minStock: e.target.value })
                 }
+                placeholder="0"
               />
             </div>
           </div>

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ListOrdered, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
+import { formatSaleNumberShort } from "@/lib/sale-number";
 
 const PAGE_SIZE = 8;
 
@@ -163,7 +164,7 @@ export function DashboardPaginatedTables() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="h-8 px-2 py-2 text-left text-xs sm:px-3">
-                      ID
+                      Sale
                     </TableHead>
                     <TableHead className="h-8 px-2 py-2 text-left text-xs sm:px-3">
                       Customer
@@ -179,8 +180,11 @@ export function DashboardPaginatedTables() {
                 <TableBody>
                   {txRows.map((transaction) => (
                     <TableRow key={transaction.id}>
-                      <TableCell className="px-2 py-1.5 text-xs font-medium sm:px-3">
-                        #{transaction.saleNumber}
+                      <TableCell
+                        className="px-2 py-1.5 text-xs font-medium tabular-nums sm:px-3"
+                        title={transaction.saleNumber}
+                      >
+                        {formatSaleNumberShort(transaction.saleNumber)}
                       </TableCell>
                       <TableCell className="max-w-[120px] px-2 py-1.5 text-xs sm:max-w-none sm:px-3">
                         <span className="line-clamp-2 break-words sm:line-clamp-none">

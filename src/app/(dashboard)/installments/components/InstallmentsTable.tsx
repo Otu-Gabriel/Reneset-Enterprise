@@ -20,6 +20,7 @@ import { InstallmentDetailsModal } from "./InstallmentDetailsModal";
 import { useSession } from "next-auth/react";
 import { Permission } from "@prisma/client";
 import { hasPermission } from "@/lib/auth";
+import { formatSaleNumberShort } from "@/lib/sale-number";
 
 interface InstallmentPlan {
   id: string;
@@ -158,8 +159,11 @@ export function InstallmentsTable({ filters }: InstallmentsTableProps) {
               ) : (
                 plans.map((plan) => (
                   <TableRow key={plan.id}>
-                    <TableCell className="font-medium">
-                      {plan.sale.saleNumber}
+                    <TableCell
+                      className="font-medium tabular-nums"
+                      title={plan.sale.saleNumber}
+                    >
+                      {formatSaleNumberShort(plan.sale.saleNumber)}
                     </TableCell>
                     <TableCell>
                       <div>

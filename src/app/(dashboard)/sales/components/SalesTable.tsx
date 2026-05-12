@@ -21,6 +21,7 @@ import { hasPermission } from "@/lib/auth";
 import { SaleDetailsModal } from "./SaleDetailsModal";
 import { EditSaleModal } from "./EditSaleModal";
 import { saleItemLineCogs } from "@/lib/product-variations";
+import { formatSaleNumberShort } from "@/lib/sale-number";
 
 interface Sale {
   id: string;
@@ -208,7 +209,7 @@ export const SalesTable = forwardRef<SalesTableRef, SalesTableProps>(
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
+                <TableHead>Sale</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Products</TableHead>
                 <TableHead>Date</TableHead>
@@ -231,8 +232,11 @@ export const SalesTable = forwardRef<SalesTableRef, SalesTableProps>(
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => handleViewDetails(sale.id)}
                   >
-                    <TableCell className="font-medium">
-                      {sale.saleNumber}
+                    <TableCell
+                      className="font-medium tabular-nums"
+                      title={sale.saleNumber}
+                    >
+                      {formatSaleNumberShort(sale.saleNumber)}
                     </TableCell>
                     <TableCell>{sale.customerName}</TableCell>
                     <TableCell className="max-w-xs truncate">

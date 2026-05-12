@@ -560,14 +560,16 @@ export function EditSaleModal({
                         type="number"
                         min="0"
                         step="0.01"
-                        value={item.discount || 0}
-                        onChange={(e) =>
+                        value={item.discount === 0 ? "" : item.discount}
+                        placeholder="0"
+                        onChange={(e) => {
+                          const raw = e.target.value;
                           updateItem(
                             index,
                             "discount",
-                            parseFloat(e.target.value) || 0
-                          )
-                        }
+                            raw === "" ? 0 : parseFloat(raw) || 0,
+                          );
+                        }}
                       />
                     </div>
                     {selectedProduct && (

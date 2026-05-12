@@ -12,6 +12,7 @@ import {
   normalizeSaleUnit,
 } from "@/lib/product-variations";
 import { redactSaleForClient } from "@/lib/product-cost-access";
+import { allocateNextSaleNumber } from "@/lib/sale-number";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -323,38 +324,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Generate unique sale number
-    // Find the highest existing sale number and increment
+    // Human-readable ref: REC-YYYYMMDD-0001 (daily sequence); retry on rare collision
     let saleNumber: string;
     let attempts = 0;
     const maxAttempts = 10;
 
     do {
-      // Find the highest sale number
-      // Get recent sales and find the maximum numeric value
-      const recentSales = await prisma.sale.findMany({
-        select: { saleNumber: true },
-        orderBy: { createdAt: "desc" },
-        take: 100, // Get last 100 sales to find max
-      });
-
-      let maxNumber = 2000;
-      if (recentSales.length > 0) {
-        // Extract all numbers and find the maximum
-        const numbers = recentSales
-          .map((s) => {
-            const num = parseInt(s.saleNumber.replace("#", ""));
-            return isNaN(num) ? 2000 : num;
-          })
-          .filter((n) => n >= 2000);
-
-        if (numbers.length > 0) {
-          maxNumber = Math.max(...numbers);
-        }
-      }
-
-      const nextNumber = maxNumber + 1;
-      saleNumber = `#${String(nextNumber).padStart(4, "0")}`;
+      saleNumber = await allocateNextSaleNumber(prisma);
 
       // Ensure customerId is set when customerName was provided
       // This is a safety check - customerIdToUse should always be set at this point

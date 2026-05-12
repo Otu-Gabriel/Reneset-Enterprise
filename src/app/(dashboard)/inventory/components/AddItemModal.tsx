@@ -58,8 +58,8 @@ export function AddItemModal({
     brandId: "",
     baseUnit: "item",
     cost: "",
-    stock: "0",
-    minStock: "0",
+    stock: "",
+    minStock: "",
     imageUrl: "",
   });
   const [variations, setVariations] = useState([
@@ -239,8 +239,8 @@ export function AddItemModal({
           brandId: "",
           baseUnit: "item",
           cost: "",
-          stock: "0",
-          minStock: "0",
+          stock: "",
+          minStock: "",
           imageUrl: "",
         });
         setVariations([{ name: "item", quantityInBaseUnit: "1", price: "", cost: "" }]);
@@ -279,8 +279,8 @@ export function AddItemModal({
         brandId: "",
         baseUnit: "item",
         cost: "",
-        stock: "0",
-        minStock: "0",
+        stock: "",
+        minStock: "",
         imageUrl: "",
       });
       setVariations([{ name: "item", quantityInBaseUnit: "1", price: "", cost: "" }]);

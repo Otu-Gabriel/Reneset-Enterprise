@@ -694,12 +694,16 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                     min="0"
                     max={total}
                     step="0.01"
-                    value={downPayment}
-                    onChange={(e) =>
+                    value={downPayment === 0 ? "" : downPayment}
+                    placeholder="0"
+                    onChange={(e) => {
+                      const raw = e.target.value;
                       setDownPayment(
-                        Math.min(total, parseFloat(e.target.value) || 0),
-                      )
-                    }
+                        raw === ""
+                          ? 0
+                          : Math.min(total, parseFloat(raw) || 0),
+                      );
+                    }}
                   />
                   <p className="text-xs text-muted-foreground">
                     Remaining: {formatCurrency(remainingAmount)}
@@ -893,14 +897,16 @@ export function AddSaleModal({ children, onSaleCreated }: AddSaleModalProps) {
                         type="number"
                         min="0"
                         step="0.01"
-                        value={item.discount || 0}
-                        onChange={(e) =>
+                        value={item.discount === 0 ? "" : item.discount}
+                        placeholder="0"
+                        onChange={(e) => {
+                          const raw = e.target.value;
                           updateItem(
                             index,
                             "discount",
-                            parseFloat(e.target.value) || 0,
-                          )
-                        }
+                            raw === "" ? 0 : parseFloat(raw) || 0,
+                          );
+                        }}
                       />
                     </div>
                     {selectedProduct && (
